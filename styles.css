@@ -5,7 +5,7 @@ body {
 }
 
 .top-bar {
-    background-color: #333;
+    background-color: #0056b3;
     color: white;
     padding: 10px;
     text-align: center;
@@ -60,4 +60,8 @@ body {
 
 .lane-button:hover {
     background-color: #45a049;
+}
+
+.logo {
+    color: #0056b3; /* Blue color similar to azc-Alphen.nl site */
 }
