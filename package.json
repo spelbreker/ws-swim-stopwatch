@@ -1,0 +1,17 @@
+{
+  "name": "webserver-with-websockets",
+  "version": "1.0.0",
+  "description": "A webserver with websockets for stopwatch synchronization and split times",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^7.4.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "",
+  "license": "ISC"
+}

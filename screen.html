@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="stopwatch">00:00:00</span>
+    </div>
+    <div class="lanes">
+        <div class="lane" id="lane-0">Lane 0</div>
+        <div class="lane" id="lane-1">Lane 1</div>
+        <div class="lane" id="lane-2">Lane 2</div>
+        <div class="lane" id="lane-3">Lane 3</div>
+        <div class="lane" id="lane-4">Lane 4</div>
+        <div class="lane" id="lane-5">Lane 5</div>
+        <div class="lane" id="lane-6">Lane 6</div>
+        <div class="lane" id="lane-7">Lane 7</div>
+        <div class="lane" id="lane-8">Lane 8</div>
+        <div class="lane" id="lane-9">Lane 9</div>
+    </div>
+    <script>
+        let stopwatchInterval;
+        let startTime;
+        const stopwatchElement = document.getElementById('stopwatch');
+
+        function startStopwatch() {
+            startTime = Date.now();
+            stopwatchInterval = setInterval(updateStopwatch, 10);
+        }
+
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchElement.textContent = '00:00:00';
+        }
+
+        function updateStopwatch() {
+            const elapsedTime = Date.now() - startTime;
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            const milliseconds = Math.floor((elapsedTime % 1000) / 10);
+            stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
+        }
+
+        function pad(number) {
+            return number.toString().padStart(2, '0');
+        }
+
+        const socket = new WebSocket('ws://localhost:8080');
+
+        socket.addEventListener('message', function (event) {
+            const message = JSON.parse(event.data);
+            if (message.type === 'start') {
+                startStopwatch();
+            } else if (message.type === 'reset') {
+                resetStopwatch();
+            } else if (message.type === 'split') {
+                document.getElementById(`lane-${message.lane}`).textContent = `Lane ${message.lane}: ${message.time}`;
+            }
+        });
+    </script>
+</body>
+</html>

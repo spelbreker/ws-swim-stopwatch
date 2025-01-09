@@ -1,0 +1,10 @@
+version: '3'
+services:
+  node-server:
+    build: .
+    ports:
+      - "8080:8080"
+  websocket-server:
+    image: 'websocket-server-image'
+    ports:
+      - "8081:8081"

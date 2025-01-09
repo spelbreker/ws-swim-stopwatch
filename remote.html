@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="stopwatch">00:00:00</span>
+    </div>
+    <div class="bottom-bar">
+        <button id="start-button">Start</button>
+        <button id="reset-button">Reset</button>
+    </div>
+    <div class="buttons">
+        <button class="lane-button" data-lane="0">0</button>
+        <button class="lane-button" data-lane="1">1</button>
+        <button class="lane-button" data-lane="2">2</button>
+        <button class="lane-button" data-lane="3">3</button>
+        <button class="lane-button" data-lane="4">4</button>
+        <button class="lane-button" data-lane="5">5</button>
+        <button class="lane-button" data-lane="6">6</button>
+        <button class="lane-button" data-lane="7">7</button>
+        <button class="lane-button" data-lane="8">8</button>
+        <button class="lane-button" data-lane="9">9</button>
+    </div>
+    <script>
+        let stopwatchInterval;
+        let startTime;
+        const stopwatchElement = document.getElementById('stopwatch');
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const laneButtons = document.querySelectorAll('.lane-button');
+
+        function startStopwatch() {
+            startTime = Date.now();
+            stopwatchInterval = setInterval(updateStopwatch, 10);
+            socket.send(JSON.stringify({ type: 'start' }));
+        }
+
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchElement.textContent = '00:00:00';
+            socket.send(JSON.stringify({ type: 'reset' }));
+        }
+
+        function updateStopwatch() {
+            const elapsedTime = Date.now() - startTime;
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            const milliseconds = Math.floor((elapsedTime % 1000) / 10);
+            stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
+        }
+
+        function pad(number) {
+            return number.toString().padStart(2, '0');
+        }
+
+        startButton.addEventListener('click', startStopwatch);
+        resetButton.addEventListener('click', resetStopwatch);
+
+        laneButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const lane = button.getAttribute('data-lane');
+                const time = stopwatchElement.textContent;
+                socket.send(JSON.stringify({ type: 'split', lane, time }));
+            });
+        });
+
+        const socket = new WebSocket('ws://localhost:8080');
+
+        socket.addEventListener('message', function (event) {
+            const message = JSON.parse(event.data);
+            if (message.type === 'start') {
+                startStopwatch();
+            } else if (message.type === 'reset') {
+                resetStopwatch();
+            }
+        });
+    </script>
+</body>
+</html>
