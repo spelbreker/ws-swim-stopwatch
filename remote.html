@@ -103,6 +103,7 @@
             if (currentEvent < 50) {
                 eventSelect.value = currentEvent + 1;
                 heatSelect.value = 1; // Reset heats back to 1
+                socket.send(JSON.stringify({ type: 'event-heat', event: currentEvent + 1, heat: 1 }));
             }
         }
 
@@ -110,6 +111,7 @@
             let currentHeat = parseInt(heatSelect.value);
             if (currentHeat < 20) {
                 heatSelect.value = currentHeat + 1;
+                socket.send(JSON.stringify({ type: 'event-heat', event: parseInt(eventSelect.value), heat: currentHeat + 1 }));
             }
         }
 
