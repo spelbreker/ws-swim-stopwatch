@@ -4,27 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="top-bar">
-        <span id="stopwatch">00:00:00</span>
+<body class="bg-gray-100">
+    <div class="top-bar flex justify-between items-center bg-blue-600 text-white p-4">
+        <div class="logo text-2xl font-bold">AZC</div>
+        <span id="stopwatch" class="text-2xl">00:00:00</span>
     </div>
-    <div class="bottom-bar">
-        <button id="start-button">Start</button>
-        <button id="reset-button">Reset</button>
+    <div class="bottom-bar bg-gray-800 text-white p-4 fixed bottom-0 w-full text-center">
+        <button id="start-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Start</button>
+        <button id="reset-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Reset</button>
+        <div class="bottom-bar-text text-red-500 text-sm mt-2">dit zijn geen officele tijden</div>
     </div>
-    <div class="buttons">
-        <button class="lane-button" data-lane="0">0</button>
-        <button class="lane-button" data-lane="1">1</button>
-        <button class="lane-button" data-lane="2">2</button>
-        <button class="lane-button" data-lane="3">3</button>
-        <button class="lane-button" data-lane="4">4</button>
-        <button class="lane-button" data-lane="5">5</button>
-        <button class="lane-button" data-lane="6">6</button>
-        <button class="lane-button" data-lane="7">7</button>
-        <button class="lane-button" data-lane="8">8</button>
-        <button class="lane-button" data-lane="9">9</button>
+    <div class="buttons flex flex-wrap justify-center mt-20">
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="0">0</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="1">1</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="2">2</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="3">3</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="4">4</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="5">5</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="6">6</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="7">7</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="8">8</button>
+        <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-2" data-lane="9">9</button>
     </div>
     <script>
         let stopwatchInterval;
