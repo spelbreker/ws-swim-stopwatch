@@ -61,7 +61,7 @@
         </div>
     </div>
     <div class="bottom-bar bg-blue-600 text-white p-2 fixed bottom-0 w-full text-center">
-        <div class="bottom-bar-text text-white text-2xl font-bold">dit zijn geen officele tijden</div>
+        <div class="bottom-bar-text text-white text-2xl font-bold">Dit zijn geen officele tijden</div>
     </div>
     <script>
         let stopwatchInterval;
@@ -112,6 +112,9 @@
                 }, 2000);
             } else if (message.type === 'event-heat') {
                 eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                document.querySelectorAll('.split-time').forEach(function (element) {
+                    element.textContent = '';
+                });
             }
         });
     </script>
