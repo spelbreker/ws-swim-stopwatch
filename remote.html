@@ -32,6 +32,18 @@
             <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded m-4" data-lane="9">9</button>
         </div>
     </div>
+    <div class="event-heat-select flex justify-center mt-10">
+        <div class="flex flex-col items-center">
+            <label for="event-select" class="text-lg font-bold mb-2">Event</label>
+            <select id="event-select" class="bg-white border border-gray-300 rounded py-2 px-4 mb-4"></select>
+            <button id="increment-event" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">Add 1 to Event</button>
+        </div>
+        <div class="flex flex-col items-center ml-10">
+            <label for="heat-select" class="text-lg font-bold mb-2">Heat</label>
+            <select id="heat-select" class="bg-white border border-gray-300 rounded py-2 px-4 mb-4"></select>
+            <button id="increment-heat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">Add 1 to Heat</button>
+        </div>
+    </div>
     <script>
         let stopwatchInterval;
         let startTime;
@@ -39,17 +51,23 @@
         const startButton = document.getElementById('start-button');
         const resetButton = document.getElementById('reset-button');
         const laneButtons = document.querySelectorAll('.lane-button');
+        const eventSelect = document.getElementById('event-select');
+        const heatSelect = document.getElementById('heat-select');
+        const incrementEventButton = document.getElementById('increment-event');
+        const incrementHeatButton = document.getElementById('increment-heat');
 
         function startStopwatch() {
             startTime = Date.now();
             stopwatchInterval = setInterval(updateStopwatch, 10);
             socket.send(JSON.stringify({ type: 'start' }));
+            disableControls(true);
         }
 
         function resetStopwatch() {
             clearInterval(stopwatchInterval);
             stopwatchElement.textContent = '00:00:00';
             socket.send(JSON.stringify({ type: 'reset' }));
+            disableControls(false);
         }
 
         function updateStopwatch() {
@@ -73,8 +91,44 @@
             }, 10000);
         }
 
+        function disableControls(disable) {
+            eventSelect.disabled = disable;
+            heatSelect.disabled = disable;
+            incrementEventButton.disabled = disable;
+            incrementHeatButton.disabled = disable;
+        }
+
+        function incrementEvent() {
+            let currentEvent = parseInt(eventSelect.value);
+            if (currentEvent < 50) {
+                eventSelect.value = currentEvent + 1;
+                heatSelect.value = 1; // Reset heats back to 1
+            }
+        }
+
+        function incrementHeat() {
+            let currentHeat = parseInt(heatSelect.value);
+            if (currentHeat < 20) {
+                heatSelect.value = currentHeat + 1;
+            }
+        }
+
+        function fillSelectOptions(selectElement, maxValue) {
+            for (let i = 1; i <= maxValue; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                selectElement.appendChild(option);
+            }
+        }
+
+        fillSelectOptions(eventSelect, 50);
+        fillSelectOptions(heatSelect, 20);
+
         startButton.addEventListener('click', startStopwatch);
         resetButton.addEventListener('click', resetStopwatch);
+        incrementEventButton.addEventListener('click', incrementEvent);
+        incrementHeatButton.addEventListener('click', incrementHeat);
 
         laneButtons.forEach(button => {
             button.addEventListener('click', () => {
