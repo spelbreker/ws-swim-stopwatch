@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Screen</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .highlight {
+            background-color: #90ee90; /* Light green */
+            transition: background-color 2s ease;
+        }
+    </style>
 </head>
 <body>
     <div class="top-bar flex justify-between items-center bg-blue-600 text-white p-4">
@@ -96,7 +102,12 @@
             } else if (message.type === 'reset') {
                 resetStopwatch();
             } else if (message.type === 'split') {
-                document.getElementById(`lane-${message.lane}`).querySelector('.split-time').textContent = message.time;
+                const laneElement = document.getElementById(`lane-${message.lane}`);
+                laneElement.querySelector('.split-time').textContent = message.time;
+                laneElement.classList.add('highlight');
+                setTimeout(() => {
+                    laneElement.classList.remove('highlight');
+                }, 2000);
             }
         });
     </script>
