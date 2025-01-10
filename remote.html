@@ -96,6 +96,18 @@
             heatSelect.disabled = disable;
             incrementEventButton.disabled = disable;
             incrementHeatButton.disabled = disable;
+
+            if (disable) {
+                eventSelect.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                heatSelect.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                incrementEventButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                incrementHeatButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            } else {
+                eventSelect.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                heatSelect.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                incrementEventButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                incrementHeatButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            }
         }
 
         function incrementEvent() {
