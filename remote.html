@@ -64,6 +64,15 @@
             return number.toString().padStart(2, '0');
         }
 
+        function highlightLaneButton(button) {
+            button.classList.add('bg-green-500');
+            button.classList.remove('bg-blue-500');
+            setTimeout(() => {
+                button.classList.remove('bg-green-500');
+                button.classList.add('bg-blue-500');
+            }, 2000);
+        }
+
         startButton.addEventListener('click', startStopwatch);
         resetButton.addEventListener('click', resetStopwatch);
 
@@ -72,6 +81,7 @@
                 const lane = button.getAttribute('data-lane');
                 const time = stopwatchElement.textContent;
                 socket.send(JSON.stringify({ type: 'split', lane, time }));
+                highlightLaneButton(button);
             });
         });
 
