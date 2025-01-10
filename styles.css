@@ -13,7 +13,7 @@ body {
 }
 
 .bottom-bar {
-    background-color: #333;
+    background-color: #0056b3;
     color: white;
     padding: 10px;
     text-align: center;
@@ -26,6 +26,7 @@ body {
     display: flex;
     flex-direction: column;
     margin-top: 20px;
+    padding: 0 20px;
 }
 
 .lane {
@@ -35,6 +36,10 @@ body {
     margin: 5px 0;
     text-align: center;
     font-size: 18px;
+}
+
+.lane span {
+    margin-right: 10px;
 }
 
 .buttons {
