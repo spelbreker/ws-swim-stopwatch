@@ -11,17 +11,50 @@
         <div class="logo text-2xl font-bold">AZC</div>
         <span id="stopwatch" class="text-2xl">00:00:00</span>
     </div>
-    <div class="lanes">
-        <div class="lane" id="lane-0">Lane 0</div>
-        <div class="lane" id="lane-1">Lane 1</div>
-        <div class="lane" id="lane-2">Lane 2</div>
-        <div class="lane" id="lane-3">Lane 3</div>
-        <div class="lane" id="lane-4">Lane 4</div>
-        <div class="lane" id="lane-5">Lane 5</div>
-        <div class="lane" id="lane-6">Lane 6</div>
-        <div class="lane" id="lane-7">Lane 7</div>
-        <div class="lane" id="lane-8">Lane 8</div>
-        <div class="lane" id="lane-9">Lane 9</div>
+    <div class="lanes flex flex-col space-y-4 p-4">
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-0">
+            <div>Lane 0:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-1">
+            <div>Lane 1:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-2">
+            <div>Lane 2:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-3">
+            <div>Lane 3:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-4">
+            <div>Lane 4:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-5">
+            <div>Lane 5:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-6">
+            <div>Lane 6:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-7">
+            <div>Lane 7:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-8">
+            <div>Lane 8:</div>
+            <span class="split-time"></span>
+        </div>
+        <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-9">
+            <div>Lane 9:</div>
+            <span class="split-time"></span>
+        </div>
+    </div>
+    <div class="bottom-bar bg-blue-600 text-white p-4 fixed bottom-0 w-full text-center">
+        <div class="bottom-bar-text text-red-500 text-sm mt-2">dit zijn geen officele tijden</div>
     </div>
     <script>
         let stopwatchInterval;
@@ -59,7 +92,7 @@
             } else if (message.type === 'reset') {
                 resetStopwatch();
             } else if (message.type === 'split') {
-                document.getElementById(`lane-${message.lane}`).textContent = `Lane ${message.lane}: ${message.time}`;
+                document.getElementById(`lane-${message.lane}`).querySelector('.split-time').textContent = message.time;
             }
         });
     </script>
