@@ -14,7 +14,6 @@
     <div class="bottom-bar bg-gray-800 text-white p-4 fixed bottom-0 w-full text-center">
         <button id="start-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Start</button>
         <button id="reset-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Reset</button>
-        <div class="bottom-bar-text text-red-500 text-sm mt-2">dit zijn geen officele tijden</div>
     </div>
     <div class="buttons flex flex-wrap justify-center mt-20">
         <div class="w-full flex justify-center">
@@ -55,6 +54,7 @@
         const heatSelect = document.getElementById('heat-select');
         const incrementEventButton = document.getElementById('increment-event');
         const incrementHeatButton = document.getElementById('increment-heat');
+        const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
         function startStopwatch() {
             startTime = Date.now();
@@ -97,24 +97,18 @@
             incrementEventButton.disabled = disable;
             incrementHeatButton.disabled = disable;
 
-            if (disable) {
-                eventSelect.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                heatSelect.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                incrementEventButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                incrementHeatButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            } else {
-                eventSelect.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                heatSelect.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                incrementEventButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-                incrementHeatButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            }
+            const classAction = disable ? 'add' : 'remove';
+            eventSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            heatSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            incrementEventButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            incrementHeatButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
         }
 
         function incrementEvent() {
             let currentEvent = parseInt(eventSelect.value);
             if (currentEvent < 50) {
                 eventSelect.value = currentEvent + 1;
-                heatSelect.value = 1; // Reset heats back to 1
+                heatSelect.value = 1;
                 socket.send(JSON.stringify({ type: 'event-heat', event: currentEvent + 1, heat: 1 }));
             }
         }
@@ -152,8 +146,6 @@
                 highlightLaneButton(button);
             });
         });
-
-        const socket = new WebSocket('ws://localhost:8080');
 
         socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
