@@ -95,7 +95,7 @@
             return number.toString().padStart(2, '0');
         }
 
-        const socket = new WebSocket('ws://localhost:8080');
+        const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
         socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
