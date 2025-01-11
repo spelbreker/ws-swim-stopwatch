@@ -4,12 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Index</h1>
-    <ul>
-        <li><a href="remote.html">Remote</a></li>
-        <li><a href="screen.html">Screen</a></li>
-    </ul>
+<body class="bg-gray-100">
+    <header class="bg-blue-600 text-white p-4">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="remote.html" class="hover:underline">Remote</a></li>
+                <li><a href="screen.html" class="hover:underline">Screen</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="p-4">
+        <h2 class="text-xl font-semibold">Welcome to the Dashboard</h2>
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            <a href="remote.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
+                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                Go to Remote
+            </a>
+            <a href="screen.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
+                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                Go to Screen
+            </a>
+        </div>
+    </main>
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        <p>&copy; Patrick Development 2023</p>
+    </footer>
 </body>
 </html>
