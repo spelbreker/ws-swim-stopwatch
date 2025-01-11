@@ -9,6 +9,7 @@ This project is a web server with WebSocket support for stopwatch synchronizatio
 - [Getting Started](#getting-started)
 - [Usage](#usage)
 - [Docker Setup](#docker-setup)
+- [Using GitHub Packages](#using-github-packages)
 - [Project Structure](#project-structure)
 - [License](#license)
 
@@ -69,5 +70,26 @@ To run the project using Docker, follow these steps:
     ```
 
 3. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/4).
+
+## Using GitHub Packages
+
+To use the Docker image published to GitHub Packages, follow these steps:
+
+1. Authenticate with GitHub Packages:
+    ```sh
+    echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+    ```
+
+2. Pull the Docker image:
+    ```sh
+    docker pull ghcr.io/your-username/webserver-with-websockets:latest
+    ```
+
+3. Run the Docker container:
+    ```sh
+    docker run -p 8080:8080 ghcr.io/your-username/webserver-with-websockets:latest
+    ```
+
+4. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/5).
 
 ## Project Structure
