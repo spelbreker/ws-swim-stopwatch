@@ -28,5 +28,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/ws-swim-stopwatch:${{ github.sha }}
+            ghcr.io/ws-swim-stopwatch:${{ github.ref_name }}
