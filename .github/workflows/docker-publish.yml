@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  tags:
+    - 'v*.*.*'
 
 jobs:
   build:
@@ -28,4 +30,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
