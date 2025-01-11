@@ -90,17 +90,21 @@
         const incrementHeatButton = document.getElementById('increment-heat');
         const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
-        function startStopwatch() {
+        function startStopwatch(sendSocket = true ) {
             startTime = Date.now();
             stopwatchInterval = setInterval(updateStopwatch, 10);
-            socket.send(JSON.stringify({ type: 'start' }));
+            if(sendSocket) {
+                socket.send(JSON.stringify({ type: 'start' }));
+            }
             disableControls(true);
         }
 
-        function resetStopwatch() {
+        function resetStopwatch(sendSocket = true) {
             clearInterval(stopwatchInterval);
             stopwatchElement.textContent = '00:00:00';
-            socket.send(JSON.stringify({ type: 'reset' }));
+            if(sendSocket){
+                socket.send(JSON.stringify({ type: 'reset' }));
+            }
             disableControls(false);
         }
 
@@ -185,12 +189,9 @@
         socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
             if (message.type === 'start') {
-                startStopwatch();
+                startStopwatch(false);
             } else if (message.type === 'reset') {
-                // Prevent sending reset message if received
-                if (message.source !== 'remote') {
-                    resetStopwatch();
-                }
+                resetStopwatch(false);
             }
         });
     </script>
