@@ -33,5 +33,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/ws-swim-stopwatch:${{ github.sha }}
-            ghcr.io/ws-swim-stopwatch:${{ github.ref_name }}
+            ghcr.io/websocket-slim-stopwatch:${{ github.sha }}
+            ghcr.io/websocket-slim-stopwatch:${{ github.ref_name }}
