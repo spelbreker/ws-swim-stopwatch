@@ -22,6 +22,12 @@ const server = http.createServer((req, res) => {
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+
     ws.on('message', (message) => {
         const data = JSON.parse(message);
         wss.clients.forEach((client) => {
@@ -30,6 +36,25 @@ wss.on('connection', (ws) => {
             }
         });
     });
+
+    ws.on('close', () => {
+        console.log('WebSocket connection closed');
+    });
+});
+
+const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        if (!ws.isAlive) {
+            return ws.terminate();
+        }
+
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 30000);
+
+wss.on('close', () => {
+    clearInterval(interval);
 });
 
 server.listen(8080, () => {
