@@ -93,6 +93,7 @@
         function startStopwatch(sendSocket = true ) {
             startTime = Date.now();
             stopwatchInterval = setInterval(updateStopwatch, 10);
+            resetSplitTimes();
             if(sendSocket) {
                 socket.send(JSON.stringify({ type: 'start' }));
             }
@@ -165,6 +166,12 @@
                 option.value = i;
                 option.textContent = i;
                 selectElement.appendChild(option);
+            }
+        }
+
+        function resetSplitTimes() {
+            for (let i = 0; i <= 9; i++) {
+                document.getElementById(`split-time-${i}`).textContent = '';
             }
         }
 
