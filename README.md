@@ -82,12 +82,12 @@ To use the Docker image published to GitHub Packages, follow these steps:
 
 2. Pull the Docker image:
     ```sh
-    docker pull ghcr.io/your-username/webserver-with-websockets:latest
+    docker pull ghcr.io/spelbreker/ws-swim-stopwatch:latest
     ```
 
 3. Run the Docker container:
     ```sh
-    docker run -p 8080:8080 ghcr.io/your-username/webserver-with-websockets:latest
+    docker run -p 8080:8080 ghcr.io/spelbreker/ws-swim-stopwatch:latest
     ```
 
 4. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/5).
