@@ -13,10 +13,10 @@
     </style>
 </head>
 <body>
-    <div class="top-bar flex justify-between items-center bg-blue-600 text-white p-4">
-        <div class="logo text-2xl font-bold">AZC</div>
-        <span id="stopwatch" class="text-2xl">00:00:00</span>
-        <span id="event-heat" class="text-2xl">1-1</span>
+    <div class="top-bar flex justify-between items-center bg-blue-600 text-white p-4 text-2xl">
+        <div class="logofont-bold">AZC</div>
+        <span id="stopwatch">00:00:00</span>
+        <span>Event: <span id="event-heat">1-1</span></span>
     </div>
     <div class="lanes flex flex-col space-y-4 p-4 text-xl">
         <div class="lane flex justify-between border-b border-gray-300 pb-2 mb-2" id="lane-0">
@@ -95,28 +95,41 @@
             return number.toString().padStart(2, '0');
         }
 
-        const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
+        function connectWebSocket() {
+            const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
-        socket.addEventListener('message', function (event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'start') {
-                startStopwatch();
-            } else if (message.type === 'reset') {
-                resetStopwatch();
-            } else if (message.type === 'split') {
-                const laneElement = document.getElementById(`lane-${message.lane}`);
-                laneElement.querySelector('.split-time').textContent = message.time;
-                laneElement.classList.add('highlight');
-                setTimeout(() => {
-                    laneElement.classList.remove('highlight');
-                }, 2000);
-            } else if (message.type === 'event-heat') {
-                eventHeatElement.textContent = `${message.event}-${message.heat}`;
-                document.querySelectorAll('.split-time').forEach(function (element) {
-                    element.textContent = '';
-                });
-            }
-        });
+            socket.addEventListener('open', function () {
+                console.log('WebSocket connection established');
+            });
+
+            socket.addEventListener('close', function () {
+                console.log('WebSocket connection closed, attempting to reconnect...');
+                setTimeout(connectWebSocket, 1000);
+            });
+
+            socket.addEventListener('message', function (event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'start') {
+                    startStopwatch();
+                } else if (message.type === 'reset') {
+                    resetStopwatch();
+                } else if (message.type === 'split') {
+                    const laneElement = document.getElementById(`lane-${message.lane}`);
+                    laneElement.querySelector('.split-time').textContent = message.time;
+                    laneElement.classList.add('highlight');
+                    setTimeout(() => {
+                        laneElement.classList.remove('highlight');
+                    }, 2000);
+                } else if (message.type === 'event-heat') {
+                    eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                    document.querySelectorAll('.split-time').forEach(function (element) {
+                        element.textContent = '';
+                    });
+                }
+            });
+        }
+
+        connectWebSocket();
     </script>
 </body>
 </html>

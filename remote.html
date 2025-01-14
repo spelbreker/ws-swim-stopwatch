@@ -90,7 +90,31 @@
         const heatSelect = document.getElementById('heat-select');
         const incrementEventButton = document.getElementById('increment-event');
         const incrementHeatButton = document.getElementById('increment-heat');
-        const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
+        let socket;
+
+        function connectWebSocket() {
+            socket = new WebSocket(`ws://${window.location.hostname}:8080`);
+
+            socket.addEventListener('open', function () {
+                console.log('WebSocket connection established');
+            });
+
+            socket.addEventListener('close', function () {
+                console.log('WebSocket connection closed, attempting to reconnect...');
+                setTimeout(connectWebSocket, 1000);
+            });
+
+            socket.addEventListener('message', function (event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'start') {
+                    startStopwatch(false);
+                } else if (message.type === 'reset') {
+                    resetStopwatch(false);
+                }
+            });
+        }
+
+        connectWebSocket();
 
         function startStopwatch(sendSocket = true ) {
             startTime = Date.now();
@@ -193,15 +217,6 @@
                 highlightLaneButton(button);
                 document.getElementById(`split-time-${lane}`).textContent = time;
             });
-        });
-
-        socket.addEventListener('message', function (event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'start') {
-                startStopwatch(false);
-            } else if (message.type === 'reset') {
-                resetStopwatch(false);
-            }
         });
     </script>
 </body>
