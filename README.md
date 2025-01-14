@@ -27,7 +27,7 @@ The project consists of a Node.js server that serves HTML files and manages WebS
 
 ### Prerequisites
 
-- Node.js (>= 20.0.0)
+- Node.js (>= 22.0.0)
 - Docker (optional, for containerized setup)
 
 ### Installation
