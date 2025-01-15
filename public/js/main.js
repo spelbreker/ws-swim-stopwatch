@@ -90,16 +90,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function disableControls(disable) {
-        eventSelect.disabled = disable;
-        heatSelect.disabled = disable;
-        incrementEventButton.disabled = disable;
-        incrementHeatButton.disabled = disable;
+        if (eventSelect) eventSelect.disabled = disable;
+        if (heatSelect) heatSelect.disabled = disable;
+        if (incrementEventButton) incrementEventButton.disabled = disable;
+        if (incrementHeatButton) incrementHeatButton.disabled = disable;
 
         const classAction = disable ? 'add' : 'remove';
-        eventSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        heatSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        incrementEventButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        incrementHeatButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        if (eventSelect) eventSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        if (heatSelect) heatSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        if (incrementEventButton) incrementEventButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        if (incrementHeatButton) incrementHeatButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
     }
 
     function incrementEvent() {
@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fillSelectOptions(selectElement, maxValue) {
+        if (!selectElement) return;
         for (let i = 1; i <= maxValue; i++) {
             const option = document.createElement('option');
             option.value = i;
@@ -129,9 +130,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function resetSplitTimes() {
-        for (let i = 0; i <= 9; i++) {
-            document.getElementById(`split-time-${i}`).textContent = '';
-        }
+        document.querySelectorAll('.split-time').forEach(function (element) {
+            element.textContent = '';
+        });
     }
 
     fillSelectOptions(eventSelect, 50);
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const time = stopwatchElement.textContent;
                 socket.send(JSON.stringify({ type: 'split', lane, time }));
                 highlightLaneButton(button);
-                document.getElementById(`split-time-${lane}`).textContent = time;
+                document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
             });
         });
     }
