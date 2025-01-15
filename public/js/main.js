@@ -40,9 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 2000);
             } else if (message.type === 'event-heat') {
                 eventHeatElement.textContent = `${message.event}-${message.heat}`;
-                document.querySelectorAll('.split-time').forEach(function (element) {
-                    element.textContent = '';
-                });
+                resetSplitTimes();
             }
         });
     }
@@ -131,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetSplitTimes() {
         document.querySelectorAll('.split-time').forEach(function (element) {
-            element.textContent = '';
+            element.textContent = '--:--:--';
         });
     }
 
