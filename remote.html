@@ -11,7 +11,7 @@
         <div class="logo text-2xl font-bold">AZC</div>
         <span id="stopwatch" class="text-2xl">00:00:00</span>
     </div>
-    <div class="bottom-bar bg-gray-800 text-white p-4 fixed bottom-0 w-full text-center">
+    <div class="bottom-bar bg-gray-800 text-white p-4 fixed bottom-0 w-full text-center z-10">
         <button id="start-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Start</button>
         <button id="reset-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Stop & reset</button>
     </div>
@@ -20,47 +20,47 @@
             <div class="w-full flex justify-center">
                 <div class="flex flex-row">
                     <div class="flex flex-col">
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="0">0</button>
-                            <span id="split-time-0" class="text-center"></span>
+                        <div class="flex flex-col"  id="lane-0">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="0">0</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="1">1</button>
-                            <span id="split-time-1" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-1">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="1">1</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="2">2</button>
-                            <span id="split-time-2" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-2">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="2">2</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="3">3</button>
-                            <span id="split-time-3" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-3">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="3">3</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="4">4</button>
-                            <span id="split-time-4" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-4">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="4">4</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
                     </div>
                     <div class="flex flex-col">
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="5">5</button>
-                            <span id="split-time-5" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-5">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="5">5</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="6">6</button>
-                            <span id="split-time-6" class="text-center"></span>
+                        <div class="flex flex-col"  id="lane-6">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="6">6</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="7">7</button>
-                            <span id="split-time-7" class="text-center"></span>
+                        <div class="flex flex-col"  id="lane-7">
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="7">7</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="8">8</button>
-                            <span id="split-time-8" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-8" >
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="8">8</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
-                        <div class="flex flex-col">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4" data-lane="9">9</button>
-                            <span id="split-time-9" class="text-center"></span>
+                        <div class="flex flex-col" id="lane-9" >
+                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="9">9</button>
+                            <span class="split-time text-center">--:--:--</span>
                         </div>
                     </div>
                 </div>
@@ -79,145 +79,6 @@
             </div>
         </div>
     </main>
-    <script>
-        let stopwatchInterval;
-        let startTime;
-        const stopwatchElement = document.getElementById('stopwatch');
-        const startButton = document.getElementById('start-button');
-        const resetButton = document.getElementById('reset-button');
-        const laneButtons = document.querySelectorAll('.lane-button');
-        const eventSelect = document.getElementById('event-select');
-        const heatSelect = document.getElementById('heat-select');
-        const incrementEventButton = document.getElementById('increment-event');
-        const incrementHeatButton = document.getElementById('increment-heat');
-        let socket;
-
-        function connectWebSocket() {
-            socket = new WebSocket(`ws://${window.location.hostname}:8080`);
-
-            socket.addEventListener('open', function () {
-                console.log('WebSocket connection established');
-            });
-
-            socket.addEventListener('close', function () {
-                console.log('WebSocket connection closed, attempting to reconnect...');
-                setTimeout(connectWebSocket, 1000);
-            });
-
-            socket.addEventListener('message', function (event) {
-                const message = JSON.parse(event.data);
-                if (message.type === 'start') {
-                    startStopwatch(false);
-                } else if (message.type === 'reset') {
-                    resetStopwatch(false);
-                }
-            });
-        }
-
-        connectWebSocket();
-
-        function startStopwatch(sendSocket = true ) {
-            startTime = Date.now();
-            stopwatchInterval = setInterval(updateStopwatch, 10);
-            resetSplitTimes();
-            if(sendSocket) {
-                socket.send(JSON.stringify({ type: 'start' }));
-            }
-            disableControls(true);
-        }
-
-        function resetStopwatch(sendSocket = true) {
-            clearInterval(stopwatchInterval);
-            stopwatchElement.textContent = '00:00:00';
-            if(sendSocket){
-                socket.send(JSON.stringify({ type: 'reset' }));
-            }
-            disableControls(false);
-        }
-
-        function updateStopwatch() {
-            const elapsedTime = Date.now() - startTime;
-            const minutes = Math.floor(elapsedTime / 60000);
-            const seconds = Math.floor((elapsedTime % 60000) / 1000);
-            const milliseconds = Math.floor((elapsedTime % 1000) / 10);
-            stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
-        }
-
-        function pad(number) {
-            return number.toString().padStart(2, '0');
-        }
-
-        function highlightLaneButton(button) {
-            button.classList.add('bg-green-500');
-            button.classList.remove('bg-blue-500');
-            setTimeout(() => {
-                button.classList.remove('bg-green-500');
-                button.classList.add('bg-blue-500');
-            }, 10000);
-        }
-
-        function disableControls(disable) {
-            eventSelect.disabled = disable;
-            heatSelect.disabled = disable;
-            incrementEventButton.disabled = disable;
-            incrementHeatButton.disabled = disable;
-
-            const classAction = disable ? 'add' : 'remove';
-            eventSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            heatSelect.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            incrementEventButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-            incrementHeatButton.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        }
-
-        function incrementEvent() {
-            let currentEvent = parseInt(eventSelect.value);
-            if (currentEvent < 50) {
-                eventSelect.value = currentEvent + 1;
-                heatSelect.value = 1;
-                socket.send(JSON.stringify({ type: 'event-heat', event: currentEvent + 1, heat: 1 }));
-            }
-        }
-
-        function incrementHeat() {
-            let currentHeat = parseInt(heatSelect.value);
-            if (currentHeat < 20) {
-                heatSelect.value = currentHeat + 1;
-                socket.send(JSON.stringify({ type: 'event-heat', event: parseInt(eventSelect.value), heat: currentHeat + 1 }));
-            }
-        }
-
-        function fillSelectOptions(selectElement, maxValue) {
-            for (let i = 1; i <= maxValue; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i;
-                selectElement.appendChild(option);
-            }
-        }
-
-        function resetSplitTimes() {
-            for (let i = 0; i <= 9; i++) {
-                document.getElementById(`split-time-${i}`).textContent = '';
-            }
-        }
-
-        fillSelectOptions(eventSelect, 50);
-        fillSelectOptions(heatSelect, 20);
-
-        startButton.addEventListener('click', startStopwatch);
-        resetButton.addEventListener('click', resetStopwatch);
-        incrementEventButton.addEventListener('click', incrementEvent);
-        incrementHeatButton.addEventListener('click', incrementHeat);
-
-        laneButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const lane = button.getAttribute('data-lane');
-                const time = stopwatchElement.textContent;
-                socket.send(JSON.stringify({ type: 'split', lane, time }));
-                highlightLaneButton(button);
-                document.getElementById(`split-time-${lane}`).textContent = time;
-            });
-        });
-    </script>
+    <script src="public/js/main.js"></script>
 </body>
 </html>

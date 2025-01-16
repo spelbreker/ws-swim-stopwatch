@@ -21,115 +21,48 @@
     <div class="lanes flex flex-col space-y-1 py-1 px-2 text-3xl">
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-0">
             <div>Lane 0:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-1">
             <div>Lane 1:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-2">
             <div>Lane 2:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-3">
             <div>Lane 3:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-4">
             <div>Lane 4:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-5">
             <div>Lane 5:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-6">
             <div>Lane 6:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-7">
             <div>Lane 7:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between border-b border-gray-300 " id="lane-8">
             <div>Lane 8:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
         <div class="lane flex justify-between" id="lane-9">
             <div>Lane 9:</div>
-            <span class="split-time"></span>
+            <span class="split-time">--:--:--</span>
         </div>
     </div>
     <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
         <div class="bottom-bar-text text-white text-md font-bold">Dit zijn geen officele tijden</div>
     </div>
-    <script>
-        let stopwatchInterval;
-        let startTime;
-        const stopwatchElement = document.getElementById('stopwatch');
-        const eventHeatElement = document.getElementById('event-heat');
-
-        function startStopwatch() {
-            startTime = Date.now();
-            stopwatchInterval = setInterval(updateStopwatch, 10);
-            // reset split times
-            document.querySelectorAll('.split-time').forEach(function (element) {
-                element.textContent = '';
-            });
-        }
-
-        function resetStopwatch() {
-            clearInterval(stopwatchInterval);
-            stopwatchElement.textContent = '00:00:00';
-        }
-
-        function updateStopwatch() {
-            const elapsedTime = Date.now() - startTime;
-            const minutes = Math.floor(elapsedTime / 60000);
-            const seconds = Math.floor((elapsedTime % 60000) / 1000);
-            const milliseconds = Math.floor((elapsedTime % 1000) / 10);
-            stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
-        }
-
-        function pad(number) {
-            return number.toString().padStart(2, '0');
-        }
-
-        function connectWebSocket() {
-            const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
-
-            socket.addEventListener('open', function () {
-                console.log('WebSocket connection established');
-            });
-
-            socket.addEventListener('close', function () {
-                console.log('WebSocket connection closed, attempting to reconnect...');
-                setTimeout(connectWebSocket, 1000);
-            });
-
-            socket.addEventListener('message', function (event) {
-                const message = JSON.parse(event.data);
-                if (message.type === 'start') {
-                    startStopwatch();
-                } else if (message.type === 'reset') {
-                    resetStopwatch();
-                } else if (message.type === 'split') {
-                    const laneElement = document.getElementById(`lane-${message.lane}`);
-                    laneElement.querySelector('.split-time').textContent = message.time;
-                    laneElement.classList.add('highlight');
-                    setTimeout(() => {
-                        laneElement.classList.remove('highlight');
-                    }, 2000);
-                } else if (message.type === 'event-heat') {
-                    eventHeatElement.textContent = `${message.event}-${message.heat}`;
-                    document.querySelectorAll('.split-time').forEach(function (element) {
-                        element.textContent = '';
-                    });
-                }
-            });
-        }
-
-        connectWebSocket();
-    </script>
+    <script src="public/js/main.js"></script>
 </body>
 </html>
