@@ -9,8 +9,9 @@
     "watch:css": "tailwindcss build src/styles.css -o public/styles.css --watch"
   },
   "dependencies": {
-    "ws": "^8.18",
-    "express": "^4.21"
+    "express": "^4.21",
+    "js-lenex": "^0.0.7",
+    "ws": "^8.18"
   },
   "devDependencies": {
     "tailwindcss": "^3.4"
