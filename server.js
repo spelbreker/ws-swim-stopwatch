@@ -74,6 +74,48 @@ app.post('/upload', upload.single('lenexFile'), (req, res) => {
     });
 });
 
+app.get('/competition/events', (req, res) => {
+    //check if json exist
+    if (!fs.existsSync('./public/competition.json')) {
+        res.status(500).send('Missing competition.json');
+        return;
+    }
+
+    let competitionData = fs.readFileSync('./public/competition.json');
+    competitionData = JSON.parse(competitionData);
+
+    let events = competitionData.meets[0].sessions[0].events.map((event) => {
+        return {
+            number: event.number,
+            order: event.order,
+            eventid: event.event,
+            heats: event.heats.map((heat) => {
+                return {
+                    heatid: heat.heatid,
+                    number: heat.number,
+                    order: heat.order,
+                    daytime: heat?.daytime,
+                };
+            })
+        };
+    });
+
+    //order by event number
+    events = events.sort((a, b) => {
+        return a.number - b.number;
+    });
+
+    //order by heat number
+    events.forEach((event) => {
+        event.heats = event.heats.sort((a, b) => {
+            return a.number - b.number;
+        });
+    });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(events));
+});
+
 app.get('/competition', (req, res) => {
     //get get param event number and heat number cast to int
     let eventNumber = parseInt(req.query.event);
