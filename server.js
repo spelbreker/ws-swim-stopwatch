@@ -1,8 +1,21 @@
 const http = require('http');
 const fs = require('fs');
 const WebSocket = require('ws');
+const express = require('express');
+const app = express();
+const server = http.createServer(app);
 
-const server = http.createServer((req, res) => {
+app.use(express.static('public'));
+
+const { upload, handleFileUpload, getCompetitionEvents, getCompetition } = require('./competition');
+
+app.post('/upload', upload.single('lenexFile'), handleFileUpload);
+
+app.get('/competition/events', getCompetitionEvents);
+
+app.get('/competition', getCompetition);
+
+app.get('*', (req, res) => {
     let filePath = '.' + req.url;
     if (filePath === './') {
         filePath = './index.html';
@@ -10,8 +23,7 @@ const server = http.createServer((req, res) => {
 
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            res.writeHead(404);
-            res.end(JSON.stringify(err));
+            res.status(404).send(JSON.stringify(err));
             return;
         }
         res.writeHead(200);
