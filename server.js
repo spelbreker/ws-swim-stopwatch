@@ -11,17 +11,8 @@ app.use(express.static('public'));
 
 const { parseLenex } = require('js-lenex/build/src/lenex-parse.js');
 
-
 app.post('/upload', upload.single('lenexFile'), (req, res) => {
     const filePath = req.file.path;
-
-    // readFile("./examples/example-entries.lxf").then((data) => {
-    //     Lenex.LoadLenexFile(f).then((len) => {
-    //         //save to json file
-    //         fs.writeFileSync('./public/competition.json', JSON.stringify(len.rawLenexData, null, 2));
-    //     });
-    // });
-
     fs.readFile(filePath, async (err, data) => {
         if (err) {
             res.status(500).send('Error reading file');
@@ -29,10 +20,56 @@ app.post('/upload', upload.single('lenexFile'), (req, res) => {
         }
 
         let result = await parseLenex(data);
-        console.log('results',this.raw);
-        
         //write result to file
         fs.writeFileSync('./public/competition.json', JSON.stringify(result));
+
+
+        //extract events first session
+        //data that i need swimstyle heats
+        let events = result.meets[0].sessions[0].events;
+
+        let eventsMap = events.map((event) => {
+            return {
+                eventid: event.eventid,
+                gender: event.gender,
+                swimstyle: event.swimstyle,
+                heats: event.heats.map((heat) => {
+                    return {
+                        heatid: heat.heatid,
+                        number: heat.number,
+                        order: heat.order,
+                        daytime: heat?.daytime,
+                    };
+                }),
+            };
+        });
+
+        fs.writeFileSync('./public/events.json', JSON.stringify(eventsMap));
+
+        let athleatesMap = result.meets[0].clubs.map((club) => {
+            return club.athletes.map((athlete) => {
+                return {
+                    athleteid: athlete.athleteid,
+                    firstname: athlete.firstname,
+                    lastname: athlete.lastname,
+                    birthdate: athlete.birthdate,
+                    club: club.name,
+                    entries: athlete.entries.map((entry) => {
+                        return {
+                            eventid: entry.eventid,
+                            heatid: entry.heatid,
+                            entrytime: entry.entrytime,
+                            lane: entry.lane,
+                        };
+                    }),
+                };
+            });
+        });
+
+        console.log('athleatesMap', athleatesMap);
+
+        fs.writeFileSync('./public/athleats.json', JSON.stringify(athleatesMap));
+
 
         //add json header to response
         res.setHeader('Content-Type', 'application/json');
