@@ -3,38 +3,40 @@ const fs = require('fs');
 const WebSocket = require('ws');
 const express = require('express');
 const multer = require('multer');
-const lenex = require('js-lenex');
-
 const app = express();
 const server = http.createServer(app);
 const upload = multer({ dest: 'uploads/' });
 
 app.use(express.static('public'));
 
+const { parseLenex } = require('js-lenex/build/src/lenex-parse.js');
+
+
 app.post('/upload', upload.single('lenexFile'), (req, res) => {
     const filePath = req.file.path;
 
-    fs.readFile(filePath, (err, data) => {
+    // readFile("./examples/example-entries.lxf").then((data) => {
+    //     Lenex.LoadLenexFile(f).then((len) => {
+    //         //save to json file
+    //         fs.writeFileSync('./public/competition.json', JSON.stringify(len.rawLenexData, null, 2));
+    //     });
+    // });
+
+    fs.readFile(filePath, async (err, data) => {
         if (err) {
             res.status(500).send('Error reading file');
             return;
         }
 
-        lenex.parse(data, (err, result) => {
-            if (err) {
-                res.status(500).send('Error parsing lenex file');
-                return;
-            }
+        let result = await parseLenex(data);
+        console.log('results',this.raw);
+        
+        //write result to file
+        fs.writeFileSync('./public/competition.json', JSON.stringify(result));
 
-            fs.writeFile('competition.json', JSON.stringify(result, null, 2), (err) => {
-                if (err) {
-                    res.status(500).send('Error saving competition data');
-                    return;
-                }
-
-                res.send('File uploaded and data saved successfully');
-            });
-        });
+        //add json header to response
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(result));
     });
 });
 

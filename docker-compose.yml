@@ -1,5 +1,9 @@
 services:
   node-server:
-    build: .
+    volumes:
+      - .:/app
+    image: node:22
+    working_dir: /app
+    command: node server.js
     ports:
       - "8080:8080"
