@@ -6,10 +6,9 @@ const multer = require('multer');
 const app = express();
 const server = http.createServer(app);
 const upload = multer({ dest: 'uploads/' });
+const { parseLenex } = require('js-lenex/build/src/lenex-parse.js');
 
 app.use(express.static('public'));
-
-const { parseLenex } = require('js-lenex/build/src/lenex-parse.js');
 
 app.post('/upload', upload.single('lenexFile'), (req, res) => {
     const filePath = req.file.path;
