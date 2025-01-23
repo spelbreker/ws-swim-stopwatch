@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 2000);
             } else if (message.type === 'event-heat') {
                 eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                fetchCompetitionData(message.event, message.heat);
                 resetSplitTimes();
             }
         });
