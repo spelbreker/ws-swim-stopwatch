@@ -155,4 +155,38 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    if (isScreenPage) {
+        fetchCompetitionData(1, 1); // Initial fetch for event 1 and heat 1
+
+        eventSelect.addEventListener('change', () => {
+            fetchCompetitionData(eventSelect.value, heatSelect.value);
+        });
+
+        heatSelect.addEventListener('change', () => {
+            fetchCompetitionData(eventSelect.value, heatSelect.value);
+        });
+    }
+
+    function fetchCompetitionData(event, heat) {
+        fetch(`/competition?event=${event}&heat=${heat}`)
+            .then(response => response.json())
+            .then(data => {
+                updateLaneInformation(data.entries);
+            })
+            .catch(error => {
+                console.error('Error fetching competition data:', error);
+            });
+    }
+
+    function updateLaneInformation(entries) {
+        entries.forEach(entry => {
+            entry.forEach(athlete => {
+                const laneElement = document.getElementById(`lane-${athlete.lane}`);
+                laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
+                laneElement.querySelector('.club').textContent = athlete.club;
+                laneElement.querySelector('.split-time').textContent = '--:--:--';
+            });
+        });
+    }
 });
