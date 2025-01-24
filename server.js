@@ -7,13 +7,14 @@ const server = http.createServer(app);
 
 app.use(express.static('public'));
 
-const { upload, handleFileUpload, getCompetitionEvents, getCompetition } = require('./competition');
+const { upload, handleFileUpload, getCompetitionEvents, getCompetition,getCompetitionSummary, deleteCompetition } = require('./competition');
 
 app.post('/upload', upload.single('lenexFile'), handleFileUpload);
 
+app.get('/competition', getCompetitionSummary);
 app.get('/competition/events', getCompetitionEvents);
-
-app.get('/competition', getCompetition);
+app.get('/competition/events-list', getCompetition);
+app.get('/competition/delete', deleteCompetition);
 
 app.get('*', (req, res) => {
     let filePath = '.' + req.url;
