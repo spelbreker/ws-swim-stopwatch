@@ -130,6 +130,12 @@ const getCompetition = (req, res) => {
     competitionData = JSON.parse(competitionData);
 
     let event = competitionData.meets[0].sessions[0].events.find((event) => event.number === eventNumber);
+
+    if (!event) {
+        res.status(404).send('Event not found');
+        return;
+    }
+
     let heat = event.heats.find((heat) => heat.number === heatNumber);
 
     if(!event || !heat) {

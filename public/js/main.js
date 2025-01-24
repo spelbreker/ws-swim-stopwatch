@@ -75,6 +75,10 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
     }
 
+    function sendProgramAndHeat(event, heat) {
+        socket.send(JSON.stringify({ type: 'event-heat', event: event, heat: heat }));
+    }
+
     function pad(number) {
         return number.toString().padStart(2, '0');
     }
@@ -106,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentEvent < 50) {
             eventSelect.value = currentEvent + 1;
             heatSelect.value = 1;
-            socket.send(JSON.stringify({ type: 'event-heat', event: currentEvent + 1, heat: 1 }));
+            sendProgramAndHeat(currentEvent + 1, 1);
         }
     }
 
@@ -114,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentHeat = parseInt(heatSelect.value);
         if (currentHeat < 20) {
             heatSelect.value = currentHeat + 1;
-            socket.send(JSON.stringify({ type: 'event-heat', event: parseInt(eventSelect.value), heat: currentHeat + 1 }));
+            sendProgramAndHeat(parseInt(eventSelect.value), currentHeat + 1);
         }
     }
 
@@ -141,10 +145,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const startButton = document.getElementById('start-button');
         const resetButton = document.getElementById('reset-button');
 
+
         startButton.addEventListener('click', startStopwatch);
         resetButton.addEventListener('click', resetStopwatch);
         incrementEventButton.addEventListener('click', incrementEvent);
         incrementHeatButton.addEventListener('click', incrementHeat);
+        eventSelect.addEventListener('change', () => {
+            heatSelect.value = 1;
+            sendProgramAndHeat(eventSelect.value, 1);
+        });
+        heatSelect.addEventListener('change', () => {
+            sendProgramAndHeat(eventSelect.value, heatSelect.value);
+        });
 
         laneButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -186,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const laneElement = document.getElementById(`lane-${athlete.lane}`);
                 laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
                 laneElement.querySelector('.club').textContent = athlete.club;
-                laneElement.querySelector('.split-time').textContent = '--:--:--';
+                laneElement.querySelector('.split-time').textContent = '---:---:---';
             });
         });
     }
