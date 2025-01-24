@@ -10,6 +10,15 @@
             background-color: #90ee90; /* Light green */
             transition: background-color 2s ease;
         }
+        .top-bar {
+            height: 10vh;
+        }
+        tr {
+            height: calc(82vh / 10);
+        }
+        .bottom-bar {
+            height: 8vh;
+        }
     </style>
 </head>
 <body>
@@ -18,68 +27,70 @@
         <span class="text-3xl" id="stopwatch">00:00:00</span>
         <span>Event: <span id="event-heat">1-1</span></span>
     </div>
-    <div class="lanes flex flex-col space-y-1 py-1 px-2 text-3xl">
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-0">
-            <div>0</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-1">
-            <div>1</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-2">
-            <div>2</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-3">
-            <div>3</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-4">
-            <div>4</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-5">
-            <div>5</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-6">
-            <div>6</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-7">
-            <div>7</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between border-b border-gray-300 " id="lane-8">
-            <div>8</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-        <div class="lane flex justify-between" id="lane-9">
-            <div>9</div>
-            <div class="athlete"></div>
-            <div class="club"></div>
-            <span class="split-time">--:--:--</span>
-        </div>
-    </div>
+    <table class="w-full text-2xl">
+        <tbody>
+            <tr class="lane border-b border-gray-300" id="lane-0">
+                <th>0</th>
+                <td class="athlete w-2/5"></td>
+                <td class="club w-2/5"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-1">
+                <th>1</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-2">
+                <th>2</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-3">
+                <th>3</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-4">
+                <th>4</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-5">
+                <th>5</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-6">
+                <th>6</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-7">
+                <th>7</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-8">
+                <th>8</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+            <tr class="lane border-b border-gray-300" id="lane-9">
+                <th>9</th>
+                <td class="athlete"></td>
+                <td class="club"></td>
+                <td class="split-time">--:--:--</td>
+            </tr>
+        </tbody>
+    </table>
     <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
         <div class="bottom-bar-text text-white text-md font-bold">Dit zijn geen officele tijden</div>
     </div>
