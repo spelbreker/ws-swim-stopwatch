@@ -19,11 +19,26 @@
         <div class="logofont-bold">AZC swimming</div>
         <span class="text-3xl" id="current-time">00:00:00</span>
     </div>
-    <div class="buttons flex justify-center mt-4">
-        <button id="add-row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Add Row</button>
-        <button id="delete-row" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete Row</button>
-    </div>
-    <div class="inputs flex flex-col items-center mt-4">
+
+    <div class="overflow-x-auto container mx-auto">
+    <table class="w-full text-2xl p-4 my-4" id="training-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Repetitions</th>
+                <th>Interval Timer</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="training-table-body">
+        </tbody>
+    </table>
+</div>
+
+    <div class="container mx-auto" id="training-input">
+
+
+    <div class="inputs flex md:flex-row flex-col items-center mt-4">
         <div class="input-group flex flex-col items-center mb-4">
             <label for="title" class="text-lg font-bold mb-2">Title</label>
             <input type="text" id="title" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title">
@@ -39,35 +54,21 @@
                 <select id="seconds" class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
             </div>
         </div>
+        <div class="buttons flex justify-center mt-4">
+            <button id="add-row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Add Row</button>
+        </div>
     </div>
-    <table class="w-full text-2xl mt-4">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Repetitions</th>
-                <th>Interval Timer</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="training-table">
-            <tr>
-                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
-                <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
-                <td>
-                    <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
-                    <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
-                </td>
-                <td>
-                    <button class="start-pause bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded m-2">Start/Pause</button>
-                    <button class="delete bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+
+</div>
+
     <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
         <div class="bottom-bar-text text-white text-md font-bold">Training Session</div>
     </div>
     <script>
+        let interval = [
+ //           {title:null, repetitions:null, currentRepetion:null, currentMinutes:null, currentSeconds:null minutes:null, seconds:null}
+        ];
+
         function updateTime() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -75,56 +76,100 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
         }
-        setInterval(updateTime, 1000);
+        setInterval(updateTime, 750);
         updateTime();
 
-        function fillSelectOptions(selectElement, maxValue, step = 1) {
-            for (let i = 0; i <= maxValue; i += step) {
+        function addInterval(){
+            const title = document.getElementById('title').value;
+            const repetitions = parseInt(document.getElementById('repetitions').value);
+            const minutes = parseInt(document.getElementById('minutes').value);
+            const seconds = parseInt(document.getElementById('seconds').value);
+
+            interval.push({title, repetitions: repetitions, currentRepetion:0, currentMinutes:minutes, currentSeconds:seconds, minutes:minutes, seconds:seconds});
+            renderTable();
+        }
+
+        function renderTable(){
+            console.log(interval);
+            const tableBody = document.getElementById('training-table-body');
+            tableBody.innerHTML = '';
+            interval.forEach((int, index) => {
+                const row = document.createElement('tr');
+                row.classList.add('border-b', 'border-gray-300');
+                row.id = `interval-${index}`;
+                row.innerHTML = `
+                    <td>${int.title}</td>
+                    <td>${int.currentRepetion}/${int.repetitions}</td>
+                    <td>${String(int.currentMinutes).padStart(2, '0')}:${String(int.currentSeconds).padStart(2, '0')}</td>
+                    <td>
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" onclick="startInterval(${index})">Start</button>
+                        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2" onclick="deleteInterval(${index})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function startInterval(index){
+            const int = interval[index];
+            if (int.currentRepetion >= int.repetitions) {
+                int.currentRepetion = 0;
+                int.currentMinutes = int.minutes;
+                int.currentSeconds = int.seconds;
+            }
+            const intervalTimer = setInterval(() => {
+                if(int.currentRepetion >= int.repetitions){
+                    clearInterval(intervalTimer);
+                    return;
+                }
+                if(int.currentSeconds === 0){
+                    if(int.currentMinutes === 0){
+                        int.currentRepetion++;
+                        int.currentMinutes = int.minutes;
+                        int.currentSeconds = int.seconds;
+                    } else {
+                        int.currentMinutes--;
+                        int.currentSeconds = 59;
+                    }
+                } else {
+                    int.currentSeconds--;
+                }
+                renderTable();
+            }, 1000); //@TODO for testing purposes set to 500ms
+        }
+
+        function deleteInterval(index){
+            interval.splice(index, 1);
+            renderTable();
+        }
+
+        function renderSelects(){
+            const minutesSelect = document.getElementById('minutes');
+            const secondsSelect = document.getElementById('seconds');
+
+            for(let i = 0; i <= 30; i++){
                 const option = document.createElement('option');
                 option.value = i;
-                option.textContent = i;
-                selectElement.appendChild(option);
+                option.textContent = String(i).padStart(2, '0');
+                minutesSelect.appendChild(option);
+            }
+
+            for(let i = 0; i <= 60; i+=5){
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = String(i).padStart(2, '0');
+                secondsSelect.appendChild(option);
             }
         }
 
-        document.querySelectorAll('.minutes-select').forEach(select => fillSelectOptions(select, 30));
-        document.querySelectorAll('.seconds-select').forEach(select => fillSelectOptions(select, 55, 5));
 
-        document.getElementById('add-row').addEventListener('click', () => {
-            const table = document.getElementById('training-table');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
-                <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
-                <td>
-                    <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
-                    <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
-                </td>
-                <td>
-                    <button class="start-pause bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded m-2">Start/Pause</button>
-                    <button class="delete bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete</button>
-                </td>
-            `;
-            table.appendChild(newRow);
-            newRow.querySelectorAll('.minutes-select').forEach(select => fillSelectOptions(select, 30));
-            newRow.querySelectorAll('.seconds-select').forEach(select => fillSelectOptions(select, 55, 5));
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSelects();
+            renderTable();
+            document.getElementById('add-row').addEventListener('click', addInterval);
         });
 
-        document.getElementById('delete-row').addEventListener('click', () => {
-            const table = document.getElementById('training-table');
-            if (table.rows.length > 1) {
-                table.deleteRow(-1);
-            }
-        });
 
-        document.getElementById('training-table').addEventListener('click', (event) => {
-            if (event.target.classList.contains('delete')) {
-                const row = event.target.closest('tr');
-                row.remove();
-            } else if (event.target.classList.contains('start-pause')) {
-                // Implement start/pause functionality here
-            }
-        });
     </script>
 </body>
 </html>
