@@ -46,6 +46,7 @@
                 <th>Title</th>
                 <th>Repetitions</th>
                 <th>Interval Timer</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="training-table">
@@ -55,6 +56,10 @@
                 <td>
                     <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
                     <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
+                </td>
+                <td>
+                    <button class="start-pause bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded m-2">Start/Pause</button>
+                    <button class="delete bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete</button>
                 </td>
             </tr>
         </tbody>
@@ -95,6 +100,10 @@
                     <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
                     <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
                 </td>
+                <td>
+                    <button class="start-pause bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded m-2">Start/Pause</button>
+                    <button class="delete bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete</button>
+                </td>
             `;
             table.appendChild(newRow);
             newRow.querySelectorAll('.minutes-select').forEach(select => fillSelectOptions(select, 30));
@@ -105,6 +114,15 @@
             const table = document.getElementById('training-table');
             if (table.rows.length > 1) {
                 table.deleteRow(-1);
+            }
+        });
+
+        document.getElementById('training-table').addEventListener('click', (event) => {
+            if (event.target.classList.contains('delete')) {
+                const row = event.target.closest('tr');
+                row.remove();
+            } else if (event.target.classList.contains('start-pause')) {
+                // Implement start/pause functionality here
             }
         });
     </script>
