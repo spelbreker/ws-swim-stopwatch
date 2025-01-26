@@ -11,6 +11,33 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
         }
 
         let result = await parseLenex(data);
+
+        if (!result.meets?.length) {
+            callback('No meets found', null);
+            return;
+        }
+
+        if (!result.meets[0]?.sessions?.length) {
+            callback('No sessions found', null);
+            return;
+        }
+
+        if (!result.meets[0]?.sessions[0]?.events?.length) {
+            callback('No events found', null);
+            return;
+        }
+        //check heats
+        if (!result.meets[0]?.sessions[0]?.events[0]?.heats?.length) {
+            callback('No heats found', null);
+            return;
+        }
+
+        if (!result.meets[0]?.clubs?.length) {
+            callback('No clubs found', null);
+            return;
+        }
+
+        //write the competition.json file
         fs.writeFileSync('./public/competition.json', JSON.stringify(result));
 
         let events = result.meets[0].sessions[0].events;
@@ -65,12 +92,36 @@ const handleFileUpload = (req, res) => {
     const filePath = req.file.path;
     readAndProcessCompetitionJSON(filePath, (err, result) => {
         if (err) {
-            res.status(500).send('Error reading file');
+            res.status(500).send('Error reading file - ' + err);
             return;
         }
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(result));
+        //delete uploaded file
+        fs.unlinkSync(filePath);
+        //redircet to the upload.html page
+        res.redirect('/competion/upload.html');
     });
+};
+
+const getCompetitionSummary = (req, res) => {
+
+    if (!fs.existsSync('./public/competition.json')) {
+        res.status(500).send('Missing competition.json');
+        return;
+    }
+
+    let competitionData = fs.readFileSync('./public/competition.json');
+    competitionData = JSON.parse(competitionData);
+
+    let summary = {
+        meet: competitionData.meets[0].name,
+        first_session_date: competitionData.meets[0].sessions[0].date,
+        session_count: competitionData.meets[0].sessions.length,
+        event_count: competitionData.meets[0].sessions.map((session) => session.events.length).reduce((a, b) => a + b, 0),
+        club_count: competitionData.meets[0].clubs.length,
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(summary));
 };
 
 const getCompetitionEvents = (req, res) => {
@@ -115,6 +166,10 @@ const getCompetitionEvents = (req, res) => {
 const getCompetition = (req, res) => {
     let eventNumber = parseInt(req.query.event);
     let heatNumber = parseInt(req.query.heat);
+    let sessionIndex = 0;
+    if (req.query.session) {
+        sessionIndex = parseInt(req.query.session);
+    }
 
     if (!eventNumber || !heatNumber) {
         res.status(400).send('Missing eventNumber or heatNumber');
@@ -129,8 +184,19 @@ const getCompetition = (req, res) => {
     let competitionData = fs.readFileSync('./public/competition.json');
     competitionData = JSON.parse(competitionData);
 
-    let event = competitionData.meets[0].sessions[0].events.find((event) => event.number === eventNumber);
+    let event = competitionData.meets[0].sessions[sessionIndex].events.find((event) => event.number === eventNumber);
+
+    if (!event) {
+        res.status(404).send('Event not found');
+        return;
+    }
+
     let heat = event.heats.find((heat) => heat.number === heatNumber);
+
+    if (!event || !heat) {
+        res.status(404).send('Event or heat not found');
+        return;
+    }
 
     let competition = {
         event: {
@@ -180,10 +246,19 @@ const findAthletes = (competitionData, event, heat) => {
     return entries;
 };
 
+const deleteCompetition = (req, res) => {
+    fs.unlinkSync('./public/competition.json');
+    fs.unlinkSync('./public/events.json');
+    fs.unlinkSync('./public/athletes.json');
+    res.status(200).send('Competition deleted');
+};
+
 module.exports = {
     upload,
     handleFileUpload,
     getCompetitionEvents,
     getCompetition,
     findAthletes,
+    getCompetitionSummary,
+    deleteCompetition,
 };

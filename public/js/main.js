@@ -11,17 +11,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const heatSelect = document.getElementById('heat-select');
     const incrementEventButton = document.getElementById('increment-event');
     const incrementHeatButton = document.getElementById('increment-heat');
+    const connectionIndicator = document.getElementById('connection-indicator');
     let socket;
+    let connectionCheckInterval;
 
     function connectWebSocket() {
         socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
         socket.addEventListener('open', function () {
             console.log('WebSocket connection established');
+            connectionIndicator.classList.remove('bg-red-500');
+            connectionIndicator.classList.add('bg-green-500');
+            startConnectionCheck();
         });
 
         socket.addEventListener('close', function () {
             console.log('WebSocket connection closed, attempting to reconnect...');
+            if (navigator.onLine) {
+                connectionIndicator.classList.remove('bg-green-500');
+                connectionIndicator.classList.add('bg-red-500');
+            }
+            stopConnectionCheck();
             setTimeout(connectWebSocket, 1000);
         });
 
@@ -40,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 2000);
             } else if (message.type === 'event-heat') {
                 eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                fetchCompetitionData(message.event, message.heat);
                 resetSplitTimes();
             }
         });
@@ -74,6 +85,10 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchElement.textContent = `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
     }
 
+    function sendProgramAndHeat(event, heat) {
+        socket.send(JSON.stringify({ type: 'event-heat', event: event, heat: heat }));
+    }
+
     function pad(number) {
         return number.toString().padStart(2, '0');
     }
@@ -105,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentEvent < 50) {
             eventSelect.value = currentEvent + 1;
             heatSelect.value = 1;
-            socket.send(JSON.stringify({ type: 'event-heat', event: currentEvent + 1, heat: 1 }));
+            sendProgramAndHeat(currentEvent + 1, 1);
         }
     }
 
@@ -113,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentHeat = parseInt(heatSelect.value);
         if (currentHeat < 20) {
             heatSelect.value = currentHeat + 1;
-            socket.send(JSON.stringify({ type: 'event-heat', event: parseInt(eventSelect.value), heat: currentHeat + 1 }));
+            sendProgramAndHeat(parseInt(eventSelect.value), currentHeat + 1);
         }
     }
 
@@ -140,10 +155,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const startButton = document.getElementById('start-button');
         const resetButton = document.getElementById('reset-button');
 
+
         startButton.addEventListener('click', startStopwatch);
         resetButton.addEventListener('click', resetStopwatch);
         incrementEventButton.addEventListener('click', incrementEvent);
         incrementHeatButton.addEventListener('click', incrementHeat);
+        eventSelect.addEventListener('change', () => {
+            heatSelect.value = 1;
+            sendProgramAndHeat(eventSelect.value, 1);
+        });
+        heatSelect.addEventListener('change', () => {
+            sendProgramAndHeat(eventSelect.value, heatSelect.value);
+        });
 
         laneButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -154,5 +177,54 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
             });
         });
+    }
+
+    if (isScreenPage) {
+        fetchCompetitionData(1, 1); // Initial fetch for event 1 and heat 1
+
+        eventSelect.addEventListener('change', () => {
+            fetchCompetitionData(eventSelect.value, heatSelect.value);
+        });
+
+        heatSelect.addEventListener('change', () => {
+            fetchCompetitionData(eventSelect.value, heatSelect.value);
+        });
+    }
+
+    function fetchCompetitionData(event, heat) {
+        fetch(`/competition/events-list?event=${event}&heat=${heat}`)
+            .then(response => response.json())
+            .then(data => {
+                updateLaneInformation(data.entries);
+            })
+            .catch(error => {
+                console.error('Error fetching competition data:', error);
+            });
+    }
+
+    function updateLaneInformation(entries) {
+        entries.forEach(entry => {
+            entry.forEach(athlete => {
+                const laneElement = document.getElementById(`lane-${athlete.lane}`);
+                laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
+                laneElement.querySelector('.club').textContent = athlete.club;
+                laneElement.querySelector('.split-time').textContent = '---:---:---';
+            });
+        });
+    }
+
+    function startConnectionCheck() {
+        connectionCheckInterval = setInterval(() => {
+            console.log('Checking connection status...');
+            if (socket.readyState !== WebSocket.OPEN || !navigator.onLine) {
+                connectionIndicator.classList.remove('bg-green-500');
+                connectionIndicator.classList.add('bg-red-500');
+                connectWebSocket();
+            }
+        }, 2000);
+    }
+
+    function stopConnectionCheck() {
+        clearInterval(connectionCheckInterval);
     }
 });
