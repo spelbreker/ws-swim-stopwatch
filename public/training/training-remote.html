@@ -76,7 +76,7 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
         }
-        setInterval(updateTime, 750);
+        setInterval(updateTime, 1000);
         updateTime();
 
         function addInterval(){
@@ -168,7 +168,6 @@
             renderTable();
             document.getElementById('add-row').addEventListener('click', addInterval);
         });
-
 
     </script>
 </body>
