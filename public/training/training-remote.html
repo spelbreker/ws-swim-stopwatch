@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Remote</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .top-bar {
+            height: 10vh;
+        }
+        .bottom-bar {
+            height: 8vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar flex justify-between items-center bg-blue-600 text-white py-1 px-2 text-2xl">
+        <div class="logofont-bold">AZC swimming</div>
+        <span class="text-3xl" id="current-time">00:00:00</span>
+    </div>
+
+    <div class="overflow-x-auto container mx-auto">
+    <table class="w-full p-4 my-4" id="training-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Repetitions</th>
+                <th>Interval Timer</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="training-table-body">
+        </tbody>
+    </table>
+</div>
+
+    <div class="container mx-auto" id="training-input">
+
+
+    <div class="inputs flex md:flex-row flex-col items-center mt-4">
+        <div class="input-group flex flex-col items-center mb-4">
+            <label for="title" class="text-lg font-bold mb-2">Naam</label>
+            <input type="text" id="title" class="border border-gray-300 rounded py-2 px-4" maxlength="15" placeholder="bijvoorbeeld: 100 vrij">
+        </div>
+        <div class="input-group flex flex-col items-center mb-4">
+            <label for="repetitions" class="text-lg font-bold mb-2">Herhalingen</label>
+            <input type="number" id="repetitions" class="border border-gray-300 rounded py-2 px-4" min="1" max="100" placeholder="0">
+        </div>
+        <div class="input-group flex flex-col items-center mb-4">
+            <label for="interval-timer" class="text-lg font-bold mb-2">Interval Timer</label>
+            <div class="flex">
+                <select id="minutes" class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
+                <select id="seconds" class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
+            </div>
+        </div>
+        <div class="buttons flex justify-center mt-4">
+            <button id="add-row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Add Row</button>
+        </div>
+    </div>
+
+</div>
+
+    <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
+        <div class="bottom-bar-text text-white text-md font-bold">Training Session</div>
+    </div>
+    <script src="/public/js/training.js"></script>
+</body>
+</html>
