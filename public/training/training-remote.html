@@ -35,7 +35,10 @@
             <tr>
                 <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
                 <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
-                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="00:00"></td>
+                <td>
+                    <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
+                    <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -53,15 +56,32 @@
         setInterval(updateTime, 1000);
         updateTime();
 
+        function fillSelectOptions(selectElement, maxValue, step = 1) {
+            for (let i = 0; i <= maxValue; i += step) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                selectElement.appendChild(option);
+            }
+        }
+
+        document.querySelectorAll('.minutes-select').forEach(select => fillSelectOptions(select, 30));
+        document.querySelectorAll('.seconds-select').forEach(select => fillSelectOptions(select, 55, 5));
+
         document.getElementById('add-row').addEventListener('click', () => {
             const table = document.getElementById('training-table');
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
                 <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
-                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="00:00"></td>
+                <td>
+                    <select class="border border-gray-300 rounded py-2 px-4 minutes-select"></select>
+                    <select class="border border-gray-300 rounded py-2 px-4 seconds-select"></select>
+                </td>
             `;
             table.appendChild(newRow);
+            newRow.querySelectorAll('.minutes-select').forEach(select => fillSelectOptions(select, 30));
+            newRow.querySelectorAll('.seconds-select').forEach(select => fillSelectOptions(select, 55, 5));
         });
 
         document.getElementById('delete-row').addEventListener('click', () => {
