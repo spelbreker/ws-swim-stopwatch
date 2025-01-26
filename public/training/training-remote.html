@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Remote</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .top-bar {
+            height: 10vh;
+        }
+        .bottom-bar {
+            height: 8vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar flex justify-between items-center bg-blue-600 text-white py-1 px-2 text-2xl">
+        <div class="logofont-bold">AZC swimming</div>
+        <span class="text-3xl" id="current-time">00:00:00</span>
+    </div>
+    <div class="buttons flex justify-center mt-4">
+        <button id="add-row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Add Row</button>
+        <button id="delete-row" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Delete Row</button>
+    </div>
+    <table class="w-full text-2xl mt-4">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Repetitions</th>
+                <th>Interval Timer</th>
+            </tr>
+        </thead>
+        <tbody id="training-table">
+            <tr>
+                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
+                <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
+                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="00:00"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
+        <div class="bottom-bar-text text-white text-md font-bold">Training Session</div>
+    </div>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        document.getElementById('add-row').addEventListener('click', () => {
+            const table = document.getElementById('training-table');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="Short Title"></td>
+                <td><input type="number" class="border border-gray-300 rounded py-2 px-4" min="0" max="100" placeholder="0"></td>
+                <td><input type="text" class="border border-gray-300 rounded py-2 px-4" placeholder="00:00"></td>
+            `;
+            table.appendChild(newRow);
+        });
+
+        document.getElementById('delete-row').addEventListener('click', () => {
+            const table = document.getElementById('training-table');
+            if (table.rows.length > 1) {
+                table.deleteRow(-1);
+            }
+        });
+    </script>
+</body>
+</html>
