@@ -64,15 +64,22 @@
     </footer>
 
     <script>
-        fetch('/competition')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('competition').textContent = data.meet;
-                document.getElementById('first_session_date').textContent = data.first_session_date;
-                document.getElementById('club_count').textContent = data.club_count;
-                document.getElementById('session_count').textContent = data.session_count;
-                document.getElementById('event_count').textContent = data.event_count;
-            });
+        //when dom loaded fetch competition data
+        function fetchCompetitionSummary() {
+            fetch('/competition')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('competition').textContent = data.meet;
+                    document.getElementById('first_session_date').textContent = data.first_session_date;
+                    document.getElementById('club_count').textContent = data.club_count;
+                    document.getElementById('session_count').textContent = data.session_count;
+                    document.getElementById('event_count').textContent = data.event_count;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCompetitionSummary();
+        });
     </script>
 </body>
 

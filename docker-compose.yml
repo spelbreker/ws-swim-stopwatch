@@ -4,6 +4,6 @@ services:
       - .:/app
     image: node:22
     working_dir: /app
-    command: node server.js
+    command: npm start
     ports:
       - "8080:8080"

@@ -98,7 +98,7 @@ const handleFileUpload = (req, res) => {
         //delete uploaded file
         fs.unlinkSync(filePath);
         //redircet to the upload.html page
-        res.redirect('/upload.html');
+        res.redirect('/competion/upload.html');
     });
 };
 

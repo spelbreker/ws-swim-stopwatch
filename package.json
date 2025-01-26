@@ -4,7 +4,7 @@
   "description": "A webserver with websockets for stopwatch synchronization and split times",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/server.js",
     "build:css": "tailwindcss build src/styles.css -o public/styles.css",
     "watch:css": "tailwindcss build src/styles.css -o public/styles.css --watch"
   },

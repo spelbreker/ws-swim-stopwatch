@@ -11,17 +11,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const heatSelect = document.getElementById('heat-select');
     const incrementEventButton = document.getElementById('increment-event');
     const incrementHeatButton = document.getElementById('increment-heat');
+    const connectionIndicator = document.getElementById('connection-indicator');
     let socket;
+    let connectionCheckInterval;
 
     function connectWebSocket() {
         socket = new WebSocket(`ws://${window.location.hostname}:8080`);
 
         socket.addEventListener('open', function () {
             console.log('WebSocket connection established');
+            connectionIndicator.classList.remove('bg-red-500');
+            connectionIndicator.classList.add('bg-green-500');
+            startConnectionCheck();
         });
 
         socket.addEventListener('close', function () {
             console.log('WebSocket connection closed, attempting to reconnect...');
+            if (navigator.onLine) {
+                connectionIndicator.classList.remove('bg-green-500');
+                connectionIndicator.classList.add('bg-red-500');
+            }
+            stopConnectionCheck();
             setTimeout(connectWebSocket, 1000);
         });
 
@@ -182,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchCompetitionData(event, heat) {
-        fetch(`/competition?event=${event}&heat=${heat}`)
+        fetch(`/competition/events-list?event=${event}&heat=${heat}`)
             .then(response => response.json())
             .then(data => {
                 updateLaneInformation(data.entries);
@@ -201,5 +211,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 laneElement.querySelector('.split-time').textContent = '---:---:---';
             });
         });
+    }
+
+    function startConnectionCheck() {
+        connectionCheckInterval = setInterval(() => {
+            console.log('Checking connection status...');
+            if (socket.readyState !== WebSocket.OPEN || !navigator.onLine) {
+                connectionIndicator.classList.remove('bg-green-500');
+                connectionIndicator.classList.add('bg-red-500');
+                connectWebSocket();
+            }
+        }, 2000);
+    }
+
+    function stopConnectionCheck() {
+        clearInterval(connectionCheckInterval);
     }
 });
