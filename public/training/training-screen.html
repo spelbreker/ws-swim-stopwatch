@@ -7,23 +7,21 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         .top-bar {
-            height: 10vh;
+            height: 8vh;
         }
         tr {
-            height: calc(82vh / 10);
-        }
-        .bottom-bar {
-            height: 8vh;
+            height: calc(72vh / 6 );
         }
     </style>
 </head>
 <body>
     <div class="top-bar flex justify-between items-center bg-blue-600 text-white py-1 px-2 text-2xl">
         <div class="logofont-bold">AZC swimming</div>
-        <span class="text-4xl" id="current-time">00:00:00</span>
+        <span class="logofont-bold">Traing session</span>
+        
     </div>
     <table class="w-full text-5xl ">
-        <thead>
+        <thead class="hidden text-3xl">
             <tr>
                 <th>Naam</th>
                 <th>Herhalingen</th>
@@ -36,8 +34,10 @@
             </tr>
         </tbody>
     </table>
-    <div class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center">
-        <div class="bottom-bar-text text-white text-md font-bold">Training Session</div>
+    <div class="bottom-bar bg-blue-600 text-white px-2 fixed bottom-0 w-full text-center">
+        <div class="bottom-bar-text">
+            <span style="font-size: 18vh; line-height: 18vh;" class="py-1" id="current-time">00:00:00</span>
+        </div>
     </div>
     <script src="/public/js/training.js"></script>
     <script>

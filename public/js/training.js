@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function connectWebSocket() {
-        socket = new WebSocket(`ws://${window.location.hostname}:8080`);
+        socket = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}`);
 
         socket.addEventListener('open', function () {
             console.log('WebSocket connection established');
