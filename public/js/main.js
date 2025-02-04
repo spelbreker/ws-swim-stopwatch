@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let connectionCheckInterval;
 
     function connectWebSocket() {
-        socket = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}`);
+        socket = new WebSocket('ws://'+window.location.host);
 
         socket.addEventListener('open', function () {
             console.log('WebSocket connection established');
