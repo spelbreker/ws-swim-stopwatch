@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetStopwatch(sendSocket = true) {
         clearInterval(stopwatchInterval);
+        stopwatchInterval = null; // Allow toggle logic via Enter key
         stopwatchElement.textContent = '00:00:00';
         if (sendSocket) {
             socket.send(JSON.stringify({ type: 'reset' }));
@@ -176,6 +177,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 highlightLaneButton(button);
                 document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
             });
+        });
+        
+        // Add key support: pressing keys 0-9 triggers the respective lane button
+        document.addEventListener('keydown', function (e) {
+            if (e.key >= '0' && e.key <= '9') {
+                const button = document.querySelector(`.lane-button[data-lane="${e.key}"]`);
+                if (button) {
+                    button.click();
+                }
+            } else if (e.key === 'Enter') {
+                if (stopwatchInterval) {
+                    resetStopwatch();
+                } else {
+                    startStopwatch();
+                }
+            }
         });
     }
 

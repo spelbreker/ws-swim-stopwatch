@@ -4,6 +4,6 @@ services:
       - .:/app
     image: node:22
     working_dir: /app
-    command: npm start
+    command: /bin/sh -c "npm install && npm start"
     ports:
       - "8080:8080"
