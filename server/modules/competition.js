@@ -62,8 +62,11 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
 
         fs.writeFileSync('./public/events.json', JSON.stringify(eventsMap));
 
+        console.log(result.meets[0].clubs)
+
         let athletesMap = result.meets[0].clubs.map((club) => {
-            return club.athletes.map((athlete) => {
+            console.log('club map',);
+            return (club.athletes || []).map((athlete) => {
                 return {
                     athleteid: athlete.athleteid,
                     firstname: athlete.firstname,
@@ -216,26 +219,25 @@ const getCompetition = (req, res) => {
 const findAthletes = (competitionData, event, heat) => {
     let entries = competitionData.meets[0].clubs
         .map((club) => {
-            return club.athletes
-                .map((athlete) => {
-                    let filterResult = athlete.entries.filter((entry) => {
-                        return entry.heatid === heat && entry.eventid === event;
-                    });
+            return (club.athletes || []).map((athlete) => {
+                let filterResult = athlete.entries.filter((entry) => {
+                    return entry.heatid === heat && entry.eventid === event;
+                });
 
-                    if (filterResult.length === 0) {
-                        return null;
-                    }
+                if (filterResult.length === 0) {
+                    return null;
+                }
 
-                    return {
-                        athleteid: athlete.athleteid,
-                        firstname: athlete.firstname,
-                        lastname: athlete.lastname,
-                        club: club.name,
-                        lane: filterResult[0]?.lane,
-                        entrytime: filterResult[0]?.entrytime,
-                    };
-                })
-                .filter(Boolean);
+                return {
+                    athleteid: athlete.athleteid,
+                    firstname: athlete.firstname,
+                    lastname: athlete.lastname,
+                    club: club.name,
+                    lane: filterResult[0]?.lane,
+                    entrytime: filterResult[0]?.entrytime,
+                };
+            })
+            .filter(Boolean);
         })
         .filter((clubEntries) => clubEntries.length > 0);
 
