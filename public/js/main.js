@@ -16,12 +16,14 @@ document.addEventListener('DOMContentLoaded', function () {
     let connectionCheckInterval;
 
     function connectWebSocket() {
-        socket = new WebSocket('ws://'+window.location.host);
+        socket = new WebSocket('ws://' + window.location.host);
 
         socket.addEventListener('open', function () {
             console.log('WebSocket connection established');
-            connectionIndicator.classList.remove('bg-red-500');
-            connectionIndicator.classList.add('bg-green-500');
+            if (connectionIndicator) {
+                connectionIndicator.classList.remove('bg-red-500');
+                connectionIndicator.classList.add('bg-green-500');
+            }
             startConnectionCheck();
         });
 
@@ -49,8 +51,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     laneElement.classList.remove('highlight');
                 }, 2000);
             } else if (message.type === 'event-heat') {
-                eventHeatElement.textContent = `${message.event}-${message.heat}`;
                 fetchCompetitionData(message.event, message.heat);
+                if (isScreenPage) {
+                    eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                }
+                if (isRemotePage) {
+                    eventSelect.value = message.event;
+                    heatSelect.value = message.heat;
+                }
                 resetSplitTimes();
             }
         });
@@ -145,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetSplitTimes() {
         document.querySelectorAll('.split-time').forEach(function (element) {
-            element.textContent = '--:--:--';
+            element.textContent = '---:---:---';
         });
     }
 
@@ -178,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
             });
         });
-        
+
         // Add key support: pressing keys 0-9 triggers the respective lane button
         document.addEventListener('keydown', function (e) {
             if (e.key >= '0' && e.key <= '9') {
@@ -198,7 +206,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (isScreenPage) {
         fetchCompetitionData(1, 1); // Initial fetch for event 1 and heat 1
+    }
 
+    if (isRemotePage) {
         eventSelect.addEventListener('change', () => {
             fetchCompetitionData(eventSelect.value, heatSelect.value);
         });
@@ -208,6 +218,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function clearLaneInformation() {
+        for (let i = 0; i <= 9; i++) {
+            const laneElement = document.getElementById(`lane-${i}`);
+            laneElement.querySelector('.athlete').textContent = '';
+            laneElement.querySelector('.club').textContent = '';
+            laneElement.querySelector('.split-time').textContent = '---:---:---';
+        }
+    }
+
     function fetchCompetitionData(event, heat) {
         fetch(`/competition/events-list?event=${event}&heat=${heat}`)
             .then(response => response.json())
@@ -215,11 +234,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateLaneInformation(data.entries);
             })
             .catch(error => {
+                clearLaneInformation();
                 console.error('Error fetching competition data:', error);
             });
     }
 
     function updateLaneInformation(entries) {
+        clearLaneInformation()
         entries.forEach(entry => {
             entry.forEach(athlete => {
                 const laneElement = document.getElementById(`lane-${athlete.lane}`);
