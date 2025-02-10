@@ -14,8 +14,19 @@
 	"forwardPorts": [
 		8080
 	],
+	"portsAttributes": {
+		"8080": {
+			"label": "Application",
+			"onAutoForward": "openPreview"
+		}
+	},
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install",
+	"waitFor": "onCreateCommand",
+	"updateContentCommand": "npm install",
+	"postCreateCommand": "",
+	"postAttachCommand": {
+		"server": "npm start"
+	},
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
