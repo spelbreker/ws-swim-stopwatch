@@ -165,10 +165,18 @@ const getCompetitionEvents = (req, res) => {
 
 const formatSwimStyle = (swimstyle) => {
     const { distance, relaycount, stroke } = swimstyle;
+    const strokeTranslation = {
+        FREE: 'Vrije slag',
+        BACK: 'Rugslag',
+        MEDLEY: 'Wisselslag',
+        BREAST: 'Schoolslag',
+        FLY: 'Vlinderslag'
+    };
+    const translatedStroke = strokeTranslation[stroke] || stroke;
     if (relaycount > 1) {
-        return `${relaycount} x ${distance}M ${stroke}`;
+        return `${relaycount} x ${distance}M ${translatedStroke}`;
     }
-    return `${distance}M ${stroke}`;
+    return `${distance}M ${translatedStroke}`;
 };
 
 const getCompetition = (req, res) => {
