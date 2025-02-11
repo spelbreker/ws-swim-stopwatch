@@ -181,9 +181,12 @@ document.addEventListener('DOMContentLoaded', function () {
             button.addEventListener('click', () => {
                 const lane = button.getAttribute('data-lane');
                 const time = stopwatchElement.textContent;
-                socket.send(JSON.stringify({ type: 'split', lane, time }));
+                //send async to not block the UI
+                new Promise((resolve, reject) => {
+                    socket.send(JSON.stringify({ type: 'split', lane, time }));
+                    document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
+                });
                 highlightLaneButton(button);
-                document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
             });
         });
 

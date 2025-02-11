@@ -62,10 +62,7 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
 
         fs.writeFileSync('./public/events.json', JSON.stringify(eventsMap));
 
-        console.log(result.meets[0].clubs)
-
         let athletesMap = result.meets[0].clubs.map((club) => {
-            console.log('club map',);
             return (club.athletes || []).map((athlete) => {
                 return {
                     athleteid: athlete.athleteid,
@@ -207,6 +204,7 @@ const getCompetition = (req, res) => {
             order: event.order,
             eventid: event.event,
             swimstyle: event.swimstyle,
+            heatCount: event.heats.length,
         },
         heat: heat,
         entries: findAthletes(competitionData, event.eventid, heat.heatid),
