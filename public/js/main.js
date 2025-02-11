@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const incrementEventButton = document.getElementById('increment-event');
     const incrementHeatButton = document.getElementById('increment-heat');
     const connectionIndicator = document.getElementById('connection-indicator');
+    const swimStyleElement = document.getElementById('swim-style');
     let socket;
     let connectionCheckInterval;
 
@@ -235,6 +236,9 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 updateLaneInformation(data.entries);
+                if (swimStyleElement) {
+                    swimStyleElement.textContent = data.event.swimstyle;
+                }
             })
             .catch(error => {
                 clearLaneInformation();

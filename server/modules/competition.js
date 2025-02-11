@@ -163,6 +163,14 @@ const getCompetitionEvents = (req, res) => {
     res.send(JSON.stringify(events));
 };
 
+const formatSwimStyle = (swimstyle) => {
+    const { distance, relaycount, stroke } = swimstyle;
+    if (relaycount > 1) {
+        return `${relaycount} x ${distance}M ${stroke}`;
+    }
+    return `${distance}M ${stroke}`;
+};
+
 const getCompetition = (req, res) => {
     let eventNumber = parseInt(req.query.event);
     let heatNumber = parseInt(req.query.heat);
@@ -203,7 +211,7 @@ const getCompetition = (req, res) => {
             number: event.number,
             order: event.order,
             eventid: event.event,
-            swimstyle: event.swimstyle,
+            swimstyle: formatSwimStyle(event.swimstyle),
             heatCount: event.heats.length,
         },
         heat: heat,
