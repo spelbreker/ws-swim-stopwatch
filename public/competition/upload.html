@@ -18,7 +18,7 @@
         </nav>
     </header>
     <main class="p-4">
-        <h2 class="text-xl font-semibold">Upload a Lenex File</h2>
+        <h2 class="text-xl border-b border-gray-400 mt-4 mb-2">Upload a Lenex File</h2>
         <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" class="mt-4">
             <div class="mb-4">
                 <label for="lenexFile" class="block text-sm font-medium text-gray-700">Choose Lenex file</label>
@@ -27,6 +27,14 @@
             <button type="submit"
                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Upload</button>
         </form>
+
+        <h2 class="text-xl border-b border-gray-400 mt-4 mb-2">How to export from splashme</h2>
+        <ul class="list-disc ml-4">
+            <li>Import/export</li>
+            <li>inschrijven exporteren</li>
+            <li>Upload the lnx file above</li>
+        </ul>
+        <img src="/public//image/import-instucties.png" alt="import instructions" class="w-1/2">
 
         <h2 class="text-xl border-b border-gray-400 mt-4 mb-2">Loaded competition</h2>
         <table class="my-4">

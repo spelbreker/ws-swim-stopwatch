@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const heatSelect = document.getElementById('heat-select');
     const incrementEventButton = document.getElementById('increment-event');
     const incrementHeatButton = document.getElementById('increment-heat');
+    const clearScreenButton = document.getElementById('clear-screen');
     const connectionIndicator = document.getElementById('connection-indicator');
     const swimStyleElement = document.getElementById('swim-style');
     let socket;
@@ -61,6 +62,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     heatSelect.value = message.heat;
                 }
                 resetSplitTimes();
+            } else if (message.type === 'clear') {
+                clearLaneInformation();
             }
         });
     }
@@ -166,6 +169,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const resetButton = document.getElementById('reset-button');
 
 
+        clearScreenButton.addEventListener('click', () => {
+            socket.send(JSON.stringify({ type: 'clear' }));
+        });
         startButton.addEventListener('click', startStopwatch);
         resetButton.addEventListener('click', resetStopwatch);
         incrementEventButton.addEventListener('click', incrementEvent);
