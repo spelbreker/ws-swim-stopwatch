@@ -266,22 +266,22 @@ const extractRelay = (competitionData, event, heat) => {
     let relayEntries = competitionData.meets[0].clubs
         .map((club) => {
             return (club.relays || []).map((relay) => {
-                if (relay.heatid !== heat || relay.eventid !== event) {
+                if (relay.entries[0].heatid !== heat || relay.entries[0].eventid !== event) {
                     return null;
                 }
 
                 return {
                     relayid: relay.relayid,
                     club: club.name,
-                    athletes: relay.athletes.map((athlete) => {
+                    athletes: relay.entries[0].relaypositions.map((position) => {
                         return {
-                            athleteid: athlete.athleteid,
-                            firstname: athlete.firstname,
-                            lastname: athlete.lastname,
+                            athleteid: position.athleteid,
+                            firstname: position.firstname,
+                            lastname: position.lastname,
                         };
                     }),
-                    lane: relay.lane,
-                    entrytime: relay.entrytime,
+                    lane: relay.entries[0].lane,
+                    entrytime: relay.entries[0].entrytime,
                 };
             })
             .filter(Boolean);
