@@ -223,7 +223,7 @@ const getCompetition = (req, res) => {
             heatCount: event.heats.length,
         },
         heat: heat,
-        entries: findAthletes(competitionData, event.eventid, heat.heatid),
+        entries: findAthletes(competitionData, event.eventid, heat.heatid).concat(extractRelay(competitionData, event.eventid, heat.heatid)),
     };
 
     res.setHeader('Content-Type', 'application/json');
@@ -260,6 +260,39 @@ const findAthletes = (competitionData, event, heat) => {
     });
 
     return entries;
+};
+
+const extractRelay = (competitionData, event, heat) => {
+    let relayEntries = competitionData.meets[0].clubs
+        .map((club) => {
+            return (club.relays || []).map((relay) => {
+                if (relay.heatid !== heat || relay.eventid !== event) {
+                    return null;
+                }
+
+                return {
+                    relayid: relay.relayid,
+                    club: club.name,
+                    athletes: relay.athletes.map((athlete) => {
+                        return {
+                            athleteid: athlete.athleteid,
+                            firstname: athlete.firstname,
+                            lastname: athlete.lastname,
+                        };
+                    }),
+                    lane: relay.lane,
+                    entrytime: relay.entrytime,
+                };
+            })
+            .filter(Boolean);
+        })
+        .filter((clubRelays) => clubRelays.length > 0);
+
+    relayEntries = relayEntries.sort((a, b) => {
+        return a[0].lane - b[0].lane;
+    });
+
+    return relayEntries;
 };
 
 const deleteCompetition = (req, res) => {
