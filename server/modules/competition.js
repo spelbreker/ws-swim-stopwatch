@@ -262,6 +262,19 @@ const findAthletes = (competitionData, event, heat) => {
     return entries;
 };
 
+const findAthleteById = (competitionData, athleteId) => {
+    for (const club of competitionData.meets[0].clubs) {
+        if (club.athletes) {
+            for (const athlete of club.athletes) {
+                if (athlete.athleteid === athleteId) {
+                    return athlete;
+                }
+            }
+        }
+    }
+    return null;
+};
+
 const extractRelay = (competitionData, event, heat) => {
     let relayEntries = competitionData.meets[0].clubs
         .map((club) => {
@@ -274,10 +287,11 @@ const extractRelay = (competitionData, event, heat) => {
                     relayid: relay.relayid,
                     club: club.name,
                     athletes: relay.entries[0].relaypositions.map((position) => {
+                        let athlete = findAthleteById(competitionData, position.athleteid);
                         return {
                             athleteid: position.athleteid,
-                            firstname: position.firstname,
-                            lastname: position.lastname,
+                            firstname: athlete ? athlete.firstname : '',
+                            lastname: athlete ? athlete.lastname : '',
                         };
                     }),
                     lane: relay.entries[0].lane,
@@ -310,4 +324,5 @@ module.exports = {
     findAthletes,
     getCompetitionSummary,
     deleteCompetition,
+    findAthleteById  // added new function
 };
