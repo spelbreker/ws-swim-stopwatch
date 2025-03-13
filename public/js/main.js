@@ -259,8 +259,11 @@ document.addEventListener('DOMContentLoaded', function () {
         entries.forEach(entry => {
             entry.forEach(athlete => {
                 const laneElement = document.getElementById(`lane-${athlete.lane}`);
+                laneElement.querySelector('.club').textContent = athlete.club;
+                laneElement.querySelector('.split-time').textContent = '---:---:---';
+
                 if (athlete.athletes && athlete.athletes.length > 0) {
-                    //loop through athletes and display firstname
+                    //if has multiple athletes, show only the first 3 characters of the first name
                     let athleteNames = '';
                     athlete.athletes.forEach((a, index) => {
                         athleteNames += `${a.firstname.substring(0, 3)}..`;
@@ -272,8 +275,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
                 }
-                laneElement.querySelector('.club').textContent = athlete.club;
-                laneElement.querySelector('.split-time').textContent = '---:---:---';
             });
 
         });
