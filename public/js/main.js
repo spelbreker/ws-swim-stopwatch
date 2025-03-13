@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let stopwatchInterval;
     let startTime;
     const stopwatchElement = document.getElementById('stopwatch');
-    const eventHeatElement = document.getElementById('event-heat');
+    const heatElement = document.getElementById('heat-number');
+    const eventElement = document.getElementById('event-number');
     const laneButtons = document.querySelectorAll('.lane-button');
     const eventSelect = document.getElementById('event-select');
     const heatSelect = document.getElementById('heat-select');
@@ -55,7 +56,8 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (message.type === 'event-heat') {
                 fetchCompetitionData(message.event, message.heat);
                 if (isScreenPage) {
-                    eventHeatElement.textContent = `${message.event}-${message.heat}`;
+                    eventElement.textContent = message.event;
+                    heatElement.textContent = message.heat;
                 }
                 if (isRemotePage) {
                     eventSelect.value = message.event;
@@ -257,10 +259,23 @@ document.addEventListener('DOMContentLoaded', function () {
         entries.forEach(entry => {
             entry.forEach(athlete => {
                 const laneElement = document.getElementById(`lane-${athlete.lane}`);
-                laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
+                if (athlete.athletes && athlete.athletes.length > 0) {
+                    //loop through athletes and display firstname
+                    let athleteNames = '';
+                    athlete.athletes.forEach((a, index) => {
+                        athleteNames += `${a.firstname.substring(0, 3)}..`;
+                        if (index < athlete.athletes.length - 1) {
+                            athleteNames += ' / ';
+                        }
+                    });
+                    laneElement.querySelector('.athlete').textContent =  athleteNames;
+                } else {
+                    laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
+                }
                 laneElement.querySelector('.club').textContent = athlete.club;
                 laneElement.querySelector('.split-time').textContent = '---:---:---';
             });
+
         });
     }
 
