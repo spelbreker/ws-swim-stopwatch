@@ -223,7 +223,7 @@ const getCompetition = (req, res) => {
             heatCount: event.heats.length,
         },
         heat: heat,
-        entries: findAthletes(competitionData, event.eventid, heat.heatid),
+        entries: findAthletes(competitionData, event.eventid, heat.heatid).concat(extractRelay(competitionData, event.eventid, heat.heatid)),
     };
 
     res.setHeader('Content-Type', 'application/json');
@@ -262,6 +262,53 @@ const findAthletes = (competitionData, event, heat) => {
     return entries;
 };
 
+const findAthleteById = (competitionData, athleteId) => {
+    for (const club of competitionData.meets[0].clubs) {
+        if (club.athletes) {
+            for (const athlete of club.athletes) {
+                if (athlete.athleteid === athleteId) {
+                    return athlete;
+                }
+            }
+        }
+    }
+    return null;
+};
+
+const extractRelay = (competitionData, event, heat) => {
+    let relayEntries = competitionData.meets[0].clubs
+        .map((club) => {
+            return (club.relays || []).map((relay) => {
+                if (relay.entries[0].heatid !== heat || relay.entries[0].eventid !== event) {
+                    return null;
+                }
+
+                return {
+                    relayid: relay.relayid,
+                    club: club.name,
+                    athletes: relay.entries[0].relaypositions.map((position) => {
+                        let athlete = findAthleteById(competitionData, position.athleteid);
+                        return {
+                            athleteid: position.athleteid,
+                            firstname: athlete ? athlete.firstname : '',
+                            lastname: athlete ? athlete.lastname : '',
+                        };
+                    }),
+                    lane: relay.entries[0].lane,
+                    entrytime: relay.entries[0].entrytime,
+                };
+            })
+            .filter(Boolean);
+        })
+        .filter((clubRelays) => clubRelays.length > 0);
+
+    relayEntries = relayEntries.sort((a, b) => {
+        return a[0].lane - b[0].lane;
+    });
+
+    return relayEntries;
+};
+
 const deleteCompetition = (req, res) => {
     fs.unlinkSync('./public/competition.json');
     fs.unlinkSync('./public/events.json');
@@ -277,4 +324,5 @@ module.exports = {
     findAthletes,
     getCompetitionSummary,
     deleteCompetition,
+    findAthleteById  // added new function
 };

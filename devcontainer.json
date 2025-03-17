@@ -1,0 +1,11 @@
+{
+    "name": "Node 22 Container",
+    "image": "node:22",
+    "postCreateCommand": "npm install",
+    "customizations": {
+        "vscode": {
+            "settings": {},
+            "extensions": []
+        }
+    }
+}
