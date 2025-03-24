@@ -212,6 +212,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     startStopwatch();
                 }
+            } else if (e.key === '+') {
+                if (!stopwatchInterval) {
+                    incrementHeat();  
+                }
+            } else if (e.key === '*') {
+                if (!stopwatchInterval) {
+                    incrementEvent();
+                    
+                }
             }
         });
     }
@@ -250,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 clearLaneInformation();
-                console.error('Error fetching competition data:', error);
+                console.error('Error fetching competition data:', error.message);
             });
     }
 
@@ -271,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             athleteNames += ' / ';
                         }
                     });
-                    laneElement.querySelector('.athlete').textContent =  athleteNames;
+                    laneElement.querySelector('.athlete').textContent = athleteNames;
                 } else {
                     laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
                 }
