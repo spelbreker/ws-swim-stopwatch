@@ -17,6 +17,35 @@ document.addEventListener('DOMContentLoaded', function () {
     const swimStyleElement = document.getElementById('swim-style');
     let socket;
     let connectionCheckInterval;
+    let wakeLock = null;
+
+    // Request a wake lock
+    async function requestWakeLock() {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake lock is active');
+            wakeLock.addEventListener('release', () => {
+                wakeLock = null;
+                console.log('Wake lock was released');
+            });
+        } catch (err) {
+            console.error('Failed to acquire wake lock:', err);
+        }
+    }
+
+    // Enable wake lock when the page is loaded
+    if ('wakeLock' in navigator) {
+        requestWakeLock();
+
+        // Reacquire wake lock if visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState == 'visible' && !wakeLock) {
+                requestWakeLock();
+            }
+        });
+    } else {
+        console.warn('Wake Lock API is not supported in this browser.');
+    }
 
     function connectWebSocket() {
         socket = new WebSocket('ws://' + window.location.host);
