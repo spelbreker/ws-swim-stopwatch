@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 clearLaneInformation();
-                console.error('Error fetching competition data:', error.message);
+                console.error('Error fetching competition data:', JSON.parse(error.message));
             });
     }
 
