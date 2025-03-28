@@ -113,11 +113,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function fillSelectOptions(selectElement, maxValue) {
+        if (!selectElement) return;
+        for (let i = 1; i <= maxValue; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            selectElement.appendChild(option);
+        }
+    }
+
     // Move initialization to after WebSocket connection is established
     window.socket.addEventListener('open', function() {
         // Initialize select options after WebSocket is connected
-        window.fillSelectOptions(eventSelect, 50);
-        window.fillSelectOptions(heatSelect, 20);
+        fillSelectOptions(eventSelect, 50);
+        fillSelectOptions(heatSelect, 20);
     });
 
     // Remove or comment out the original initialization
