@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchCompetitionData(event, heat) {
-        fetch(`/competition/events-list?event=${event}&heat=${heat}`)
+        fetch(`/competition/event?event=${event}&heat=${heat}`)
             .then(response => response.json())
             .then(data => {
                 updateLaneInformation(data.entries);
@@ -296,26 +296,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateLaneInformation(entries) {
         clearLaneInformation()
         entries.forEach(entry => {
-            entry.forEach(athlete => {
-                const laneElement = document.getElementById(`lane-${athlete.lane}`);
-                laneElement.querySelector('.club').textContent = athlete.club;
-                laneElement.querySelector('.split-time').textContent = '---:---:---';
+            const laneElement = document.getElementById(`lane-${entry.lane}`);
+            laneElement.querySelector('.club').textContent = entry.club;
+            laneElement.querySelector('.split-time').textContent = '---:---:---';
 
-                if (athlete.athletes && athlete.athletes.length > 0) {
-                    //if has multiple athletes, show only the first 3 characters of the first name
-                    let athleteNames = '';
-                    athlete.athletes.forEach((a, index) => {
-                        athleteNames += `${a.firstname.substring(0, 3)}..`;
-                        if (index < athlete.athletes.length - 1) {
-                            athleteNames += ' / ';
-                        }
-                    });
-                    laneElement.querySelector('.athlete').textContent = athleteNames;
-                } else {
-                    laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
-                }
-            });
-
+            if (entry.athletes && entry.athletes.length > 1) {
+                let athleteNames = '';
+                entry.athletes.forEach((a, index) => {
+                    athleteNames += `${a.firstname.substring(0, 3)}...`;
+                    if (index < entry.athletes.length - 1) {
+                        athleteNames += ' / ';
+                    }
+                });
+                laneElement.querySelector('.athlete').textContent = athleteNames;
+            } else if (entry.athletes && entry.athletes.length === 1) {
+                const athlete = entry.athletes[0];
+                laneElement.querySelector('.athlete').textContent = `${athlete.firstname} ${athlete.lastname}`;
+            }
         });
     }
 
