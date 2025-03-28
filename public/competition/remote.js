@@ -14,17 +14,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const heatSelect = document.getElementById('heat-select');
     const laneButtons = document.querySelectorAll('.lane-button');
 
-    window.startStopwatch = function(sendSocket = true) {
+    function startStopwatch(sendSocket = true) {
         startTime = Date.now();
         stopwatchInterval = setInterval(updateStopwatch, 10);
-        window.resetSplitTimes();
+        resetSplitTimes();
         if (sendSocket) {
             window.socket.send(JSON.stringify({ type: 'start', time: startTime }));
         }
         disableControls(true);
-    };
+    }
 
-    window.resetStopwatch = function(sendSocket = true) {
+    function resetStopwatch(sendSocket = true) {
         clearInterval(stopwatchInterval);
         stopwatchInterval = null;
         stopwatchElement.textContent = '00:00:00';
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.socket.send(JSON.stringify({ type: 'reset' }));
         }
         disableControls(false);
-    };
+    }
 
     function updateStopwatch() {
         const elapsedTime = Date.now() - startTime;
@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
         window.socket.send(JSON.stringify({ type: 'clear' }));
     });
     
-    startButton.addEventListener('click', () => window.startStopwatch());
-    resetButton.addEventListener('click', () => window.resetStopwatch());
+    startButton.addEventListener('click', () => startStopwatch());
+    resetButton.addEventListener('click', () => resetStopwatch());
     incrementEventButton.addEventListener('click', incrementEvent);
     incrementHeatButton.addEventListener('click', incrementHeat);
     
@@ -102,9 +102,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (button) button.click();
         } else if (e.key === 'Enter') {
             if (stopwatchInterval) {
-                window.resetStopwatch();
+                resetStopwatch();
             } else {
-                window.startStopwatch();
+                startStopwatch();
             }
         } else if (e.key === '+' && !stopwatchInterval) {
             incrementHeat();
@@ -168,9 +168,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('message', function (event) {
         const message = JSON.parse(event.data);
         if (message.type === 'start') {
-            window.startStopwatch(false);
+            startStopwatch(false);
         } else if (message.type === 'reset') {
-            window.resetStopwatch(false);
+            resetStopwatch(false);
         } else if (message.type === 'split') {
             const laneElement = document.getElementById(`lane-${message.lane}`);
             laneElement.querySelector('.split-time').textContent = message.time;
@@ -188,3 +188,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// Add these functions outside the DOMContentLoaded event listener
+function resetSplitTimes() {
+    document.querySelectorAll('.split-time').forEach(element => {
+        element.textContent = '--:--:--';
+    });
+}
+
+function clearLaneInformation() {
+    document.querySelectorAll('.lane-button').forEach(button => {
+        const lane = button.getAttribute('data-lane');
+        document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = '--:--:--';
+        button.classList.remove('bg-green-500');
+        button.classList.add('bg-blue-500');
+    });
+}
