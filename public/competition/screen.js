@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchCompetitionData(eventNum, heatNum) {
         // Fetch event data first
-        fetch(`/competition/event?event=${eventNum}`)
+        fetch(`/competition/event/${eventNum}`)
             .then(response => response.json())
             .then(eventData => {
                 const swimStyleElement = document.getElementById('swim-style');
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 
                 // Then fetch heat data
-                return fetch(`/competition/heat?event=${eventNum}&heat=${heatNum}`);
+                return fetch(`/competition/event/${eventNum}/heat/${heatNum}`);
             })
             .then(response => response.json())
             .then(heatData => {
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 clearLaneInformation();
-                console.error('Error fetching competition data:', JSON.parse(error.message));
+                console.error('Error fetching competition data:', error);
             });
     }
 
@@ -100,10 +100,18 @@ document.addEventListener('DOMContentLoaded', function () {
     function formatSwimStyle(swimstyle) {
         if (!swimstyle) return '';
         const { distance, relaycount, stroke } = swimstyle;
+        const strokeTranslation = {
+            FREE: 'Vrije slag',
+            BACK: 'Rugslag',
+            MEDLEY: 'Wisselslag',
+            BREAST: 'Schoolslag',
+            FLY: 'Vlinderslag'
+        };
+        const translatedStroke =  strokeTranslation[stroke] || stroke; 
         if (relaycount > 1) {
-            return `${relaycount} x ${distance}M ${stroke}`;
+            return `${relaycount} x ${distance}M ${translatedStroke}`;
         }
-        return `${distance}M ${stroke}`;
+        return `${distance}M ${translatedStroke}`;
     }
 
     // Add WebSocket message handler for screen updates

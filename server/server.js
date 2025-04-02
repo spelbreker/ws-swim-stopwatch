@@ -4,21 +4,22 @@ const WebSocket = require('ws');
 const express = require('express');
 const app = express();
 const server = http.createServer(app);
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 app.use(express.static('public'));
 
-const { upload, handleFileUpload, getCompetition,getCompetitionSummary, deleteCompetition, getHeat, getEvent } = require('./modules/competition');
+const { handleFileUpload, getMeetSummary, deleteCompetition, getHeat, getEvents, getEvent } = require('./modules/competition');
 
-app.post('/upload', upload.single('lenexFile'), handleFileUpload);
+app.get('/competition', getMeetSummary);
+app.post('/competition/upload', upload.single('lenexFile'), handleFileUpload);
 
-//need to refactor
-app.get('/competition', getCompetitionSummary);
-app.get('/competition/events-list', getCompetition);
 app.get('/competition/delete', deleteCompetition);
 
-//new enpoints to cleanup the code
-app.get('/competition/heat', getHeat); 
-app.get('/competition/event', getEvent); 
+app.get('/competition/event/:event', getEvent);
+app.get('/competition/event', getEvents);
+
+app.get('/competition/event/:event/heat/:heat', getHeat);
 
 
 app.get('*', (req, res) => {
