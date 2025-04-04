@@ -8,28 +8,31 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-100 h-screen flex flex-col">
-    <!-- Static Header -->
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Fixed Header -->
     <header class="bg-blue-600 text-white text-center p-4 fixed top-0 w-full z-10 text-xl">
         AZC - 1 - 100m Vrijeslag - serie2 - <span id="stopwatch">00:00:00</span>
     </header>
 
-    <!-- Scrollable Lane Info Section -->
-    <section class="lane-info grid grid-cols-2 place-content-around gap-8 p-4 overflow-y-auto mx-auto mt-16 text-xl">
-        <div>lane 0 : <span class="lane-time" data-lane="0">00:00:00</span></div>
-        <div>lane 5 : <span class="lane-time" data-lane="5">00:00:00</span></div>
-        <div>lane 1 : <span class="lane-time" data-lane="1">00:00:00</span></div>
-        <div>lane 6 : <span class="lane-time" data-lane="6">00:00:00</span></div>
-        <div>lane 2 : <span class="lane-time" data-lane="2">00:00:00</span></div>
-        <div>lane 7 : <span class="lane-time" data-lane="7">00:00:00</span></div>
-        <div>lane 3 : <span class="lane-time" data-lane="3">00:00:00</span></div>
-        <div>lane 8 : <span class="lane-time" data-lane="8">00:00:00</span></div>
-        <div>lane 4 : <span class="lane-time" data-lane="4">00:00:00</span></div>
-        <div>lane 9 : <span class="lane-time" data-lane="9">00:00:00</span></div>
-    </section>
+    <!-- Main scrollable content -->
+    <main class="flex-1 mt-16 overflow-y-auto">
+        <!-- Lane Info Section -->
+        <section class="lane-info grid grid-cols-2 place-content-around gap-8 p-4 mx-auto text-xl">
+            <div>lane 0 : <span class="lane-time" data-lane="0">00:00:00</span></div>
+            <div>lane 5 : <span class="lane-time" data-lane="5">00:00:00</span></div>
+            <div>lane 1 : <span class="lane-time" data-lane="1">00:00:00</span></div>
+            <div>lane 6 : <span class="lane-time" data-lane="6">00:00:00</span></div>
+            <div>lane 2 : <span class="lane-time" data-lane="2">00:00:00</span></div>
+            <div>lane 7 : <span class="lane-time" data-lane="7">00:00:00</span></div>
+            <div>lane 3 : <span class="lane-time" data-lane="3">00:00:00</span></div>
+            <div>lane 8 : <span class="lane-time" data-lane="8">00:00:00</span></div>
+            <div>lane 4 : <span class="lane-time" data-lane="4">00:00:00</span></div>
+            <div>lane 9 : <span class="lane-time" data-lane="9">00:00:00</span></div>
+        </section>
+    </main>
 
-    <!-- Fixed Bottom Sections -->
-    <div class="fixed bottom-0 left-0 w-full">
+    <!-- Bottom Sections -->
+    <div class="w-full bg-white shadow-lg">
         <!-- Controls Section -->
         <section class="controls w-full bg-gray-300 p-4 flex flex-col items-center gap-4">
             <div class="flex gap-4">
