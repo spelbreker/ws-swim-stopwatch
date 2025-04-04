@@ -25,7 +25,7 @@ app.get('/competition/event/:event/heat/:heat', getHeat);
 app.get('*', (req, res) => {
     let filePath = '.' + req.url;
     if (filePath === './') {
-        filePath = '.public/index.html';
+        filePath = './public/index.html';
     }
 
     fs.readFile(filePath, (err, data) => {
@@ -48,10 +48,18 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('message', (message) => {
-        const data = JSON.parse(message);
+        let msg;
+        try {
+            msg = JSON.parse(message);
+        } catch (e) {
+            return;
+        }
+        if (msg.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
+        }
         wss.clients.forEach((client) => {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(data));
+                client.send(JSON.stringify(msg));
             }
         });
     });

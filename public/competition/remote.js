@@ -4,6 +4,8 @@
 let startTime;
 let eventSelect;
 let heatSelect;
+// Global variable for ping
+let pingStartTime;
 
 // ------------------------------------------------------------------
 // Utility functions
@@ -52,6 +54,12 @@ function highlightLaneButton(button) {
         button.classList.remove('bg-green-500');
         button.classList.add('bg-blue-500');
     }, 10000);
+}
+
+// Function to send a ping message over WebSocket
+function sendPing() {
+    pingStartTime = Date.now();
+    window.socket.send(JSON.stringify({ type: 'ping', time: pingStartTime }));
 }
 
 // ------------------------------------------------------------------
@@ -209,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('open', function() {
         fillSelectOptions(eventSelect, 50);
         fillSelectOptions(heatSelect, 20);
+        setInterval(sendPing, 5000); // send ping every 5 seconds
     });
 
     // WebSocket message handler
@@ -232,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function () {
             resetSplitTimes();
         } else if (message.type === 'clear') {
             clearLaneInformation();
+        } else if (message.type === 'pong') { // New handling for pong response
+            const pingTime = Date.now() - message.time;
+            const pingDisplay = document.getElementById('ping-display');
+            if (pingDisplay) {
+                pingDisplay.textContent = `${pingTime} ms`;
+            }
         }
     });
 });

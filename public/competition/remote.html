@@ -10,18 +10,21 @@
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <!-- Fixed Header -->
-    <header class="bg-blue-600 text-white text-center p-4 fixed top-0 w-full z-10 text-xl">
+    <header class="bg-blue-600 text-white text-center p-4 fixed top-0 w-full z-10">
         <div class="flex justify-between items-center">
-            <div><span>1 - 100m Vrijeslag - serie2</span></div>
+            <div>AZC</div>
             <div><span id="stopwatch">00:00:00</span></div>
-            <div>
+            <div class="flex items-center">
                 <div id="connection-indicator" class="w-4 h-4 rounded-full bg-red-500"></div>
+                <!-- New ping display element -->
+                <div id="ping-display" class="ml-2 text-xs">-- ms</div>
             </div>
         </div>
     </header>
 
     <!-- Main scrollable content -->
     <main class="flex-1 mt-16 overflow-y-auto">
+        <div class="text-center border-b border-gray-300">123 - 100m Vrijeslag - serie 333</div>
         <!-- Lane Info Section -->
         <section class="lane-info grid grid-cols-2 place-content-around gap-8 p-4 mx-auto text-xl">
             <div>lane 0 : <span class="lane-time" data-lane="0">00:00:00</span></div>
