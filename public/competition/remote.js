@@ -125,8 +125,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const controlElements = [eventSelect, heatSelect, incrementEventButton, incrementHeatButton];
 
-    function startStopwatch(sendSocket = true) {
-        startTime = Date.now();
+    function startStopwatch(sendSocket = true, startTimeOverride = null) {
+        if (stopwatchInterval) return; // Prevent multiple intervals
+        if (startTimeOverride) {
+            startTime = startTimeOverride;
+        } else {
+            startTime = Date.now();
+        }
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
@@ -224,7 +229,12 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('message', function (event) {
         const message = JSON.parse(event.data);
         if (message.type === 'start') {
-            startStopwatch(false);
+            //latency compensation
+            const latency = Date.now() - message.time;
+            startTime = Date.now() - latency;
+            // Start the stopwatch with the adjusted start time
+            startStopwatch(false, startTime);
+            console.log('Latency:', latency);
         } else if (message.type === 'reset') {
             resetStopwatch(false);
         } else if (message.type === 'split') {
