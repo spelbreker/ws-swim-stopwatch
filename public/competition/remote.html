@@ -11,7 +11,13 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <!-- Fixed Header -->
     <header class="bg-blue-600 text-white text-center p-4 fixed top-0 w-full z-10 text-xl">
-        AZC - 1 - 100m Vrijeslag - serie2 - <span id="stopwatch">00:00:00</span>
+        <div class="flex justify-between items-center">
+            <div><span>1 - 100m Vrijeslag - serie2</span></div>
+            <div><span id="stopwatch">00:00:00</span></div>
+            <div>
+                <div id="connection-indicator" class="w-4 h-4 rounded-full bg-red-500"></div>
+            </div>
+        </div>
     </header>
 
     <!-- Main scrollable content -->
@@ -38,7 +44,8 @@
             <div class="flex gap-4">
                 <div class="flex flex-col items-center">
                     <label for="event-select" class="text-md font-bold mb-2">Event</label>
-                    <select id="event-select" placeholder="Event" class="bg-white border border-gray-300 py-2 px-4"></select>
+                    <select id="event-select" placeholder="Event"
+                        class="bg-white border border-gray-300 py-2 px-4"></select>
                 </div>
                 <div class="flex flex-col items-center">
                     <label for="heat-select" class="text-md font-bold mb-2">Heat</label>
@@ -46,13 +53,13 @@
                 </div>
             </div>
             <div class="flex gap-4">
-                <button id="increment-event"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+ event</button>
+                <button id="increment-event" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+
+                    event</button>
                 <button id="clear-screen"
                     class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 ">Clear
                     screen</button>
-                <button id="increment-heat"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+ heat</button>
+                <button id="increment-heat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+
+                    heat</button>
             </div>
         </section>
 
@@ -69,12 +76,15 @@
             <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="1">1</button>
             <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="2">2</button>
             <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="3">3</button>
-            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 col-span-3" data-lane="0">0</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 col-span-3"
+                data-lane="0">0</button>
         </section>
 
         <!-- Footer -->
         <footer class="text-white text-center w-full">
-            <button id="start-button" class="w-full font-bold py-4 text-xl transition-colors duration-200 bg-green-600 hover:bg-green-700">start stopwatch</button>
+            <button id="start-button"
+                class="w-full font-bold py-4 text-xl transition-colors duration-200 bg-green-600 hover:bg-green-700">start
+                stopwatch</button>
         </footer>
     </div>
 
