@@ -12,16 +12,24 @@ function pad(number) {
     return number.toString().padStart(2, '0');
 }
 
+function updateLaneInfo(lane, time) {
+    const timeSpan = document.querySelector(`.lane-time[data-lane="${lane}"]`);
+    if (timeSpan) {
+        timeSpan.textContent = time;
+    }
+}
+
+// Update resetSplitTimes to use lane mapping
 function resetSplitTimes() {
-    document.querySelectorAll('.split-time').forEach(element => {
-        element.textContent = '---:---:---';
+    document.querySelectorAll('.lane-time').forEach(span => {
+        span.textContent = '00:00:00';
     });
 }
 
 function clearLaneInformation() {
     document.querySelectorAll('.lane-button').forEach(button => {
         const lane = button.getAttribute('data-lane');
-        document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = '---:---:---';
+        updateLaneInfo(lane, '00:00:00');
         button.classList.remove('bg-green-500');
         button.classList.add('bg-blue-500');
     });
@@ -99,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get elements
     const stopwatchElement = document.getElementById('stopwatch');
     const startButton = document.getElementById('start-button');
-    const resetButton = document.getElementById('reset-button');
     const clearScreenButton = document.getElementById('clear-screen');
     const incrementEventButton = document.getElementById('increment-event');
     const incrementHeatButton = document.getElementById('increment-heat');
@@ -108,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     heatSelect = document.getElementById('heat-select');
     const laneButtons = document.querySelectorAll('.lane-button');
 
-    const controlElements = [eventSelect, heatSelect, incrementEventButton, incrementHeatButton, startButton];
+    const controlElements = [eventSelect, heatSelect, incrementEventButton, incrementHeatButton];
 
     function startStopwatch(sendSocket = true) {
         startTime = Date.now();
@@ -118,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function () {
             window.socket.send(JSON.stringify({ type: 'start', time: startTime }));
         }
         disableControls(true, controlElements);
+        
+        // Update button appearance
+        startButton.textContent = 'Stop stopwatch';
+        startButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+        startButton.classList.add('bg-red-600', 'hover:bg-red-700');
     }
 
     function resetStopwatch(sendSocket = true) {
@@ -128,6 +140,11 @@ document.addEventListener('DOMContentLoaded', function () {
             window.socket.send(JSON.stringify({ type: 'reset' }));
         }
         disableControls(false, controlElements);
+        
+        // Update button appearance
+        startButton.textContent = 'Start stopwatch';
+        startButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+        startButton.classList.add('bg-green-600', 'hover:bg-green-700');
     }
 
     // Event listeners
@@ -135,20 +152,27 @@ document.addEventListener('DOMContentLoaded', function () {
         window.socket.send(JSON.stringify({ type: 'clear' }));
     });
     
-    startButton.addEventListener('click', () => startStopwatch());
-    resetButton.addEventListener('click', () => resetStopwatch());
+    startButton.addEventListener('click', () => {
+        if (stopwatchInterval) {
+            resetStopwatch();
+        } else {
+            startStopwatch();
+        }
+    });
+    
+    // Remove reset button event listener since we no longer have that button
+    // resetButton.addEventListener('click', () => resetStopwatch());
+    
     incrementEventButton.addEventListener('click', incrementEvent);
     incrementHeatButton.addEventListener('click', incrementHeat);
     
     eventSelect.addEventListener('change', () => {
         heatSelect.value = 1;
         sendEventAndHeat(eventSelect.value, 1);
-        fetchCompetitionData(eventSelect.value, heatSelect.value);
     });
     
     heatSelect.addEventListener('change', () => {
         sendEventAndHeat(eventSelect.value, heatSelect.value);
-        fetchCompetitionData(eventSelect.value, heatSelect.value);
     });
 
     // Lane button handlers
@@ -156,10 +180,9 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
             const time = stopwatchElement.textContent;
-            new Promise((resolve) => {
-                window.socket.send(JSON.stringify({ type: 'split', lane, time }));
-                document.getElementById(`lane-${lane}`).querySelector('.split-time').textContent = time;
-            });
+            
+            updateLaneInfo(lane, time);
+            window.socket.send(JSON.stringify({ type: 'split', lane, time }));
             highlightLaneButton(button);
         });
     });
@@ -196,12 +219,12 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (message.type === 'reset') {
             resetStopwatch(false);
         } else if (message.type === 'split') {
-            const laneElement = document.getElementById(`lane-${message.lane}`);
-            laneElement.querySelector('.split-time').textContent = message.time;
-            laneElement.classList.add('highlight');
-            setTimeout(() => {
-                laneElement.classList.remove('highlight');
-            }, 2000);
+            const lane = message.lane;
+            updateLaneInfo(lane, message.time);
+            const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
+            if (button) {
+                highlightLaneButton(button);
+            }
         } else if (message.type === 'event-heat') {
             eventSelect.value = message.event;
             heatSelect.value = message.heat;

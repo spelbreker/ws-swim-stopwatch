@@ -48,7 +48,7 @@ function fetchCompetitionData(eventNum, heatNum) {
         })
         .catch(error => {
             clearLaneInformation();
-            console.error('Error fetching competition data:', error);
+            console.warn('Error fetching competition data');
         });
 }
 

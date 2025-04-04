@@ -1,116 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <div class="top-bar flex justify-between items-center bg-blue-600 text-white p-4">
-        <div class="logo text-2xl font-bold">AZC</div>
-        <span id="stopwatch" class="text-2xl">00:00:00</span>
-        <div id="connection-indicator" class="w-4 h-4 rounded-full bg-red-500"></div>
-    </div>
-    <div class="bottom-bar bg-gray-800 text-white p-4 fixed bottom-0 w-full text-center z-10">
-        <button id="start-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-2">Start</button>
-        <button id="reset-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2">Stop & reset</button>
-    </div>
-    <main class="mt-2 mb-32">
-        <div class="buttons flex flex-wrap justify-center">
-            <div class="w-full flex justify-center">
-                <div class="flex flex-row">
-                    <div class="flex flex-col">
-                        <div class="flex flex-col"  id="lane-0">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="0">0</button>
-                            <span class="athlete"></span>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-1">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="1">1</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-2">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="2">2</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-3">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="3">3</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-4">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="4">4</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="flex flex-col" id="lane-5">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="5">5</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col"  id="lane-6">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="6">6</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col"  id="lane-7">
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="7">7</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-8" >
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="8">8</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                        <div class="flex flex-col" id="lane-9" >
-                            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded m-4 mb-0" data-lane="9">9</button>
-                            <span class="split-time text-center">--:--:--</span>
-                        </div>
-                    </div>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Fixed Header -->
+    <header class="bg-blue-600 text-white text-center p-4 fixed top-0 w-full z-10 text-xl">
+        AZC - 1 - 100m Vrijeslag - serie2 - <span id="stopwatch">00:00:00</span>
+    </header>
+
+    <!-- Main scrollable content -->
+    <main class="flex-1 mt-16 overflow-y-auto">
+        <!-- Lane Info Section -->
+        <section class="lane-info grid grid-cols-2 place-content-around gap-8 p-4 mx-auto text-xl">
+            <div>lane 0 : <span class="lane-time" data-lane="0">00:00:00</span></div>
+            <div>lane 5 : <span class="lane-time" data-lane="5">00:00:00</span></div>
+            <div>lane 1 : <span class="lane-time" data-lane="1">00:00:00</span></div>
+            <div>lane 6 : <span class="lane-time" data-lane="6">00:00:00</span></div>
+            <div>lane 2 : <span class="lane-time" data-lane="2">00:00:00</span></div>
+            <div>lane 7 : <span class="lane-time" data-lane="7">00:00:00</span></div>
+            <div>lane 3 : <span class="lane-time" data-lane="3">00:00:00</span></div>
+            <div>lane 8 : <span class="lane-time" data-lane="8">00:00:00</span></div>
+            <div>lane 4 : <span class="lane-time" data-lane="4">00:00:00</span></div>
+            <div>lane 9 : <span class="lane-time" data-lane="9">00:00:00</span></div>
+        </section>
+    </main>
+
+    <!-- Bottom Sections -->
+    <div class="w-full bg-white shadow-lg">
+        <!-- Controls Section -->
+        <section class="controls w-full bg-gray-300 p-4 flex flex-col items-center gap-4">
+            <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                    <label for="event-select" class="text-md font-bold mb-2">Event</label>
+                    <select id="event-select" placeholder="Event" class="bg-white border border-gray-300 py-2 px-4"></select>
+                </div>
+                <div class="flex flex-col items-center">
+                    <label for="heat-select" class="text-md font-bold mb-2">Heat</label>
+                    <select id="heat-select" class="bg-white border border-gray-300  py-2 px-4"></select>
                 </div>
             </div>
-        </div>
-        <div class="event-heat-select flex justify-center mt-10">
-            <div class="flex flex-col items-center">
-                <label for="event-select" class="text-lg font-bold mb-2">Event</label>
-                <select id="event-select" class="bg-white border border-gray-300 rounded py-2 px-4 mb-4"></select>
-                <button id="increment-event" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">Add 1 to Event</button>
+            <div class="flex gap-4">
+                <button id="increment-event"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+ event</button>
+                <button id="clear-screen"
+                    class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 ">Clear
+                    screen</button>
+                <button id="increment-heat"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ">1+ heat</button>
             </div>
-            <div class="flex flex-col items-center ml-10">
-                <label for="heat-select" class="text-lg font-bold mb-2">Heat</label>
-                <select id="heat-select" class="bg-white border border-gray-300 rounded py-2 px-4 mb-4"></select>
-                <button id="increment-heat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">Add 1 to Heat</button>
-            </div>
-        </div>
-        <div class="flex flex-col items-center ml-10">
-            <button id="clear-screen" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded m-2">Clear Screen</button>
-        </div>
-        <div class="w-full text-center mt-2">
-            Loaded competition:<br/>
-            <span id="competition">None</div>
-        </div>
-        
+        </section>
 
-        <div class="mb-20"></div>
+        <!-- Grid Buttons Section -->
+        <section class="grid grid-cols-3 gap-1 p-2 bg-gray-100 text-center max-w-2xl mx-auto">
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="7">7</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="8">8</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="9">9</button>
 
-    </main>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="4">4</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="5">5</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="6">6</button>
+
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="1">1</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="2">2</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4" data-lane="3">3</button>
+            <button class="lane-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 col-span-3" data-lane="0">0</button>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-white text-center w-full">
+            <button id="start-button" class="w-full font-bold py-4 text-xl transition-colors duration-200 bg-green-600 hover:bg-green-700">start stopwatch</button>
+        </footer>
+    </div>
+
     <script src="/js/main.js"></script>
     <script src="/competition/remote.js"></script>
-    <script>
-        //when dom loaded fetch competition data
-        function fetchCompetitionSummary() {
-            fetch('/competition')
-                .then(response => response.json())
-                .then(data => {
-                    if(data.meet === null) {
-                        document.getElementById('competition').textContent = 'None';
-                        return;
-                    }
-                    document.getElementById('competition').textContent = data.meet;
-                });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchCompetitionSummary();
-        });
-    </script>
 </body>
+
 </html>
