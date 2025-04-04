@@ -4,22 +4,28 @@ const WebSocket = require('ws');
 const express = require('express');
 const app = express();
 const server = http.createServer(app);
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 app.use(express.static('public'));
 
-const { upload, handleFileUpload, getCompetitionEvents, getCompetition,getCompetitionSummary, deleteCompetition } = require('./modules/competition');
+const { handleFileUpload, getMeetSummary, deleteCompetition, getHeat, getEvents, getEvent } = require('./modules/competition');
 
-app.post('/upload', upload.single('lenexFile'), handleFileUpload);
+app.get('/competition', getMeetSummary);
+app.post('/competition/upload', upload.single('lenexFile'), handleFileUpload);
 
-app.get('/competition', getCompetitionSummary);
-app.get('/competition/events', getCompetitionEvents);
-app.get('/competition/events-list', getCompetition);
 app.get('/competition/delete', deleteCompetition);
+
+app.get('/competition/event/:event', getEvent);
+app.get('/competition/event', getEvents);
+
+app.get('/competition/event/:event/heat/:heat', getHeat);
+
 
 app.get('*', (req, res) => {
     let filePath = '.' + req.url;
     if (filePath === './') {
-        filePath = '.public/index.html';
+        filePath = './public/index.html';
     }
 
     fs.readFile(filePath, (err, data) => {
@@ -42,10 +48,18 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('message', (message) => {
-        const data = JSON.parse(message);
+        let msg;
+        try {
+            msg = JSON.parse(message);
+        } catch (e) {
+            return;
+        }
+        if (msg.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
+        }
         wss.clients.forEach((client) => {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(data));
+                client.send(JSON.stringify(msg));
             }
         });
     });
