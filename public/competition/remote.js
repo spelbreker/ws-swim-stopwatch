@@ -169,12 +169,10 @@ document.addEventListener('DOMContentLoaded', function () {
     eventSelect.addEventListener('change', () => {
         heatSelect.value = 1;
         sendEventAndHeat(eventSelect.value, 1);
-        fetchCompetitionData(eventSelect.value, heatSelect.value);
     });
     
     heatSelect.addEventListener('change', () => {
         sendEventAndHeat(eventSelect.value, heatSelect.value);
-        fetchCompetitionData(eventSelect.value, heatSelect.value);
     });
 
     // Lane button handlers
@@ -182,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
             const time = stopwatchElement.textContent;
-            console.log(`Lane ${lane} time: ${time}`);
             
             updateLaneInfo(lane, time);
             window.socket.send(JSON.stringify({ type: 'split', lane, time }));
