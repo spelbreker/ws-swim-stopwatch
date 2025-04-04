@@ -93,3 +93,8 @@ To use the Docker image published to GitHub Packages, follow these steps:
 4. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/5).
 
 ## Project Structure
+
+## copilot instructions
+
+use as template
+https://www.reddit.com/r/ChatGPTCoding/comments/1jl6gll/copilotinstructionsmd_has_helped_me_so_much/
