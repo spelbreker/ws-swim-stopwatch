@@ -21,31 +21,13 @@
 	- Show clear "before" and "after" snippets when proposing changes
 	- Include concise explanations of what changed and why
 	- Always check if the edit maintains the project's coding style
-
-### Edit sequence:
-	1. [First specific change] - Purpose: [why]
-	2. [Second specific change] - Purpose: [why]
-	3. Do you approve this plan? I'll proceed with Edit [number] after your confirmation.
-	4. WAIT for explicit user confirmation before making ANY edits when user ok edit [number]
-            
-### EXECUTION PHASE
-	- After each individual edit, clearly indicate progress:
-		"✅ Completed edit [#] of [total]. Ready for next edit?"
-	- If you discover additional needed changes during editing:
-	- STOP and update the plan
-	- Get approval before continuing
                 
 ### REFACTORING GUIDANCE
 	When refactoring large files:
 	- Break work into logical, independently functional chunks
 	- Ensure each intermediate state maintains functionality
 	- Consider temporary duplication as a valid interim step
-	- Always indicate the refactoring pattern being applied
-                
-### RATE LIMIT AVOIDANCE
-	- For very large files, suggest splitting changes across multiple sessions
-	- Prioritize changes that are logically complete units
-	- Always provide clear stopping points
+	- Always indicate the refactoring pattern being applied                
             
 ## General Requirements
 	Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
