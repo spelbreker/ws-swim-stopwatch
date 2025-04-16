@@ -136,33 +136,7 @@ const getMeetSummary = (req, res) => {
     res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
     };
-
-const getMeet = (req, res) => {
-    let meetIndex = 0;
-    //query params for session and meet
-    if (req.query.meet) {
-        meetIndex = parseInt(req.query.meet);
-    }
-
-    if (!fs.existsSync('./public/competition.json')) {
-        res.status(500).send('Missing competition.json');
-        return;
-    }
-
-    let competitionData = fs.readFileSync('./public/competition.json');
-    competitionData = JSON.parse(competitionData);
-
-    let meet = competitionData.meets[meetIndex];
-
-    if (!meet) {
-        res.status(404).send('Meet not found');
-        return;
-    }
-
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(meet));
-};
-
+    
 // events list
 const getEvents = (req, res) => {
     let meetIndex = 0;
@@ -393,5 +367,4 @@ module.exports = {
     findAthleteById,  
     getHeat,
     getEvent,
-    getMeet,
 };

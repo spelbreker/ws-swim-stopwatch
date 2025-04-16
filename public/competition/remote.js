@@ -38,12 +38,42 @@ function clearLaneInformation() {
 }
 
 function fillSelectOptions(selectElement, maxValue) {
+    // Overwrite: fetch event list and populate select with event numbers
     if (!selectElement) return;
-    for (let i = 1; i <= maxValue; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i;
-        selectElement.appendChild(option);
+    if (selectElement.id === 'event-select') {
+        fetch('/competition/event')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch event list');
+                return res.json();
+            })
+            .then(events => {
+                selectElement.innerHTML = '';
+                events.forEach(event => {
+                    const option = document.createElement('option');
+                    option.value = event.number;
+                    option.textContent = event.number;
+                    selectElement.appendChild(option);
+                });
+            })
+            .catch(() => {
+                // fallback: fill with 1..maxValue if fetch fails
+                selectElement.innerHTML = '';
+                for (let i = 1; i <= maxValue; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    selectElement.appendChild(option);
+                }
+            });
+    } else {
+        // fallback for heat-select
+        selectElement.innerHTML = '';
+        for (let i = 1; i <= maxValue; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            selectElement.appendChild(option);
+        }
     }
 }
 
@@ -86,12 +116,14 @@ function disableControls(disable, elements) {
 // Event and heat control functions
 // ------------------------------------------------------------------
 function incrementEvent() {
-    let currentEvent = parseInt(eventSelect.value);
-    if (currentEvent < 50) {
-        eventSelect.value = currentEvent + 1;
+    // Only increment if not at the last event option
+    const options = eventSelect.options;
+    const currentIndex = eventSelect.selectedIndex;
+    if (currentIndex < options.length - 1) {
+        eventSelect.selectedIndex = currentIndex + 1;
         heatSelect.value = 1;
-        sendEventAndHeat(currentEvent + 1, 1);
-        updateEventHeatInfoBar(currentEvent + 1, 1);
+        sendEventAndHeat(eventSelect.value, 1);
+        updateEventHeatInfoBar(eventSelect.value, 1);
     }
 }
 
@@ -257,8 +289,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // WebSocket initialization
     window.socket.addEventListener('open', function() {
-        fillSelectOptions(eventSelect, 50);
-        fillSelectOptions(heatSelect, 20);
+        fillSelectOptions(eventSelect, 25);
+        fillSelectOptions(heatSelect, 25);
         setInterval(sendPing, 5000); // send ping every 5 seconds
         // Fetch and display initial event/heat info bar
         updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1);
