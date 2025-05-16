@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { get } = require('http');
 const { parseLenex } = require('js-lenex/build/src/lenex-parse.js');
 
 const readAndProcessCompetitionJSON = (filePath, callback) => {
@@ -133,9 +134,9 @@ const getMeetSummary = (req, res) => {
     };
 
     res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(summary));
-};
-
+        res.send(JSON.stringify(summary));
+    };
+    
 // events list
 const getEvents = (req, res) => {
     let meetIndex = 0;

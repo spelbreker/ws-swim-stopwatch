@@ -9,9 +9,9 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use(express.static('public'));
 
-const { handleFileUpload, getMeetSummary, deleteCompetition, getHeat, getEvents, getEvent } = require('./modules/competition');
+const { handleFileUpload, getMeetSummary, deleteCompetition, getHeat, getEvents, getEvent,getMeet } = require('./modules/competition');
 
-app.get('/competition', getMeetSummary);
+app.get('/competition/summary', getMeetSummary);
 app.post('/competition/upload', upload.single('lenexFile'), handleFileUpload);
 
 app.get('/competition/delete', deleteCompetition);

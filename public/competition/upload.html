@@ -75,7 +75,7 @@
     <script>
         //when dom loaded fetch competition data
         function fetchCompetitionSummary() {
-            fetch('/competition')
+            fetch('/competition/summary')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('competition').textContent = data.meet;
