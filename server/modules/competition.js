@@ -277,6 +277,10 @@ const getAthletesByHeatId = (competitionData, heatId) => {
     let entries = competitionData.meets[0].clubs
         .map((club) => {
             return (club.athletes || []).map((athlete) => {
+                // Fix: Only call .filter if athlete.entries is an array
+                if (!Array.isArray(athlete.entries)) {
+                    return null;
+                }
                 let filterResult = athlete.entries.filter((entry) => {
                     return entry.heatid === heatId;
                 });
@@ -358,6 +362,31 @@ const extractRelay = (competitionData, event, heat) => {
 
     return relayEntries;
 };
+
+// Utility: Find athletes without entries
+function findAthletesWithoutEntries(competitionData) {
+    const result = [];
+    for (const club of competitionData.meets[0].clubs) {
+        if (Array.isArray(club.athletes)) {
+            for (const athlete of club.athletes) {
+                if (!Array.isArray(athlete.entries) || athlete.entries.length === 0) {
+                    result.push({
+                        club: club.name,
+                        athleteid: athlete.athleteid,
+                        firstname: athlete.firstname,
+                        lastname: athlete.lastname,
+                        birthdate: athlete.birthdate
+                    });
+                }
+            }
+        }
+    }
+    return result;
+}
+
+// Example usage (for debugging):
+// const competitionData = JSON.parse(fs.readFileSync('./public/competition.json'));
+// console.log(findAthletesWithoutEntries(competitionData));
 
 module.exports = {
     handleFileUpload,
