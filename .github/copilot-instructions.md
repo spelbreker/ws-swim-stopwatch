@@ -105,7 +105,7 @@
 ## Folder Structure
 	Follow this structured directory layout:
 
-    project-root /
+    project-root/
         ├── public
         │   ├── competition
         │   │   ├── remote.html     # screen remote view
@@ -123,10 +123,22 @@
         │   └── training            # training module views and scripts
         │       ├── training-remote.html
         │       └── training-screen.html
-        └── server                  # node js server
-            ├── modules
-            │   └── competition.js  # module for api reponses for compettion data
-            └── server.js           # bootstrap and routing of server
+        ├── src
+        │   └── server
+        │       ├── server.ts           # bootstrap and routing of server
+        │       ├── modules
+        │       │   └── competition.ts  # module for api responses for competition data
+        │       └── types
+        │           └── types.ts        # TypeScript types/interfaces
+        ├── test
+        │   └── server
+        │       └── modules
+        │           └── competition.test.ts # tests for competition module
+        ├── uploads                     # uploaded files (e.g. Lenex)
+        ├── examples                    # example files (e.g. sample Lenex)
+        ├── package.json
+        ├── tsconfig.json
+        └── ...etc (config files)
 
 
 ## Documentation Requirements

@@ -2,14 +2,14 @@ import {
   getAthletesByHeatId,
   findAthleteById,
   extractRelay,
-  readAndProcessCompetitionJSON
-} from './competition';
-import type { CompetitionData } from './types';
+  readAndProcessCompetitionJSON,
+} from '../../src/modules/competition';
+import type { CompetitionData } from '../../src/types/types';
 
 // Mock fs and parseLenex for readAndProcessCompetitionJSON
 jest.mock('fs');
 jest.mock('js-lenex/build/src/lenex-parse.js', () => ({
-  parseLenex: jest.fn()
+  parseLenex: jest.fn(),
 }));
 
 const mockCompetitionData: CompetitionData = {
@@ -27,11 +27,13 @@ const mockCompetitionData: CompetitionData = {
               gender: 'M',
               swimstyle: { relaycount: 1 },
               heats: [
-                { heatid: 'H1', number: 1, order: 1, daytime: '10:00' }
-              ]
-            }
-          ]
-        }
+                {
+                  heatid: 'H1', number: 1, order: 1, daytime: '10:00',
+                },
+              ],
+            },
+          ],
+        },
       ],
       clubs: [
         {
@@ -43,9 +45,11 @@ const mockCompetitionData: CompetitionData = {
               lastname: 'Doe',
               birthdate: '2000-01-01',
               entries: [
-                { eventid: 'E1', heatid: 'H1', entrytime: '1:00.00', lane: 3 }
-              ]
-            }
+                {
+                  eventid: 'E1', heatid: 'H1', entrytime: '1:00.00', lane: 3,
+                },
+              ],
+            },
           ],
           relays: [
             {
@@ -57,16 +61,16 @@ const mockCompetitionData: CompetitionData = {
                   entrytime: '2:00.00',
                   lane: 1,
                   relaypositions: [
-                    { athleteid: 'A1' }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+                    { athleteid: 'A1' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 describe('competition module', () => {
@@ -93,7 +97,7 @@ describe('competition module', () => {
   test('readAndProcessCompetitionJSON calls callback with error if fs.readFile fails', (done) => {
     const fs = require('fs');
     fs.readFile.mockImplementation((path: any, cb: any) => cb(new Error('fail'), null));
-    readAndProcessCompetitionJSON('dummy', (err, result) => {
+    readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
       expect(err).toBeInstanceOf(Error);
       expect(result).toBeNull();
       done();
@@ -106,7 +110,7 @@ describe('competition module', () => {
     fs.readFile.mockImplementation((path: any, cb: any) => cb(null, Buffer.from('data')));
     parseLenex.mockResolvedValue(mockCompetitionData);
     fs.writeFileSync.mockImplementation(() => {});
-    readAndProcessCompetitionJSON('dummy', (err, result) => {
+    readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
       expect(err).toBeNull();
       expect(result).toBeDefined();
       expect(result?.meets[0].name).toBe('Test Meet');

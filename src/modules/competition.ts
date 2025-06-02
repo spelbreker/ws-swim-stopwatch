@@ -9,22 +9,22 @@ import {
   Heat,
   Relay,
   RelayEntry,
-  RelayPosition
-} from './types';
+  RelayPosition,
+} from '../types/types';
 
 // TypeScript conversion of all functions and exports
 
 // readAndProcessCompetitionJSON
 export const readAndProcessCompetitionJSON = (
   filePath: string,
-  callback: (err: Error | string | null, result: CompetitionData | null) => void
+  callback: (err: Error | string | null, result: CompetitionData | null) => void,
 ): void => {
   fs.readFile(filePath, async (err, data) => {
     if (err) {
       callback(err, null);
       return;
     }
-    let result = await parseLenex(data);
+    const result = await parseLenex(data);
     // Fallbacks for type safety
     if (!result.meets) result.meets = [];
     if (!result.meets?.length) {
@@ -67,7 +67,7 @@ export const handleFileUpload = (req: MulterRequest, res: Response): void => {
   const filePath = req.file.path;
   readAndProcessCompetitionJSON(filePath, (err, result) => {
     if (err) {
-      res.status(500).send('Error reading file - ' + err);
+      res.status(500).send(`Error reading file - ${err}`);
       return;
     }
     fs.unlinkSync(filePath);
@@ -79,18 +79,20 @@ export const handleFileUpload = (req: MulterRequest, res: Response): void => {
 export const getMeetSummary = (req: Request, res: Response): void => {
   let meetIndex = 0;
   let sessionIndex = 0;
-  if (req.query.session) sessionIndex = parseInt(req.query.session as string);
-  if (req.query.meet) meetIndex = parseInt(req.query.meet as string);
+  if (req.query.session) sessionIndex = parseInt(req.query.session as string, 10);
+  if (req.query.meet) meetIndex = parseInt(req.query.meet as string, 10);
   if (!fs.existsSync('./public/competition.json')) {
     res.status(500).send('Missing competition.json');
     return;
   }
-  let competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
-  let summary = {
+  const competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
+  const summary = {
     meet: competitionData.meets[meetIndex].name,
     first_session_date: competitionData.meets[meetIndex].sessions[sessionIndex].date,
     session_count: competitionData.meets[meetIndex].sessions.length,
-    event_count: competitionData.meets[meetIndex].sessions.map((session) => session.events.length).reduce((a, b) => a + b, 0),
+    event_count: competitionData.meets[meetIndex].sessions
+      .map((session: any) => session.events.length)
+      .reduce((a: number, b: number) => a + b, 0),
     club_count: competitionData.meets[meetIndex].clubs.length,
   };
   res.setHeader('Content-Type', 'application/json');
@@ -101,25 +103,25 @@ export const getMeetSummary = (req: Request, res: Response): void => {
 export const getEvents = (req: Request, res: Response): void => {
   let meetIndex = 0;
   let sessionIndex = 0;
-  if (req.query.session) sessionIndex = parseInt(req.query.session as string);
-  if (req.query.meet) meetIndex = parseInt(req.query.meet as string);
+  if (req.query.session) sessionIndex = parseInt(req.query.session as string, 10);
+  if (req.query.meet) meetIndex = parseInt(req.query.meet as string, 10);
   if (!fs.existsSync('./public/competition.json')) {
     res.status(500).send('Missing competition.json');
     return;
   }
-  let competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
-  let events = competitionData.meets[meetIndex].sessions[sessionIndex].events;
+  const competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
+  const { events } = competitionData.meets[meetIndex].sessions[sessionIndex];
   res.setHeader('Content-Type', 'application/json');
   res.send(JSON.stringify(events));
 };
 
 // getEvent
 export const getEvent = (req: Request, res: Response): void => {
-  let eventNumber = parseInt(req.params.event);
+  const eventNumber = parseInt(req.params.event, 10);
   let meetIndex = 0;
   let sessionIndex = 0;
-  if (req.query.session) sessionIndex = parseInt(req.query.session as string);
-  if (req.query.meet) meetIndex = parseInt(req.query.meet as string);
+  if (req.query.session) sessionIndex = parseInt(req.query.session as string, 10);
+  if (req.query.meet) meetIndex = parseInt(req.query.meet as string, 10);
   if (!eventNumber) {
     res.status(400).send('Missing eventNumber');
     return;
@@ -128,8 +130,8 @@ export const getEvent = (req: Request, res: Response): void => {
     res.status(500).send('Missing competition.json');
     return;
   }
-  let competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
-  let event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event) => event.number === eventNumber);
+  const competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
+  const event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event: any) => event.number === eventNumber);
   if (!event) {
     res.status(404).send('Event not found');
     return;
@@ -140,12 +142,12 @@ export const getEvent = (req: Request, res: Response): void => {
 
 // getHeat
 export const getHeat = (req: Request, res: Response): void => {
-  let eventNumber = parseInt(req.params.event);
-  let heatNumber = parseInt(req.params.heat);
+  const eventNumber = parseInt(req.params.event, 10);
+  const heatNumber = parseInt(req.params.heat, 10);
   let meetIndex = 0;
   let sessionIndex = 0;
-  if (req.query.session) sessionIndex = parseInt(req.query.session as string);
-  if (req.query.meet) meetIndex = parseInt(req.query.meet as string);
+  if (req.query.session) sessionIndex = parseInt(req.query.session as string, 10);
+  if (req.query.meet) meetIndex = parseInt(req.query.meet as string, 10);
   if (!eventNumber || !heatNumber) {
     res.status(400).send('Missing eventNumber or heatNumber');
     return;
@@ -154,24 +156,24 @@ export const getHeat = (req: Request, res: Response): void => {
     res.status(500).send('Missing competition.json');
     return;
   }
-  let competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
-  let event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event) => event.number === eventNumber);
+  const competitionData: CompetitionData = JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
+  const event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event: any) => event.number === eventNumber);
   if (!event) {
     res.status(404).send('Event not found');
     return;
   }
-  let heat = event.heats.find((heat) => heat.number === heatNumber);
+  const heat = event.heats.find((heat: any) => heat.number === heatNumber);
   if (!heat) {
     res.status(404).send('Heat not found');
     return;
   }
   if (event.swimstyle.relaycount > 1) {
-    let relayEntries = extractRelay(competitionData, event.eventid, heat.heatid);
+    const relayEntries = extractRelay(competitionData, event.eventid, heat.heatid);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(relayEntries));
     return;
   }
-  let entries = getAthletesByHeatId(competitionData, heat.heatid);
+  const entries = getAthletesByHeatId(competitionData, heat.heatid);
   if (entries.length === 0) {
     res.status(404).send('No entries found for the specified heat');
     return;
@@ -190,32 +192,33 @@ export const deleteCompetition = (req: Request, res: Response): void => {
 
 // getAthletesByHeatId
 export const getAthletesByHeatId = (competitionData: CompetitionData, heatId: string) => {
-  let entries = competitionData.meets[0].clubs
-    .map((club) => {
-      return (club.athletes || []).map((athlete) => {
-        if (!Array.isArray(athlete.entries)) {
-          return null;
-        }
-        let filterResult = athlete.entries.filter((entry) => entry.heatid === heatId);
-        if (filterResult.length === 0) {
-          return null;
-        }
-        return {
-          lane: filterResult[0]?.lane,
-          entrytime: filterResult[0]?.entrytime,
-          club: club.name,
-          athletes: [{
-            athleteid: athlete.athleteid,
-            firstname: athlete.firstname,
-            lastname: athlete.lastname,
-            birthdate: athlete.birthdate,
-          }],
-        };
-      });
-    });
+  const entries = competitionData.meets[0].clubs
+    .map((club: any) => (club.athletes || []).map((athlete: any) => {
+      if (!Array.isArray(athlete.entries)) {
+        return null;
+      }
+      const filterResult = athlete.entries.filter((entry: any) => entry.heatid === heatId);
+      if (filterResult.length === 0) {
+        return null;
+      }
+      return {
+        lane: filterResult[0]?.lane,
+        entrytime: filterResult[0]?.entrytime,
+        club: club.name,
+        athletes: [{
+          athleteid: athlete.athleteid,
+          firstname: athlete.firstname,
+          lastname: athlete.lastname,
+          birthdate: athlete.birthdate,
+        }],
+      };
+    }));
   // Flatten, filter nulls with type guard, and sort
   type EntryType = { lane: number; entrytime: string; club: string; athletes: any[] };
-  const flatEntries = entries.flat().filter((x): x is EntryType => x !== null).sort((a, b) => a.lane - b.lane);
+  const flatEntries = entries
+    .flat()
+    .filter((x: any): x is EntryType => x !== null)
+    .sort((a: EntryType, b: EntryType) => a.lane - b.lane);
   return flatEntries;
 };
 
@@ -235,31 +238,32 @@ export const findAthleteById = (competitionData: CompetitionData, athleteId: str
 
 // extractRelay
 export const extractRelay = (competitionData: CompetitionData, event: string, heat: string) => {
-  let relayEntries = competitionData.meets[0].clubs
-    .map((club) => {
-      return (club.relays || []).map((relay) => {
-        if (!relay.entries.length || relay.entries[0].heatid !== heat || relay.entries[0].eventid !== event) {
-          return null;
-        }
-        return {
-          lane: relay.entries[0].lane,
-          entrytime: relay.entries[0].entrytime,
-          club: club.name,
-          relayid: relay.relayid,
-          athletes: relay.entries[0].relaypositions.map((position) => {
-            let athlete = findAthleteById(competitionData, position.athleteid);
-            return {
-              athleteid: position.athleteid,
-              firstname: athlete ? athlete.firstname : '',
-              lastname: athlete ? athlete.lastname : '',
-            };
-          }),
-        };
-      });
-    });
+  const relayEntries = competitionData.meets[0].clubs
+    .map((club: any) => (club.relays || []).map((relay: any) => {
+      if (!relay.entries.length || relay.entries[0].heatid !== heat || relay.entries[0].eventid !== event) {
+        return null;
+      }
+      return {
+        lane: relay.entries[0].lane,
+        entrytime: relay.entries[0].entrytime,
+        club: club.name,
+        relayid: relay.relayid,
+        athletes: relay.entries[0].relaypositions.map((position: any) => {
+          const athlete = findAthleteById(competitionData, position.athleteid);
+          return {
+            athleteid: position.athleteid,
+            firstname: athlete ? athlete.firstname : '',
+            lastname: athlete ? athlete.lastname : '',
+          };
+        }),
+      };
+    }));
   // Flatten, filter nulls with type guard, and sort
   type RelayEntryType = { lane: number; entrytime: string; club: string; relayid: string; athletes: any[] };
-  const flatRelayEntries = relayEntries.flat().filter((x): x is RelayEntryType => x !== null).sort((a, b) => a.lane - b.lane);
+  const flatRelayEntries = relayEntries
+    .flat()
+    .filter((x: any): x is RelayEntryType => x !== null)
+    .sort((a: RelayEntryType, b: RelayEntryType) => a.lane - b.lane);
   return flatRelayEntries;
 };
 
@@ -275,7 +279,7 @@ export function findAthletesWithoutEntries(competitionData: CompetitionData) {
             athleteid: athlete.athleteid,
             firstname: athlete.firstname,
             lastname: athlete.lastname,
-            birthdate: athlete.birthdate
+            birthdate: athlete.birthdate,
           });
         }
       }

@@ -9,7 +9,7 @@ import {
   deleteCompetition,
   getHeat,
   getEvents,
-  getEvent
+  getEvent,
 } from './modules/competition';
 
 const app = express();
@@ -26,13 +26,11 @@ app.get('/competition/event', getEvents);
 app.get('/competition/event/:event/heat/:heat', getHeat);
 
 app.get('*', (req: Request, res: Response) => {
-  let filePath = '.' + req.url;
-  if (filePath === './') {
-    filePath = './public/index.html';
-  }
+  let filePath = `.${req.url}`;
+  if (filePath === './') filePath = './public/index.html';
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.status(404).send(JSON.stringify(err));
+      res.status(500).send(`Error: ${err.message}`);
       return;
     }
     res.writeHead(200);
@@ -41,45 +39,71 @@ app.get('*', (req: Request, res: Response) => {
 });
 
 const wss = new WebSocketServer({ server });
+// Track client liveness in a Map
+const clientLiveness = new Map<WebSocket, boolean>();
 
-wss.on('connection', (ws: WebSocket & { isAlive?: boolean }) => {
-  ws.isAlive = true;
+// Type-safe WebSocket message definition
+type Message =
+  | { type: 'ping'; time: number }
+  | { type: 'pong'; time: number }
+  | { type: string;[key: string]: unknown }; // Extend as needed
+
+function isMessage(obj: unknown): obj is Message {
+  return (
+    typeof obj === 'object'
+    && obj !== null
+    && 'type' in obj
+    // && typeof (obj as any).type === 'string'
+  );
+}
+
+wss.on('connection', (ws: WebSocket) => {
+  clientLiveness.set(ws, true);
+
   ws.on('pong', () => {
-    ws.isAlive = true;
+    clientLiveness.set(ws, true);
   });
+
   ws.on('message', (message: string) => {
-    let msg;
+    let msg: unknown;
     try {
       msg = JSON.parse(message);
-    } catch (e) {
+    } catch {
       return;
     }
-    if (msg.type === 'ping') {
+    if (!isMessage(msg)) return;
+
+    if (msg.type === 'ping' && typeof msg.time === 'number') {
       ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
     }
     wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
+      if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(msg));
       }
     });
   });
+
   ws.on('close', () => {
+    clientLiveness.delete(ws);
     console.log('WebSocket connection closed');
   });
 });
 
-const interval = setInterval(() => {
-  wss.clients.forEach((ws: WebSocket & { isAlive?: boolean }) => {
-    if (!ws.isAlive) {
-      return ws.terminate();
+const heartbeat = setInterval(() => {
+  wss.clients.forEach((client) => {
+    if (!clientLiveness.get(client)) {
+      client.terminate();
+      clientLiveness.delete(client);
+    } else {
+      clientLiveness.set(client, false);
+      client.ping();
     }
-    ws.isAlive = false;
-    ws.ping();
   });
 }, 30000);
 
 wss.on('close', () => {
-  clearInterval(interval);
+  clearInterval(heartbeat);
+  clientLiveness.clear();
 });
 
 server.listen(8080, () => {
