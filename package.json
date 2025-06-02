@@ -4,18 +4,28 @@
   "description": "A webserver with websockets for stopwatch synchronization and split times",
   "main": "server.js",
   "scripts": {
-    "start": "node server/server.js",
+    "start": "node dist/server/server.js",
+    "build": "tsc",
+    "dev": "ts-node server/server.ts",
     "build:css": "tailwindcss build src/styles.css -o public/styles.css",
     "watch:css": "tailwindcss build src/styles.css -o public/styles.css --watch"
   },
   "dependencies": {
     "express": "^4.21",
     "js-lenex": "^0.0.7",
-    "ws": "^8.18",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "ws": "^8.18"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4"
+    "@types/express": "^5.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.15.29",
+    "@types/ws": "^8.18.1",
+    "jest": "^29.7.0",
+    "tailwindcss": "^3.4",
+    "ts-jest": "^29.3.4",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=22.0.0"
