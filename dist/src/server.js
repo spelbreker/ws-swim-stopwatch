@@ -68,6 +68,13 @@ app.get('*', (req, res) => {
 const wss = new ws_1.WebSocketServer({ server });
 // Track client liveness in a Map
 const clientLiveness = new Map();
+function isMessage(obj) {
+    return (typeof obj === 'object'
+        && obj !== null
+        && 'type' in obj
+    // && typeof (obj as any).type === 'string'
+    );
+}
 wss.on('connection', (ws) => {
     clientLiveness.set(ws, true);
     ws.on('pong', () => {
@@ -81,7 +88,9 @@ wss.on('connection', (ws) => {
         catch {
             return;
         }
-        if (typeof msg === 'object' && msg !== null && msg.type === 'ping') {
+        if (!isMessage(msg))
+            return;
+        if (msg.type === 'ping' && typeof msg.time === 'number') {
             ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
         }
         wss.clients.forEach((client) => {

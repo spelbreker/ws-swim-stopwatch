@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "build": "tsc",
+    "test" : "jest",
     "dev": "ts-node server/server.ts",
     "build:css": "tailwindcss build src/styles.css -o public/styles.css",
     "watch:css": "tailwindcss build src/styles.css -o public/styles.css --watch",
