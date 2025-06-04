@@ -3,7 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractRelay = exports.findAthleteById = exports.getAthletesByHeatId = exports.deleteCompetition = exports.getHeat = exports.getEvent = exports.getEvents = exports.getMeetSummary = exports.handleFileUpload = exports.readAndProcessCompetitionJSON = void 0;
+exports.extractRelay = exports.findAthleteById = exports.getAthletesByHeatId = exports.readAndProcessCompetitionJSON = void 0;
+exports.handleFileUploadPure = handleFileUploadPure;
+exports.getMeetSummary = getMeetSummary;
+exports.getEvents = getEvents;
+exports.getEvent = getEvent;
+exports.getHeat = getHeat;
+exports.deleteCompetition = deleteCompetition;
 exports.findAthletesWithoutEntries = findAthletesWithoutEntries;
 const fs_1 = __importDefault(require("fs"));
 const lenex_parse_js_1 = require("js-lenex/build/src/lenex-parse.js");
@@ -45,37 +51,28 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
     });
 };
 exports.readAndProcessCompetitionJSON = readAndProcessCompetitionJSON;
-// handleFileUpload
-const handleFileUpload = (req, res) => {
-    if (!req.file) {
-        res.status(400).send('No file uploaded');
-        return;
-    }
-    const filePath = req.file.path;
+/**
+ * Handles file upload and processing. Pure function, no req/res.
+ */
+function handleFileUploadPure(filePath, callback) {
     (0, exports.readAndProcessCompetitionJSON)(filePath, (err, result) => {
         if (err) {
-            res.status(500).send(`Error reading file - ${err}`);
+            callback(err);
             return;
         }
         fs_1.default.unlinkSync(filePath);
-        res.redirect('/competition/upload.html');
+        callback(null);
     });
-};
-exports.handleFileUpload = handleFileUpload;
-// getMeetSummary
-const getMeetSummary = (req, res) => {
-    let meetIndex = 0;
-    let sessionIndex = 0;
-    if (req.query.session)
-        sessionIndex = parseInt(req.query.session, 10);
-    if (req.query.meet)
-        meetIndex = parseInt(req.query.meet, 10);
-    if (!fs_1.default.existsSync('./public/competition.json')) {
-        res.status(500).send('Missing competition.json');
-        return;
-    }
-    const competitionData = JSON.parse(fs_1.default.readFileSync('./public/competition.json', 'utf-8'));
-    const summary = {
+}
+/**
+ * Returns meet summary for given indices.
+ */
+function getMeetSummary(competitionData, meetIndex, sessionIndex) {
+    if (!competitionData.meets[meetIndex])
+        throw new Error('Invalid meetIndex');
+    if (!competitionData.meets[meetIndex].sessions[sessionIndex])
+        throw new Error('Invalid sessionIndex');
+    return {
         meet: competitionData.meets[meetIndex].name,
         first_session_date: competitionData.meets[meetIndex].sessions[sessionIndex].date,
         session_count: competitionData.meets[meetIndex].sessions.length,
@@ -84,107 +81,60 @@ const getMeetSummary = (req, res) => {
             .reduce((a, b) => a + b, 0),
         club_count: competitionData.meets[meetIndex].clubs.length,
     };
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(summary));
-};
-exports.getMeetSummary = getMeetSummary;
-// getEvents
-const getEvents = (req, res) => {
-    let meetIndex = 0;
-    let sessionIndex = 0;
-    if (req.query.session)
-        sessionIndex = parseInt(req.query.session, 10);
-    if (req.query.meet)
-        meetIndex = parseInt(req.query.meet, 10);
-    if (!fs_1.default.existsSync('./public/competition.json')) {
-        res.status(500).send('Missing competition.json');
-        return;
-    }
-    const competitionData = JSON.parse(fs_1.default.readFileSync('./public/competition.json', 'utf-8'));
-    const { events } = competitionData.meets[meetIndex].sessions[sessionIndex];
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(events));
-};
-exports.getEvents = getEvents;
-// getEvent
-const getEvent = (req, res) => {
-    const eventNumber = parseInt(req.params.event, 10);
-    let meetIndex = 0;
-    let sessionIndex = 0;
-    if (req.query.session)
-        sessionIndex = parseInt(req.query.session, 10);
-    if (req.query.meet)
-        meetIndex = parseInt(req.query.meet, 10);
-    if (!eventNumber) {
-        res.status(400).send('Missing eventNumber');
-        return;
-    }
-    if (!fs_1.default.existsSync('./public/competition.json')) {
-        res.status(500).send('Missing competition.json');
-        return;
-    }
-    const competitionData = JSON.parse(fs_1.default.readFileSync('./public/competition.json', 'utf-8'));
+}
+/**
+ * Returns all events for a given meet/session.
+ */
+function getEvents(competitionData, meetIndex, sessionIndex) {
+    if (!competitionData.meets[meetIndex])
+        throw new Error('Invalid meetIndex');
+    if (!competitionData.meets[meetIndex].sessions[sessionIndex])
+        throw new Error('Invalid sessionIndex');
+    return competitionData.meets[meetIndex].sessions[sessionIndex].events;
+}
+/**
+ * Returns a single event by event number.
+ */
+function getEvent(competitionData, meetIndex, sessionIndex, eventNumber) {
+    if (!competitionData.meets[meetIndex])
+        throw new Error('Invalid meetIndex');
+    if (!competitionData.meets[meetIndex].sessions[sessionIndex])
+        throw new Error('Invalid sessionIndex');
+    return competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event) => event.number === eventNumber) || null;
+}
+/**
+ * Returns heat data or relay entries for a given event/heat.
+ */
+function getHeat(competitionData, meetIndex, sessionIndex, eventNumber, heatNumber) {
+    if (!competitionData.meets[meetIndex])
+        throw new Error('Invalid meetIndex');
+    if (!competitionData.meets[meetIndex].sessions[sessionIndex])
+        throw new Error('Invalid sessionIndex');
     const event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event) => event.number === eventNumber);
-    if (!event) {
-        res.status(404).send('Event not found');
-        return;
-    }
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(event));
-};
-exports.getEvent = getEvent;
-// getHeat
-const getHeat = (req, res) => {
-    const eventNumber = parseInt(req.params.event, 10);
-    const heatNumber = parseInt(req.params.heat, 10);
-    let meetIndex = 0;
-    let sessionIndex = 0;
-    if (req.query.session)
-        sessionIndex = parseInt(req.query.session, 10);
-    if (req.query.meet)
-        meetIndex = parseInt(req.query.meet, 10);
-    if (!eventNumber || !heatNumber) {
-        res.status(400).send('Missing eventNumber or heatNumber');
-        return;
-    }
-    if (!fs_1.default.existsSync('./public/competition.json')) {
-        res.status(500).send('Missing competition.json');
-        return;
-    }
-    const competitionData = JSON.parse(fs_1.default.readFileSync('./public/competition.json', 'utf-8'));
-    const event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event) => event.number === eventNumber);
-    if (!event) {
-        res.status(404).send('Event not found');
-        return;
-    }
+    if (!event)
+        return null;
     const heat = event.heats.find((heat) => heat.number === heatNumber);
-    if (!heat) {
-        res.status(404).send('Heat not found');
-        return;
-    }
+    if (!heat)
+        return null;
     if (event.swimstyle.relaycount > 1) {
-        const relayEntries = (0, exports.extractRelay)(competitionData, event.eventid, heat.heatid);
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(relayEntries));
-        return;
+        return (0, exports.extractRelay)(competitionData, event.eventid, heat.heatid);
     }
     const entries = (0, exports.getAthletesByHeatId)(competitionData, heat.heatid);
-    if (entries.length === 0) {
-        res.status(404).send('No entries found for the specified heat');
-        return;
-    }
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(entries));
-};
-exports.getHeat = getHeat;
-// deleteCompetition
-const deleteCompetition = (req, res) => {
-    fs_1.default.unlinkSync('./public/competition.json');
-    fs_1.default.unlinkSync('./public/events.json');
-    fs_1.default.unlinkSync('./public/athletes.json');
-    res.status(200).send('Competition deleted');
-};
-exports.deleteCompetition = deleteCompetition;
+    if (entries.length === 0)
+        return null;
+    return entries;
+}
+/**
+ * Deletes competition files.
+ */
+function deleteCompetition() {
+    if (fs_1.default.existsSync('./public/competition.json'))
+        fs_1.default.unlinkSync('./public/competition.json');
+    if (fs_1.default.existsSync('./public/events.json'))
+        fs_1.default.unlinkSync('./public/events.json');
+    if (fs_1.default.existsSync('./public/athletes.json'))
+        fs_1.default.unlinkSync('./public/athletes.json');
+}
 // getAthletesByHeatId
 const getAthletesByHeatId = (competitionData, heatId) => {
     const entries = competitionData.meets[0].clubs
