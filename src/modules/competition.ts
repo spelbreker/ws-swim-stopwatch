@@ -43,25 +43,6 @@ export const readAndProcessCompetitionJSON = (
   });
 };
 
-// MulterRequest type voor file property
-interface MulterRequest extends Request {
-  file?: Express.Multer.File;
-}
-
-/**
- * Handles file upload and processing. Pure function, no req/res.
- */
-export function handleFileUploadPure(filePath: string, callback: (err: Error | string | null) => void): void {
-  readAndProcessCompetitionJSON(filePath, (err, result) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-    fs.unlinkSync(filePath);
-    callback(null);
-  });
-}
-
 /**
  * Returns meet summary for given indices.
  */

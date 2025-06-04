@@ -5,7 +5,7 @@ import {
   getEvents as getEventsModule,
   getEvent as getEventModule,
   getHeat as getHeatModule,
-  handleFileUploadPure,
+  readAndProcessCompetitionJSON,
   deleteCompetition as deleteCompetitionModule,
 } from '../modules/competition';
 import { CompetitionData } from '../types/types';
@@ -108,11 +108,16 @@ export function handleFileUpload(req: Request, res: Response): void {
     res.status(400).send('No file uploaded');
     return;
   }
-  handleFileUploadPure(file.path, (err) => {
+  const filePath = file.path;
+  readAndProcessCompetitionJSON(filePath, (err, result) => {
     if (err) {
       res.status(500).send(`Error reading file - ${err}`);
       return;
     }
+    // Remove uploaded file after processing
+    try {
+      require('fs').unlinkSync(filePath);
+    } catch {}
     res.redirect('/competition/upload.html');
   });
 }
