@@ -1,11 +1,6 @@
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-
-// Type-safe WebSocket message definition
-export type Message =
-  | { type: 'ping'; time: number }
-  | { type: 'pong'; time: number }
-  | { type: string; [key: string]: unknown };
+import { Message } from './messageTypes';
 
 function isMessage(obj: unknown): obj is Message {
   return (
