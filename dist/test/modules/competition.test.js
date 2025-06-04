@@ -107,3 +107,50 @@ describe('competition module', () => {
         });
     });
 });
+describe('getAthletesByHeatId edge cases', () => {
+    test('returns empty array if clubs is empty', () => {
+        const data = {
+            ...mockCompetitionData,
+            meets: [{ ...mockCompetitionData.meets[0], clubs: [] }],
+        };
+        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        expect(result).toEqual([]);
+    });
+    test('returns empty array if club has no athletes', () => {
+        const data = {
+            ...mockCompetitionData,
+            meets: [{
+                    ...mockCompetitionData.meets[0],
+                    clubs: [{ name: 'Club B', athletes: [], relays: [] }],
+                }],
+        };
+        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        expect(result).toEqual([]);
+    });
+    test('returns empty array if club has no athletes property', () => {
+        const data = {
+            ...mockCompetitionData,
+            meets: [{
+                    ...mockCompetitionData.meets[0],
+                    clubs: [{ name: 'Club C', relays: [] }],
+                }],
+        };
+        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        expect(result).toEqual([]);
+    });
+    test('returns empty array if athlete has no entries property', () => {
+        const data = {
+            ...mockCompetitionData,
+            meets: [{
+                    ...mockCompetitionData.meets[0],
+                    clubs: [{
+                            name: 'Club D',
+                            athletes: [{ athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01' }],
+                            relays: [],
+                        }],
+                }],
+        };
+        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        expect(result).toEqual([]);
+    });
+});

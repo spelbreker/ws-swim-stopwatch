@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractRelay = exports.findAthleteById = exports.getAthletesByHeatId = exports.readAndProcessCompetitionJSON = void 0;
-exports.handleFileUploadPure = handleFileUploadPure;
 exports.getMeetSummary = getMeetSummary;
 exports.getEvents = getEvents;
 exports.getEvent = getEvent;
@@ -51,19 +50,6 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
     });
 };
 exports.readAndProcessCompetitionJSON = readAndProcessCompetitionJSON;
-/**
- * Handles file upload and processing. Pure function, no req/res.
- */
-function handleFileUploadPure(filePath, callback) {
-    (0, exports.readAndProcessCompetitionJSON)(filePath, (err, result) => {
-        if (err) {
-            callback(err);
-            return;
-        }
-        fs_1.default.unlinkSync(filePath);
-        callback(null);
-    });
-}
 /**
  * Returns meet summary for given indices.
  */
