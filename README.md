@@ -94,7 +94,37 @@ To use the Docker image published to GitHub Packages, follow these steps:
 
 ## Project Structure
 
-## copilot instructions
+The project uses a modern, modular folder structure for clarity and maintainability:
 
-use as template
-https://www.reddit.com/r/ChatGPTCoding/comments/1jl6gll/copilotinstructionsmd_has_helped_me_so_much/
+```
+project-root/
+├── public/                  # Static assets (HTML, JS, images, manifest, etc.)
+│   ├── competition/         # Competition views/scripts
+│   ├── image/               # Public images
+│   ├── js/                  # General JS scripts
+│   ├── training/            # Training module views/scripts
+│   ├── index.html           # Dashboard
+│   ├── manifest.json        # PWA manifest
+│   └── ...
+├── src/                    # All source code (Node.js server, modules, types)
+│   └── server/
+│       ├── server.ts        # Server entry point
+│       ├── modules/         # Business logic modules (e.g. competition.ts)
+│       └── types/           # TypeScript types/interfaces
+├── test/                   # Automated tests (mirrors src/ structure)
+│   └── server/
+│       └── modules/
+├── uploads/                # Uploaded files (e.g. Lenex)
+├── examples/               # Example files (e.g. sample Lenex)
+├── package.json
+├── tsconfig.json
+└── ...etc (config files)
+```
+
+### Key Points
+- All server-side code is now under `src/server/`.
+- Types are in `src/server/types/` (or `types/` if shared project-wide).
+- Tests are in `test/`, mirroring the source structure.
+- Static assets remain in `public/`.
+
+> This structure improves maintainability, scalability, and testability.

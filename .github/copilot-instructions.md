@@ -105,28 +105,65 @@
 ## Folder Structure
 	Follow this structured directory layout:
 
-    project-root /
+    project-root/
         ├── public
         │   ├── competition
-        │   │   ├── remote.html     # screen remote view
-        │   │   ├── remote.js       # screen remote js
-        │   │   ├── screen.html     # screen view
-        │   │   ├── screen.js       # screen view js
-        │   │   └── upload.html     # upload page for lenex file
-        │   ├── competition.json    # converted lenex file with all competion data
-        │   ├── image               # public images
-        │   ├── index.html          # dashboard
-        │   ├── js
-        │   │   ├── main.js         # included js to bootstrap default functions
-        │   │   └── training.js     # training js script for training mode
+        │   │   ├── remote.html           # screen remote view
+        │   │   ├── remote.js             # screen remote js
+        │   │   ├── screen.html           # screen view
+        │   │   ├── screen.js             # screen view js
+        │   │   └── upload.html           # upload page for lenex file
+        │   ├── competition.json          # converted lenex file with all competition data
+        │   ├── css/
+        │   ├── image/                    # public images
+        │   ├── index.html                # dashboard
+        │   ├── js/
+        │   │   ├── main.js               # included js to bootstrap default functions
+        │   │   └── training.js           # training js script for training mode
         │   ├── manifest.json
-        │   └── training            # training module views and scripts
+        │   └── training/
         │       ├── training-remote.html
         │       └── training-screen.html
-        └── server                  # node js server
-            ├── modules
-            │   └── competition.js  # module for api reponses for compettion data
-            └── server.js           # bootstrap and routing of server
+        ├── src
+        │   ├── server.ts                 # bootstrap and routing of server
+        │   ├── controllers/
+        │   │   └── competition/
+        │   │       ├── competitionController.ts
+        │   │       └── event/
+        │   │           └── eventController.ts
+        │   │           └── heat/
+        │   │               └── heatController.ts
+        │   ├── modules/
+        │   │   └── competition.ts        # module for api responses for competition data
+        │   ├── routes/
+        │   │   └── routes.ts
+        │   ├── types/
+        │   │   └── types.ts              # TypeScript types/interfaces
+        │   └── websockets/
+        │       ├── messageTypes.ts
+        │       └── websocket.ts
+        ├── test
+        │   ├── controllers/
+        │   │   └── competition/
+        │   │       ├── competitionController.test.ts
+        │   │       └── event/
+        │   │           └── eventController.test.ts
+        │   │           └── heat/
+        │   │               └── heatController.test.ts
+        │   └── modules/
+        │       └── competition.test.ts   # tests for competition module
+        ├── uploads/                      # uploaded files (e.g. Lenex)
+        ├── examples/                     # example files (e.g. sample Lenex)
+        ├── package.json
+        ├── tsconfig.json
+        ├── jest.config.js
+        ├── tailwind.config.js
+        ├── postcss.config.js
+        ├── README.md
+        ├── devcontainer.json
+        ├── docker-compose.yml
+        ├── Dockerfile
+        └── ...etc (config files)
 
 
 ## Documentation Requirements
