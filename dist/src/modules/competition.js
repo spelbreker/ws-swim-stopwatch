@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -8,11 +41,13 @@ exports.getMeetSummary = getMeetSummary;
 exports.getEvents = getEvents;
 exports.getEvent = getEvent;
 exports.getHeat = getHeat;
-exports.deleteCompetition = deleteCompetition;
 exports.findAthletesWithoutEntries = findAthletesWithoutEntries;
 const fs_1 = __importDefault(require("fs"));
-const lenex_parse_js_1 = require("js-lenex/build/src/lenex-parse.js");
-// TypeScript conversion of all functions and exports
+function loadCompetitionData() {
+    if (!fs_1.default.existsSync('./public/competition.json'))
+        return null;
+    return JSON.parse(fs_1.default.readFileSync('./public/competition.json', 'utf-8'));
+}
 // readAndProcessCompetitionJSON
 const readAndProcessCompetitionJSON = (filePath, callback) => {
     fs_1.default.readFile(filePath, async (err, data) => {
@@ -20,7 +55,9 @@ const readAndProcessCompetitionJSON = (filePath, callback) => {
             callback(err, null);
             return;
         }
-        const result = await (0, lenex_parse_js_1.parseLenex)(data);
+        // Dynamic import for ESM compatibility
+        const { parseLenex } = await Promise.resolve().then(() => __importStar(require('js-lenex/build/src/lenex-parse.js')));
+        const result = await parseLenex(data);
         // Fallbacks for type safety
         if (!result.meets)
             result.meets = [];
@@ -53,7 +90,10 @@ exports.readAndProcessCompetitionJSON = readAndProcessCompetitionJSON;
 /**
  * Returns meet summary for given indices.
  */
-function getMeetSummary(competitionData, meetIndex, sessionIndex) {
+function getMeetSummary(meetIndex, sessionIndex) {
+    const competitionData = loadCompetitionData();
+    if (!competitionData)
+        throw new Error('Missing competition.json');
     if (!competitionData.meets[meetIndex])
         throw new Error('Invalid meetIndex');
     if (!competitionData.meets[meetIndex].sessions[sessionIndex])
@@ -71,7 +111,10 @@ function getMeetSummary(competitionData, meetIndex, sessionIndex) {
 /**
  * Returns all events for a given meet/session.
  */
-function getEvents(competitionData, meetIndex, sessionIndex) {
+function getEvents(meetIndex, sessionIndex) {
+    const competitionData = loadCompetitionData();
+    if (!competitionData)
+        throw new Error('Missing competition.json');
     if (!competitionData.meets[meetIndex])
         throw new Error('Invalid meetIndex');
     if (!competitionData.meets[meetIndex].sessions[sessionIndex])
@@ -81,7 +124,10 @@ function getEvents(competitionData, meetIndex, sessionIndex) {
 /**
  * Returns a single event by event number.
  */
-function getEvent(competitionData, meetIndex, sessionIndex, eventNumber) {
+function getEvent(meetIndex, sessionIndex, eventNumber) {
+    const competitionData = loadCompetitionData();
+    if (!competitionData)
+        throw new Error('Missing competition.json');
     if (!competitionData.meets[meetIndex])
         throw new Error('Invalid meetIndex');
     if (!competitionData.meets[meetIndex].sessions[sessionIndex])
@@ -91,7 +137,10 @@ function getEvent(competitionData, meetIndex, sessionIndex, eventNumber) {
 /**
  * Returns heat data or relay entries for a given event/heat.
  */
-function getHeat(competitionData, meetIndex, sessionIndex, eventNumber, heatNumber) {
+function getHeat(meetIndex, sessionIndex, eventNumber, heatNumber) {
+    const competitionData = loadCompetitionData();
+    if (!competitionData)
+        throw new Error('Missing competition.json');
     if (!competitionData.meets[meetIndex])
         throw new Error('Invalid meetIndex');
     if (!competitionData.meets[meetIndex].sessions[sessionIndex])
@@ -109,17 +158,6 @@ function getHeat(competitionData, meetIndex, sessionIndex, eventNumber, heatNumb
     if (entries.length === 0)
         return null;
     return entries;
-}
-/**
- * Deletes competition files.
- */
-function deleteCompetition() {
-    if (fs_1.default.existsSync('./public/competition.json'))
-        fs_1.default.unlinkSync('./public/competition.json');
-    if (fs_1.default.existsSync('./public/events.json'))
-        fs_1.default.unlinkSync('./public/events.json');
-    if (fs_1.default.existsSync('./public/athletes.json'))
-        fs_1.default.unlinkSync('./public/athletes.json');
 }
 // getAthletesByHeatId
 const getAthletesByHeatId = (competitionData, heatId) => {
