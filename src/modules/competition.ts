@@ -1,8 +1,10 @@
 import fs from 'fs';
-import { parseLenex } from 'js-lenex/build/src/lenex-parse.js';
-import {CompetitionData,Athlete} from '../types/types';
+import { CompetitionData, Athlete } from '../types/types';
 
-// TypeScript conversion of all functions and exports
+function loadCompetitionData(): CompetitionData | null {
+  if (!fs.existsSync('./public/competition.json')) return null;
+  return JSON.parse(fs.readFileSync('./public/competition.json', 'utf-8'));
+}
 
 // readAndProcessCompetitionJSON
 export const readAndProcessCompetitionJSON = (
@@ -14,6 +16,8 @@ export const readAndProcessCompetitionJSON = (
       callback(err, null);
       return;
     }
+    // Dynamic import for ESM compatibility
+    const { parseLenex } = await import('js-lenex/build/src/lenex-parse.js');
     const result = await parseLenex(data);
     // Fallbacks for type safety
     if (!result.meets) result.meets = [];
@@ -46,7 +50,9 @@ export const readAndProcessCompetitionJSON = (
 /**
  * Returns meet summary for given indices.
  */
-export function getMeetSummary(competitionData: CompetitionData, meetIndex: number, sessionIndex: number) {
+export function getMeetSummary(meetIndex: number, sessionIndex: number) {
+  const competitionData = loadCompetitionData();
+  if (!competitionData) throw new Error('Missing competition.json');
   if (!competitionData.meets[meetIndex]) throw new Error('Invalid meetIndex');
   if (!competitionData.meets[meetIndex].sessions[sessionIndex]) throw new Error('Invalid sessionIndex');
   return {
@@ -63,7 +69,9 @@ export function getMeetSummary(competitionData: CompetitionData, meetIndex: numb
 /**
  * Returns all events for a given meet/session.
  */
-export function getEvents(competitionData: CompetitionData, meetIndex: number, sessionIndex: number) {
+export function getEvents(meetIndex: number, sessionIndex: number) {
+  const competitionData = loadCompetitionData();
+  if (!competitionData) throw new Error('Missing competition.json');
   if (!competitionData.meets[meetIndex]) throw new Error('Invalid meetIndex');
   if (!competitionData.meets[meetIndex].sessions[sessionIndex]) throw new Error('Invalid sessionIndex');
   return competitionData.meets[meetIndex].sessions[sessionIndex].events;
@@ -72,7 +80,9 @@ export function getEvents(competitionData: CompetitionData, meetIndex: number, s
 /**
  * Returns a single event by event number.
  */
-export function getEvent(competitionData: CompetitionData, meetIndex: number, sessionIndex: number, eventNumber: number) {
+export function getEvent(meetIndex: number, sessionIndex: number, eventNumber: number) {
+  const competitionData = loadCompetitionData();
+  if (!competitionData) throw new Error('Missing competition.json');
   if (!competitionData.meets[meetIndex]) throw new Error('Invalid meetIndex');
   if (!competitionData.meets[meetIndex].sessions[sessionIndex]) throw new Error('Invalid sessionIndex');
   return competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event: any) => event.number === eventNumber) || null;
@@ -81,7 +91,9 @@ export function getEvent(competitionData: CompetitionData, meetIndex: number, se
 /**
  * Returns heat data or relay entries for a given event/heat.
  */
-export function getHeat(competitionData: CompetitionData, meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
+export function getHeat(meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
+  const competitionData = loadCompetitionData();
+  if (!competitionData) throw new Error('Missing competition.json');
   if (!competitionData.meets[meetIndex]) throw new Error('Invalid meetIndex');
   if (!competitionData.meets[meetIndex].sessions[sessionIndex]) throw new Error('Invalid sessionIndex');
   const event = competitionData.meets[meetIndex].sessions[sessionIndex].events.find((event: any) => event.number === eventNumber);
@@ -94,15 +106,6 @@ export function getHeat(competitionData: CompetitionData, meetIndex: number, ses
   const entries = getAthletesByHeatId(competitionData, heat.heatid);
   if (entries.length === 0) return null;
   return entries;
-}
-
-/**
- * Deletes competition files.
- */
-export function deleteCompetition() {
-  if (fs.existsSync('./public/competition.json')) fs.unlinkSync('./public/competition.json');
-  if (fs.existsSync('./public/events.json')) fs.unlinkSync('./public/events.json');
-  if (fs.existsSync('./public/athletes.json')) fs.unlinkSync('./public/athletes.json');
 }
 
 // getAthletesByHeatId
