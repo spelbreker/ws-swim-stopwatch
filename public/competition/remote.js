@@ -6,6 +6,7 @@ let eventSelect;
 let heatSelect;
 // Global variable for ping
 let pingStartTime;
+let serverTimeOffset = 0;
 
 // ------------------------------------------------------------------
 // Utility functions
@@ -96,7 +97,12 @@ function sendPing() {
 // Stopwatch control functions
 // ------------------------------------------------------------------
 function updateStopwatch(startTime, stopwatchElement) {
-    const elapsedTime = Date.now() - startTime;
+    if (!startTime || !stopwatchElement) {
+        if (stopwatchElement) stopwatchElement.textContent = '00:00:00';
+        return;
+    }
+    const now = Date.now() + serverTimeOffset;
+    const elapsedTime = now - startTime;
     const minutes = Math.floor(elapsedTime / 60000);
     const seconds = Math.floor((elapsedTime % 60000) / 1000);
     const milliseconds = Math.floor((elapsedTime % 1000) / 10);
@@ -197,8 +203,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (startTimeOverride) {
             startTime = startTimeOverride;
         } else {
-            startTime = Date.now();
+            // Gebruik altijd serverTimeOffset bij start
+            startTime = Date.now() + serverTimeOffset;
         }
+        // Start een interval om de stopwatch te laten lopen
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
@@ -261,10 +269,10 @@ document.addEventListener('DOMContentLoaded', function () {
     laneButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
-            const time = stopwatchElement.textContent;
-            
-            updateLaneInfo(lane, time);
-            window.socket.send(JSON.stringify({ type: 'split', lane, time }));
+            // Gebruik timestamp voor lap time
+            const lapTimestamp = Date.now() + serverTimeOffset;
+            updateLaneInfo(lane, window.formatLapTime(lapTimestamp, startTime || 0));
+            window.socket.send(JSON.stringify({ type: 'split', lane, timestamp: lapTimestamp }));
             highlightLaneButton(button);
         });
     });
@@ -300,17 +308,23 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('message', function (event) {
         const message = JSON.parse(event.data);
         if (message.type === 'start') {
-            //latency compensation
-            const latency = Date.now() - message.time;
-            startTime = Date.now() - latency;
-            // Start the stopwatch with the adjusted start time
-            startStopwatch(false, startTime);
-            console.log('Latency:', latency);
+            startTime = message.timestamp + serverTimeOffset;
+            window.startTime = startTime;
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+            }
+            // Start een interval om de stopwatch te laten lopen bij ontvangen van start
+            stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
+            for (let i = 0; i <= 9; i++) {
+                updateLaneInfo(i, '00:00:00');
+            }
         } else if (message.type === 'reset') {
             resetStopwatch(false);
         } else if (message.type === 'split') {
             const lane = message.lane;
-            updateLaneInfo(lane, message.time);
+            if (message.timestamp) {
+                updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0));
+            }
             const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
             if (button) {
                 highlightLaneButton(button);
@@ -323,12 +337,17 @@ document.addEventListener('DOMContentLoaded', function () {
             updateEventHeatInfoBar(message.event, message.heat);
         } else if (message.type === 'clear') {
             clearLaneInformation();
-        } else if (message.type === 'pong') { // New handling for pong response
-            const pingTime = Date.now() - message.time;
-            const pingDisplay = document.getElementById('ping-display');
-            if (pingDisplay) {
-                pingDisplay.textContent = `${pingTime} ms`;
+        } else if (message.type === 'pong' || message.type === 'time_sync') {
+            let rtt = 0;
+            if (message.type === 'pong') {
+                rtt = Date.now() - (message.client_ping_time ?? Date.now());
+                const pingDisplay = document.getElementById('ping-display');
+                if (pingDisplay) {
+                    pingDisplay.textContent = Number.isFinite(rtt) && rtt >= 0 ? `${rtt} ms` : '';
+                }
             }
+            const estimatedServerTimeNow = message.server_time + (rtt / 2);
+            serverTimeOffset = estimatedServerTimeNow - Date.now();
         }
     });
 });
