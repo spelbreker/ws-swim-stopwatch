@@ -14,7 +14,7 @@ function updateStopwatch() {
         stopwatchElement.textContent = '00:00:00';
         return;
     }
-    const currentTime = Date.now();
+    const currentTime = Date.now() + serverTimeOffset;
     const elapsedTime = currentTime - startTime;
     const minutes = Math.floor(elapsedTime / 60000);
     const seconds = Math.floor((elapsedTime % 60000) / 1000);
