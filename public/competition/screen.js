@@ -150,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add WebSocket message handler for screen updates
     window.socket.addEventListener('message', function (event) {
         const message = JSON.parse(event.data);
+
+        /** Start the stopwatch */
         if (message.type === 'start') {
             startTime = message.timestamp + serverTimeOffset;
             window.startTime = startTime;
@@ -158,15 +160,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
             clearLaneSplitTimes();
-        } else if (message.type === 'reset') {
+            return
+        } 
+
+        /** Stop the stopwatch */
+        if (message.type === 'reset') {
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
                 stopwatchInterval = null;
             }
             startTime = null;
             stopwatchElement.textContent = '00:00:00';
-           //clearLaneSplitTimes();
-        } else if (message.type === 'split') {
+            return;
+        } 
+        
+        /** Update lane information */
+        if (message.type === 'split') {
             const lane = message.lane;
             if (message.timestamp) {
                 const laneElement = document.getElementById(`lane-${lane}`);
@@ -179,19 +188,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
                 }
             }
-        } else if (message.type === 'event-heat') {
+            return;
+        } 
+
+        /** change event and heat information */
+        if (message.type === 'event-heat') {
             document.getElementById('event-number').textContent = message.event;
             document.getElementById('heat-number').textContent = message.heat;
             fetchCompetitionData(message.event, message.heat);
-        } else if (message.type === 'clear') {
+            return;
+        } 
+
+        /** clear all lane information */
+        if (message.type === 'clear') {
             clearLaneInformation();
-        } else if (message.type === 'pong' || message.type === 'time_sync') {
+            return;
+        } 
+        
+        /** Update server time offset */
+        if (message.type === 'pong' || message.type === 'time_sync') {
             let rtt = 0;
             if (message.type === 'pong') {
                 rtt = Date.now() - message.client_ping_time;
             }
             const estimatedServerTimeNow = message.server_time + (rtt / 2);
             serverTimeOffset = estimatedServerTimeNow - Date.now();
+            return;
         }
     });
 });
