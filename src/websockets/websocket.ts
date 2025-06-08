@@ -4,9 +4,9 @@ import { Message } from './messageTypes';
 
 function isMessage(obj: unknown): obj is Message {
   return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj
+    typeof obj === 'object'
+    && obj !== null
+    && 'type' in obj
   );
 }
 
