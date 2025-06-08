@@ -14,7 +14,7 @@ function updateStopwatch() {
         stopwatchElement.textContent = '00:00:00';
         return;
     }
-    const currentTime = Date.now() + serverTimeOffset;
+    const currentTime = Date.now();
     const elapsedTime = currentTime - startTime;
     const minutes = Math.floor(elapsedTime / 60000);
     const seconds = Math.floor((elapsedTime % 60000) / 1000);
@@ -91,6 +91,12 @@ function formatLapTime(ts) {
     return window.formatLapTime(ts, base);
 }
 
+function formatLapTime(ts) {
+    // Zet timestamp om naar mm:ss:ms
+    const base = window.startTime || 0;
+    return window.formatLapTime(ts, base);
+}
+
 function clearLaneInformation() {
     for (let i = 0; i <= 9; i++) {
         const laneElement = document.getElementById(`lane-${i}`);
@@ -144,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Start the stopwatch */
         if (message.type === 'start') {
+            startTime = message.timestamp + serverTimeOffset;
+            window.startTime = startTime;
             startTime = message.timestamp + serverTimeOffset;
             window.startTime = startTime;
             if (stopwatchInterval) {
@@ -205,6 +213,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const estimatedServerTimeNow = message.server_time + (rtt / 2);
             serverTimeOffset = estimatedServerTimeNow - Date.now();
             return;
-        }
+        } 
     });
 });

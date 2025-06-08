@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Start een interval om de stopwatch te laten lopen bij ontvangen van start
             stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
             for (let i = 0; i <= 9; i++) {
-                updateLaneInfo(i, '00:00:00');
+                updateLaneInfo(i, '---:---:---');
             }
             return;
         }
