@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
-            window.socket.send(JSON.stringify({ type: 'start', time: startTime }));
+            window.socket.send(JSON.stringify({ type: 'start', time: startTime, heat: heatSelect.value, event: eventSelect.value }));
         }
         disableControls(true, controlElements);
         

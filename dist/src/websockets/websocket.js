@@ -35,10 +35,64 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupWebSocket = setupWebSocket;
 const ws_1 = __importStar(require("ws"));
+const logger_1 = require("./logger");
 function isMessage(obj) {
-    return (typeof obj === 'object' &&
-        obj !== null &&
-        'type' in obj);
+    return (typeof obj === 'object'
+        && obj !== null
+        && 'type' in obj);
+}
+function broadcastAllClients(wss, payload) {
+    const withTimestamp = {
+        ...(typeof payload === 'object' && payload !== null ? payload : {}),
+        server_timestamp: Date.now(),
+    };
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws_1.default.OPEN) {
+            client.send(JSON.stringify(withTimestamp));
+        }
+    });
+}
+function handleStart(msg, wss) {
+    const { event, heat, time } = msg;
+    if ((typeof time === 'number')
+        && (typeof event === 'string' || typeof event === 'number')
+        && (typeof heat === 'string' || typeof heat === 'number')) {
+        (0, logger_1.logStart)(event, heat, time);
+    }
+    const payload = {
+        ...msg,
+        timestamp: Date.now(),
+    };
+    broadcastAllClients(wss, payload);
+}
+function handleLap(msg, wss) {
+    const { lane, timestamp } = msg;
+    if ((typeof lane === 'string' || typeof lane === 'number')
+        && typeof timestamp === 'number') {
+        (0, logger_1.logLap)(lane, timestamp);
+    }
+    const payload = {
+        ...msg,
+        timestamp: Date.now(),
+    };
+    broadcastAllClients(wss, payload);
+}
+function handleReset(msg, wss) {
+    (0, logger_1.logStop)(Date.now());
+    const payload = {
+        ...msg,
+        timestamp: Date.now(),
+    };
+    broadcastAllClients(wss, payload);
+}
+function handlePing(msg, ws) {
+    if (typeof msg.time === 'number') {
+        ws.send(JSON.stringify({
+            type: 'pong',
+            client_ping_time: msg.time,
+            server_time: Date.now(),
+        }));
+    }
 }
 function setupWebSocket(server) {
     const wss = new ws_1.WebSocketServer({ server });
@@ -58,14 +112,25 @@ function setupWebSocket(server) {
             }
             if (!isMessage(msg))
                 return;
-            if (msg.type === 'ping' && typeof msg.time === 'number') {
-                ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
+            const msgObj = msg;
+            switch (msgObj.type) {
+                case 'ping':
+                    handlePing(msgObj, ws);
+                    return;
+                case 'start':
+                    handleStart(msgObj, wss);
+                    return;
+                case 'split':
+                    handleLap(msgObj, wss);
+                    return;
+                case 'reset':
+                    handleReset(msgObj, wss);
+                    return;
+                default:
+                    break;
             }
-            wss.clients.forEach((client) => {
-                if (client.readyState === ws_1.default.OPEN) {
-                    client.send(JSON.stringify(msg));
-                }
-            });
+            // Default: broadcast other messages as-is
+            broadcastAllClients(wss, msgObj);
         });
         ws.on('close', () => {
             clientLiveness.delete(ws);

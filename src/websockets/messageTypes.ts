@@ -1,10 +1,10 @@
 // Type-safe WebSocket message definition for all frontend/backend communication
 export type Message =
   | { type: 'ping'; time: number }
-  | { type: 'pong'; time: number }
-  | { type: 'start'; time?: number }
-  | { type: 'reset' }
-  | { type: 'split'; lane: number; time: string }
+  | { type: 'pong'; client_ping_time: number; server_time: number }
+  | { type: 'start'; time?: number; timestamp: number, event?: number | string, heat?: number | string }
+  | { type: 'reset'; timestamp: number }
+  | { type: 'split'; lane: number; timestamp: string }
   | { type: 'event-heat'; event: number | string; heat: number | string }
   | { type: 'clear' }
   | { type: 'add-interval'; newInterval: any }
