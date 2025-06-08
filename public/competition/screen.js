@@ -91,12 +91,6 @@ function formatLapTime(ts) {
     return window.formatLapTime(ts, base);
 }
 
-function formatLapTime(ts) {
-    // Zet timestamp om naar mm:ss:ms
-    const base = window.startTime || 0;
-    return window.formatLapTime(ts, base);
-}
-
 function clearLaneInformation() {
     for (let i = 0; i <= 9; i++) {
         const laneElement = document.getElementById(`lane-${i}`);
