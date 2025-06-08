@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             startTime = null;
             stopwatchElement.textContent = '00:00:00';
-            clearLaneSplitTimes();
+           //clearLaneSplitTimes();
         } else if (message.type === 'split') {
             const lane = message.lane;
             if (message.timestamp) {
