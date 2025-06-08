@@ -19,7 +19,7 @@
     "node": true,
     "es2020": true
   },
-  "ignorePatterns": ["dist/", "node_modules/"],
+  "ignorePatterns": ["dist/", "node_modules/","public/"],
   "rules": {
     "max-len": ["error", { "code": 120 }],
     "no-console": "off",

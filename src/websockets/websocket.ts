@@ -4,9 +4,9 @@ import { Message } from './messageTypes';
 
 function isMessage(obj: unknown): obj is Message {
   return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj
+    typeof obj === 'object'
+    && obj !== null
+    && 'type' in obj
   );
 }
 
@@ -31,8 +31,20 @@ export function setupWebSocket(server: http.Server) {
       if (!isMessage(msg)) return;
 
       if (msg.type === 'ping' && typeof msg.time === 'number') {
-        ws.send(JSON.stringify({ type: 'pong', time: msg.time }));
+        ws.send(JSON.stringify({ type: 'pong', client_ping_time: msg.time, server_time: Date.now() }));
+        return;
       }
+      // Handle start/stop/reset to always include server timestamp
+      if (msg.type === 'start' || msg.type === 'reset' || msg.type === 'stop') {
+        const payload = { ...msg, timestamp: Date.now() };
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(payload));
+          }
+        });
+        return;
+      }
+      // Default: broadcast other messages as-is
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(msg));
@@ -57,6 +69,15 @@ export function setupWebSocket(server: http.Server) {
       }
     });
   }, 30000);
+
+  // Periodically broadcast time_sync to all clients
+  setInterval(() => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: 'time_sync', server_time: Date.now() }));
+      }
+    });
+  }, 5000);
 
   wss.on('close', () => {
     clearInterval(heartbeat);
