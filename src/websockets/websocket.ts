@@ -137,6 +137,15 @@ export function setupWebSocket(server: http.Server) {
     });
   }, 30000);
 
+  // Periodically broadcast time_sync to all clients
+  setInterval(() => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: 'time_sync', server_time: Date.now() }));
+      }
+    });
+  }, 5000);
+
   wss.on('close', () => {
     clearInterval(heartbeat);
     clientLiveness.clear();
