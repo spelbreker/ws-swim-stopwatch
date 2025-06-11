@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.8",
-    "express": "^4.21",
+    "express": "^5.1.0",
     "js-lenex": "^0.0.7",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.0.1",
     "ws": "^8.18"
   },
   "devDependencies": {

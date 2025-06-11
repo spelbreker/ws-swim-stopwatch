@@ -36,7 +36,10 @@ function logStop(timestamp) {
 }
 function logLap(lane, timestamp) {
     const lastStart = lastStartTimestamp;
-    if (typeof timestamp !== 'undefined' && lastStart === null) {
+    if (typeof timestamp === 'undefined') {
+        return; // Exit early if timestamp is invalid
+    }
+    if (lastStart === null) {
         // No start: show 00:00.xxx where xxx is the last three digits of the timestamp
         const millis = String(timestamp % 1000).padStart(3, '0');
         const formattedTime = `00:00.${millis}`;
@@ -45,10 +48,7 @@ function logLap(lane, timestamp) {
         appendLog(lapMsg);
         return;
     }
-    let elapsed = 0;
-    if (typeof timestamp !== 'undefined' && lastStart !== null) {
-        elapsed = timestamp - lastStart;
-    }
+    const elapsed = timestamp - lastStart;
     const minutes = String(Math.floor((elapsed ?? 0) / 60000)).padStart(2, '0');
     const seconds = String(Math.floor(((elapsed ?? 0) % 60000) / 1000)).padStart(2, '0');
     const millis = String((elapsed ?? 0) % 1000).padStart(3, '0');
