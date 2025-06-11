@@ -4,7 +4,9 @@ This document describes all WebSocket message types exchanged between the fronte
 
 ## Message Types
 
-### 1. `ping`
+## Time Sync
+
+### `ping`
 - **Direction:** Client → Server
 - **Description:** Sent by the client to measure latency and synchronize time.
 - **Payload:**
@@ -13,7 +15,7 @@ This document describes all WebSocket message types exchanged between the fronte
   ```
   - `time`: Client timestamp (ms since epoch)
 
-### 2. `pong`
+### `pong`
 - **Direction:** Server → Client
 - **Description:** Response to `ping`, used for time sync and round-trip time measurement.
 - **Payload:**
@@ -23,7 +25,18 @@ This document describes all WebSocket message types exchanged between the fronte
   - `client_ping_time`: Echoes the original ping time
   - `server_time`: Server timestamp (ms since epoch)
 
-### 3. `start`
+###  `time_sync`
+- **Direction:** Server → Client (periodic broadcast)
+- **Description:** Periodic time synchronization message.
+- **Payload:**
+  ```json
+  { "type": "time_sync", "server_time": 1718035200000 }
+  ```
+  - `server_time`: Server timestamp (ms since epoch)
+
+## Stopwatch Control
+
+### `start`
 - **Direction:** Client → Server (broadcast to all clients)
 - **Description:** Starts the stopwatch for a specific event/heat.
 - **Payload:**
@@ -35,7 +48,7 @@ This document describes all WebSocket message types exchanged between the fronte
   - `time`: (optional) Start time
   - `timestamp`: Server-generated timestamp
 
-### 4. `reset` / `stop`
+### `reset` / `stop`
 - **Direction:** Client → Server (broadcast to all clients)
 - **Description:** Stops or resets the stopwatch.
 - **Payload:**
@@ -44,7 +57,7 @@ This document describes all WebSocket message types exchanged between the fronte
   ```
   - `timestamp`: Server-generated timestamp
 
-### 5. `split`
+### `split` / `lap`
 - **Direction:** Client → Server (broadcast to all clients)
 - **Description:** Records a split/lap for a lane.
 - **Payload:**
@@ -54,9 +67,11 @@ This document describes all WebSocket message types exchanged between the fronte
   - `lane`: Lane number
   - `timestamp`: Split time (ms since epoch)
 
-### 6. `event-heat`
+## Event and Heat Control
+
+### `event-heat`
 - **Direction:** Client → Server (broadcast to all clients)
-- **Description:** Changes the current event and heat.
+- **Description:** Changes the current event and heat. only when stopped.
 - **Payload:**
   ```json
   { "type": "event-heat", "event": 1, "heat": 2 }
@@ -64,7 +79,7 @@ This document describes all WebSocket message types exchanged between the fronte
   - `event`: Event number or string
   - `heat`: Heat number or string
 
-### 7. `clear`
+### `clear`
 - **Direction:** Client → Server (broadcast to all clients)
 - **Description:** Clears all lane and split information on all clients.
 - **Payload:**
@@ -72,26 +87,31 @@ This document describes all WebSocket message types exchanged between the fronte
   { "type": "clear" }
   ```
 
-### 9. `time_sync`
-- **Direction:** Server → Client (periodic broadcast)
-- **Description:** Periodic time synchronization message.
-- **Payload:**
-  ```json
-  { "type": "time_sync", "server_time": 1718035200000 }
-  ```
-  - `server_time`: Server timestamp (ms since epoch)
 
-### 10. Custom/Other
+
+### Custom/Other
 - **Direction:** Both
 - **Description:** Any other message type is broadcast as-is. Structure may vary.
 
-## Example Flow
-1. Client sends `ping` to server.
-2. Server responds with `pong`.
-3. Client sends `start` to begin a race; server broadcasts to all clients.
-4. Clients send `split` messages as swimmers reach split points.
-5. Client sends `reset` to stop the race; server broadcasts to all clients.
-6. Server periodically sends `time_sync` to all clients.
+## WebSocket State Diagram for stopwatch
+
+Below is a state diagram illustrating the main states and transitions for stopwatch and event/heat control via the WebSocket API. This diagram focuses on the flow of control messages between clients and the server.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+    Stopped --> Running : Start
+    Running --> Stopped : Reset
+    Running --> Running : Split time
+    Stopped --> Stopped : event-heat
+```
+
+- **Idle:** Waiting for a race to start. Receives event/heat changes, clear, or time sync messages.
+- **Running:** Stopwatch is active. Can receive split, event/heat, or time sync messages.
+- **Stopped:** Stopwatch has been stopped/reset. Can receive event/heat, clear, or time sync messages.
+
+This diagram summarizes the control flow; actual message payloads and additional details are described above.
+
 
 ## Notes
 - All messages are JSON objects with a `type` field.
