@@ -31,17 +31,31 @@ export function logStop(timestamp: number) {
 }
 
 export function logLap(lane: string | number, timestamp: number | undefined) {
-  let elapsed = 0;
   const lastStart = lastStartTimestamp;
-  if (typeof timestamp !== 'undefined' && lastStart !== null) {
-    elapsed = timestamp - lastStart;
+  if (typeof timestamp === 'undefined') {
+    return; // Exit early if timestamp is invalid
   }
 
+  if (lastStart === null) {
+    // No start: show 00:00.xxx where xxx is the last three digits of the timestamp
+    const millis = String(timestamp % 1000).padStart(3, '0');
+    const formattedTime = `00:00.${millis}`;
+    const lapMsg = `[${new Date(Number(timestamp)).toISOString()}] LAP - Lane: ${lane}, Time: ${formattedTime}, `
+      + `Timestamp: ${timestamp}`;
+    appendLog(lapMsg);
+    return;
+  }
+
+  const elapsed = timestamp - lastStart;
   const minutes = String(Math.floor((elapsed ?? 0) / 60000)).padStart(2, '0');
   const seconds = String(Math.floor(((elapsed ?? 0) % 60000) / 1000)).padStart(2, '0');
-  const millis = String((elapsed ?? 0) % 1000).padStart(2, '0');
+  const millis = String((elapsed ?? 0) % 1000).padStart(3, '0');
   const formattedTime = `${minutes}:${seconds}.${millis}`;
   const lapMsg = `[${new Date(Number(timestamp)).toISOString()}] LAP - Lane: ${lane}, Time: ${formattedTime}, `
     + `Timestamp: ${timestamp}`;
   appendLog(lapMsg);
+}
+
+export function resetLoggerState() {
+  lastStartTimestamp = null;
 }

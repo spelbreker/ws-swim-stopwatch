@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.logStart = logStart;
 exports.logStop = logStop;
 exports.logLap = logLap;
+exports.resetLoggerState = resetLoggerState;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const LOG_FILE = path_1.default.join(process.cwd(), '/logs/competition.log');
@@ -34,16 +35,28 @@ function logStop(timestamp) {
     appendLog(`\n${stopLine}\n${stopMsg}\n${stopLine}`);
 }
 function logLap(lane, timestamp) {
-    let elapsed = 0;
     const lastStart = lastStartTimestamp;
+    if (typeof timestamp !== 'undefined' && lastStart === null) {
+        // No start: show 00:00.xxx where xxx is the last three digits of the timestamp
+        const millis = String(timestamp % 1000).padStart(3, '0');
+        const formattedTime = `00:00.${millis}`;
+        const lapMsg = `[${new Date(Number(timestamp)).toISOString()}] LAP - Lane: ${lane}, Time: ${formattedTime}, `
+            + `Timestamp: ${timestamp}`;
+        appendLog(lapMsg);
+        return;
+    }
+    let elapsed = 0;
     if (typeof timestamp !== 'undefined' && lastStart !== null) {
         elapsed = timestamp - lastStart;
     }
     const minutes = String(Math.floor((elapsed ?? 0) / 60000)).padStart(2, '0');
     const seconds = String(Math.floor(((elapsed ?? 0) % 60000) / 1000)).padStart(2, '0');
-    const millis = String((elapsed ?? 0) % 1000).padStart(2, '0');
+    const millis = String((elapsed ?? 0) % 1000).padStart(3, '0');
     const formattedTime = `${minutes}:${seconds}.${millis}`;
     const lapMsg = `[${new Date(Number(timestamp)).toISOString()}] LAP - Lane: ${lane}, Time: ${formattedTime}, `
         + `Timestamp: ${timestamp}`;
     appendLog(lapMsg);
+}
+function resetLoggerState() {
+    lastStartTimestamp = null;
 }
