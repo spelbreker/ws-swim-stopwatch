@@ -71,7 +71,7 @@ function updateLaneDisplay(athlete) {
     const laneElement = document.getElementById(`lane-${athlete.lane}`);
     if (laneElement) {
         laneElement.querySelector('.club').textContent = athlete.club;
-        laneElement.querySelector('.split-time').textContent = '---:---:---';
+        clearSplitTimes();
 
         if (athlete.athletes) {
             let athleteNames = athlete.athletes.length === 1 
@@ -102,16 +102,7 @@ function clearLaneInformation() {
     }
 }
 
-function clearLaneSplitTimes() {
-    for (let i = 0; i <= 9; i++) {
-        const laneElement = document.getElementById(`lane-${i}`);
-        if (laneElement) {
-            laneElement.querySelector('.split-time').textContent = '---:---:---';
-        }
-    }
-}
-
-function resetSplitTimes() {
+function clearSplitTimes() {
     document.querySelectorAll('.split-time').forEach(element => {
         element.textContent = '---:---:---';
     });
@@ -155,11 +146,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (message.type === 'start') {
             startTime = message.timestamp + serverTimeOffset;
             window.startTime = startTime;
+            startTime = message.timestamp + serverTimeOffset;
+            window.startTime = startTime;
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
-            clearLaneSplitTimes();
+            clearSplitTimes();
             return
         } 
 
@@ -214,6 +207,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const estimatedServerTimeNow = message.server_time + (rtt / 2);
             serverTimeOffset = estimatedServerTimeNow - Date.now();
             return;
-        }
+        } 
     });
 });

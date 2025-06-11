@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Competition Log Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .log-container {
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <header class="bg-blue-600 text-white py-4 px-6 text-center text-2xl tracking-wide">
+    Wedstrijd Logboek
+  </header>
+  <main class="flex-1 flex flex-col items-center py-8 px-2">
+    <button id="refresh-btn" aria-label="Ververs log"
+      class="bg-green-400 text-gray-900 font-semibold rounded px-6 py-2 mb-4 transition hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+      Ververs log
+    </button>
+    <div class="log-container text-gray-100  w-full max-w-5xl bg-gray-800 rounded-lg shadow-lg p-6 mb-8 overflow-x-auto">
+      <pre id="log-content" class="text-base leading-relaxed whitespace-pre-wrap break-words bg-transparent border-0 p-0 m-0">Log wordt geladen...</pre>
+    </div>
+  </main>
+  <script>
+    async function fetchLog() {
+      try {
+        const res = await fetch('/logs/competition.log', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Kan logbestand niet laden');
+        const text = await res.text();
+        document.getElementById('log-content').textContent = text || 'Logbestand is leeg.';
+      } catch (e) {
+        document.getElementById('log-content').textContent = 'Fout bij laden van log: ' + e.message;
+      }
+    }
+    document.getElementById('refresh-btn').addEventListener('click', fetchLog);
+    window.addEventListener('DOMContentLoaded', fetchLog);
+    // Auto-refresh every 10 seconds
+    setInterval(fetchLog, 10000);
+  </script>
+</body>
+</html>

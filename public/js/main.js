@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Format a timestamp as mm:ss:ms relative to a base (start) time
     window.formatLapTime = function(ts, base = 0) {
         const elapsed = ts - base;
-        if (elapsed < 0) return '--:--:--';
+        if (elapsed < 0 || base === 0) return '---:---:---';
         const minutes = Math.floor(elapsed / 60000);
         const seconds = Math.floor((elapsed % 60000) / 1000);
         const milliseconds = Math.floor((elapsed % 1000) / 10);

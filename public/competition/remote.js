@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
-            window.socket.send(JSON.stringify({ type: 'start', time: startTime }));
+            window.socket.send(JSON.stringify({ type: 'start', time: startTime, heat: heatSelect.value, event: eventSelect.value }));
         }
         disableControls(true, controlElements);
 
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Start een interval om de stopwatch te laten lopen bij ontvangen van start
             stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
             for (let i = 0; i <= 9; i++) {
-                updateLaneInfo(i, '00:00:00');
+                updateLaneInfo(i, '---:---:---');
             }
             return;
         }
