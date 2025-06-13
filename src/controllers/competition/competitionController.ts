@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { getMeetSummary, readAndProcessCompetitionJSON } from '../../modules/competition';
 import fs from 'fs';
+import { getMeetSummary, readAndProcessCompetitionJSON } from '../../modules/competition';
 
 export function uploadCompetition(req: Request, res: Response): void {
-  const file = (req as any).file;
+  const { file } = (req as any);
   if (!file) {
     res.status(400).send('No file uploaded');
     return;

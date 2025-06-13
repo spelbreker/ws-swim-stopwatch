@@ -160,7 +160,9 @@ describe('getAthletesByHeatId edge cases', () => {
         ...mockCompetitionData.meets[0],
         clubs: [{
           name: 'Club D',
-          athletes: [{ athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01' } as any],
+          athletes: [{
+            athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01',
+          } as any],
           relays: [],
         } as any],
       }],

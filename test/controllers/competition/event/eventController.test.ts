@@ -1,8 +1,9 @@
 import request from 'supertest';
 import express from 'express';
-jest.mock('../../../../src/modules/competition');
 import * as eventController from '../../../../src/controllers/competition/event/eventController';
 import * as competitionModule from '../../../../src/modules/competition';
+
+jest.mock('../../../../src/modules/competition');
 
 const app = express();
 app.get('/competition/event', eventController.getEvents);
