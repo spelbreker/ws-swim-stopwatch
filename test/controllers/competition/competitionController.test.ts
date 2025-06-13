@@ -26,8 +26,9 @@ describe('competitionController', () => {
       (competitionModule.getMeetSummary as jest.Mock).mockReturnValue({ meet: 'Test Meet', club_count: 2 });
       const res = await request(app).get('/competition/summary');
       expect(res.status).toBe(200);
-      expect(res.body.meet).toBe('Test Meet');
-      expect(res.body.club_count).toBe(2);
+      const body = res.body as { meet: string; club_count: number };
+      expect(body.meet).toBe('Test Meet');
+      expect(body.club_count).toBe(2);
     });
   });
 

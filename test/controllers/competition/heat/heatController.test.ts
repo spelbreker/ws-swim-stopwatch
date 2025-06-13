@@ -29,8 +29,9 @@ describe('heatController', () => {
     (competitionModule.getHeat as jest.Mock).mockReturnValue([{ lane: 3 }]);
     const res = await request(app).get('/competition/event/1/heat/1');
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body[0].lane).toBe(3);
+    const body = res.body as Array<{ lane: number }>;
+    expect(Array.isArray(body)).toBe(true);
+    expect(body[0].lane).toBe(3);
   });
 
   it('should return 500 if module throws', async () => {

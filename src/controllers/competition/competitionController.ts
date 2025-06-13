@@ -3,18 +3,26 @@ import fs from 'fs';
 import { getMeetSummary, readAndProcessCompetitionJSON } from '../../modules/competition';
 
 export function uploadCompetition(req: Request, res: Response): void {
-  const { file } = (req as any);
+  const { file } = req as Request & { file?: Express.Multer.File };
   if (!file) {
     res.status(400).send('No file uploaded');
     return;
   }
-  const filePath = file.path;
-  readAndProcessCompetitionJSON(filePath, (err) => {
-    if (err) {
-      res.status(500).send(`Error reading file - ${err}`);
+  const filePath: string = file.path;
+  readAndProcessCompetitionJSON(filePath, (err: unknown) => {
+    if (err instanceof Error) {
+      res.status(500).send(`Error reading file - ${err.message}`);
       return;
     }
-    try { require('fs').unlinkSync(filePath); } catch {}
+    if (err) {
+      res.status(500).send('Error reading file');
+      return;
+    }
+    try {
+      fs.unlinkSync(filePath);
+    } catch (unlinkErr) {
+      // Optionally log the error, but do not throw
+    }
     res.redirect('/competition/upload.html');
   });
 }

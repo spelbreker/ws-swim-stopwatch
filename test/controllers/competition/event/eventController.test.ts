@@ -25,8 +25,9 @@ describe('eventController', () => {
       (competitionModule.getEvents as jest.Mock).mockReturnValue([{ number: 1 }, { number: 2 }]);
       const res = await request(app).get('/competition/event');
       expect(res.status).toBe(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body[0].number).toBe(1);
+      const body = res.body as Array<{ number: number }>;
+      expect(Array.isArray(body)).toBe(true);
+      expect(body[0].number).toBe(1);
     });
   });
 
@@ -41,7 +42,8 @@ describe('eventController', () => {
       (competitionModule.getEvent as jest.Mock).mockReturnValue({ number: 1 });
       const res = await request(app).get('/competition/event/1');
       expect(res.status).toBe(200);
-      expect(res.body.number).toBe(1);
+      const body = res.body as { number: number };
+      expect(body.number).toBe(1);
     });
     it('should return 500 if module throws', async () => {
       (competitionModule.getEvent as jest.Mock).mockImplementation(() => { throw new Error('fail'); });
