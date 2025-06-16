@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetStopwatch(sendSocket = true) {
         clearInterval(stopwatchInterval);
         stopwatchInterval = null;
-        startTime = null;
+        window.startTime = null;
         stopwatchElement.textContent = '00:00:00';
         if (sendSocket) {
             window.socket.send(JSON.stringify({ type: 'reset' }));
