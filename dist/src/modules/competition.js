@@ -48,7 +48,14 @@ class Competition {
             this.competitionData = null;
             return;
         }
-        this.competitionData = JSON.parse(fs_1.default.readFileSync(Competition.COMPETITION_FILE_PATH, 'utf-8'));
+        try {
+            const fileContent = fs_1.default.readFileSync(Competition.COMPETITION_FILE_PATH, 'utf-8');
+            this.competitionData = JSON.parse(fileContent);
+        }
+        catch (err) {
+            console.error('[Competition] Failed to parse competition.json:', err);
+            this.competitionData = null;
+        }
     }
     // readAndProcessCompetitionJSON
     static readAndProcessCompetitionJSON(filePath, callback) {
@@ -98,7 +105,6 @@ class Competition {
             callback(null, result);
         });
     }
-    ;
     /**
      * Helper to validate competitionData, meetIndex, and sessionIndex.
      */

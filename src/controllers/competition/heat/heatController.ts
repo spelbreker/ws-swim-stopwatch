@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
-export let comp = new Competition();
+export const comp = new Competition();
 
 export function getHeat(req: Request, res: Response) {
   const eventNumber = parseInt(req.params.event, 10);

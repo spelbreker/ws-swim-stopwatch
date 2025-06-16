@@ -73,7 +73,7 @@ class Competition {
       }
       callback(null, result as unknown as CompetitionData);
     });
-  };
+  }
 
   /**
    * Helper to validate competitionData, meetIndex, and sessionIndex.

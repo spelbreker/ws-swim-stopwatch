@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import Competition from '../../modules/competition';
 
-export let comp = new Competition();
+export const comp = new Competition();
 
 export function uploadCompetition(req: Request, res: Response): void {
   const { file } = (req as any);
