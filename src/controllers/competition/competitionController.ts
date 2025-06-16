@@ -4,20 +4,33 @@ import Competition from '../../modules/competition';
 
 export const comp = new Competition();
 
+// Define a type for file upload (Multer)
+interface MulterFile {
+  path: string;
+  [key: string]: unknown;
+}
+
 export function uploadCompetition(req: Request, res: Response): void {
-  const { file } = (req as any);
+  // Use object destructuring for file
+  const { file } = req as Request & { file?: MulterFile };
   if (!file) {
     res.status(400).send('No file uploaded');
     return;
   }
-  const filePath = file.path;
-  Competition.readAndProcessCompetitionJSON(filePath, (err) => {
+  const filePath: string = file.path;
+  Competition.readAndProcessCompetitionJSON(filePath, (err: string | Error | null) => {
     if (err) {
-      res.status(500).send(`Error reading file - ${err}`);
+      res.status(500).send(`Error reading file - ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
     comp.reload();
-    try { require('fs').unlinkSync(filePath); } catch {}
+    try {
+      fs.unlinkSync(filePath);
+    } catch (unlinkErr) {
+      // Log error for dev/ops, but do not block user
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete uploaded file:', unlinkErr);
+    }
     res.redirect('/competition/upload.html');
   });
 }
