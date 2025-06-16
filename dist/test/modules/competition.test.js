@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const competition_1 = require("../../src/modules/competition");
+const competition_1 = __importDefault(require("../../src/modules/competition"));
 // Mock fs and parseLenex for readAndProcessCompetitionJSON
 jest.mock('fs');
 jest.mock('js-lenex/build/src/lenex-parse.js', () => ({
@@ -67,19 +70,28 @@ const mockCompetitionData = {
     ],
 };
 describe('competition module', () => {
+    let comp;
+    beforeEach(() => {
+        comp = new competition_1.default();
+        // Directly set the private competitionData for testing
+        comp.competitionData = mockCompetitionData;
+    });
     test('getAthletesByHeatId returns correct athlete', () => {
-        const result = (0, competition_1.getAthletesByHeatId)(mockCompetitionData, 'H1');
+        // @ts-ignore: access private for test
+        const result = comp.getAthletesByHeatId('H1');
         expect(result).toHaveLength(1);
         expect(result[0].athletes[0].firstname).toBe('John');
         expect(result[0].lane).toBe(3);
     });
     test('findAthleteById finds correct athlete', () => {
-        const athlete = (0, competition_1.findAthleteById)(mockCompetitionData, 'A1');
+        // @ts-ignore: access private for test
+        const athlete = comp.findAthleteById('A1');
         expect(athlete).toBeDefined();
         expect(athlete?.firstname).toBe('John');
     });
     test('extractRelay returns correct relay entry', () => {
-        const relays = (0, competition_1.extractRelay)(mockCompetitionData, 'E1', 'H1');
+        // @ts-ignore: access private for test
+        const relays = comp.extractRelay('E1', 'H1');
         expect(relays).toHaveLength(1);
         expect(relays[0].relayid).toBe('R1');
         expect(relays[0].athletes[0].firstname).toBe('John');
@@ -87,7 +99,7 @@ describe('competition module', () => {
     test('readAndProcessCompetitionJSON calls callback with error if fs.readFile fails', (done) => {
         const fs = require('fs');
         fs.readFile.mockImplementation((path, cb) => cb(new Error('fail'), null));
-        (0, competition_1.readAndProcessCompetitionJSON)('dummy', (err, result) => {
+        competition_1.default.readAndProcessCompetitionJSON('dummy', (err, result) => {
             expect(err).toBeInstanceOf(Error);
             expect(result).toBeNull();
             done();
@@ -99,7 +111,7 @@ describe('competition module', () => {
         fs.readFile.mockImplementation((path, cb) => cb(null, Buffer.from('data')));
         parseLenex.mockResolvedValue(mockCompetitionData);
         fs.writeFileSync.mockImplementation(() => { });
-        (0, competition_1.readAndProcessCompetitionJSON)('dummy', (err, result) => {
+        competition_1.default.readAndProcessCompetitionJSON('dummy', (err, result) => {
             expect(err).toBeNull();
             expect(result).toBeDefined();
             expect(result?.meets[0].name).toBe('Test Meet');
@@ -113,7 +125,11 @@ describe('getAthletesByHeatId edge cases', () => {
             ...mockCompetitionData,
             meets: [{ ...mockCompetitionData.meets[0], clubs: [] }],
         };
-        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        const comp = new competition_1.default();
+        // @ts-expect-error: access private for test
+        comp.competitionData = data;
+        // @ts-expect-error: access private for test
+        const result = comp.getAthletesByHeatId('H1');
         expect(result).toEqual([]);
     });
     test('returns empty array if club has no athletes', () => {
@@ -124,7 +140,11 @@ describe('getAthletesByHeatId edge cases', () => {
                     clubs: [{ name: 'Club B', athletes: [], relays: [] }],
                 }],
         };
-        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        const comp = new competition_1.default();
+        // @ts-expect-error: access private for test
+        comp.competitionData = data;
+        // @ts-expect-error: access private for test
+        const result = comp.getAthletesByHeatId('H1');
         expect(result).toEqual([]);
     });
     test('returns empty array if club has no athletes property', () => {
@@ -135,7 +155,11 @@ describe('getAthletesByHeatId edge cases', () => {
                     clubs: [{ name: 'Club C', relays: [] }],
                 }],
         };
-        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        const comp = new competition_1.default();
+        // @ts-expect-error: access private for test
+        comp.competitionData = data;
+        // @ts-expect-error: access private for test
+        const result = comp.getAthletesByHeatId('H1');
         expect(result).toEqual([]);
     });
     test('returns empty array if athlete has no entries property', () => {
@@ -145,12 +169,18 @@ describe('getAthletesByHeatId edge cases', () => {
                     ...mockCompetitionData.meets[0],
                     clubs: [{
                             name: 'Club D',
-                            athletes: [{ athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01' }],
+                            athletes: [{
+                                    athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01',
+                                }],
                             relays: [],
                         }],
                 }],
         };
-        const result = (0, competition_1.getAthletesByHeatId)(data, 'H1');
+        const comp = new competition_1.default();
+        // @ts-expect-error: access private for test
+        comp.competitionData = data;
+        // @ts-expect-error: access private for test
+        const result = comp.getAthletesByHeatId('H1');
         expect(result).toEqual([]);
     });
 });

@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
-import { getEvents as getEventsModule, getEvent as getEventModule } from '../../../modules/competition';
+import Competition from '../../../modules/competition';
+
+export const comp = new Competition();
 
 export function getEvents(req: Request, res: Response) {
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
   const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
   try {
-    const events = getEventsModule(meetIndex, sessionIndex);
+    const events = comp.getEvents(meetIndex, sessionIndex);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(events));
   } catch (e) {
@@ -22,7 +24,7 @@ export function getEvent(req: Request, res: Response) {
     return;
   }
   try {
-    const event = getEventModule(meetIndex, sessionIndex, eventNumber);
+    const event = comp.getEvent(meetIndex, sessionIndex, eventNumber);
     if (!event) {
       res.status(404).send('Event not found');
       return;
@@ -30,6 +32,15 @@ export function getEvent(req: Request, res: Response) {
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(event));
   } catch (e) {
-    res.status(500).send('Error getting event');
+    // Enhanced error logging for debugging
+    console.error('[getEvent] Error getting event:', {
+      error: e,
+      eventNumber,
+      meetIndex,
+      sessionIndex,
+      stack: e instanceof Error ? e.stack : undefined,
+    });
+    const errorMsg = e instanceof Error ? e.message : JSON.stringify(e);
+    res.status(500).send(`Error getting event: ${errorMsg}`);
   }
 }

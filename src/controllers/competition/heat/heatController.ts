@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
-import { getHeat as getHeatModule } from '../../../modules/competition';
+import Competition from '../../../modules/competition';
+
+export let comp = new Competition();
 
 export function getHeat(req: Request, res: Response) {
   const eventNumber = parseInt(req.params.event, 10);
@@ -11,7 +13,7 @@ export function getHeat(req: Request, res: Response) {
     return;
   }
   try {
-    const result = getHeatModule(meetIndex, sessionIndex, eventNumber, heatNumber);
+    const result = comp.getHeat(meetIndex, sessionIndex, eventNumber, heatNumber);
     if (!result) {
       res.status(404).send('Heat or entries not found');
       return;

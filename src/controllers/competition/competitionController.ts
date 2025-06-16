@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
-import { getMeetSummary, readAndProcessCompetitionJSON } from '../../modules/competition';
+import Competition from '../../modules/competition';
+
+export let comp = new Competition();
 
 export function uploadCompetition(req: Request, res: Response): void {
   const { file } = (req as any);
@@ -9,11 +11,12 @@ export function uploadCompetition(req: Request, res: Response): void {
     return;
   }
   const filePath = file.path;
-  readAndProcessCompetitionJSON(filePath, (err) => {
+  Competition.readAndProcessCompetitionJSON(filePath, (err) => {
     if (err) {
       res.status(500).send(`Error reading file - ${err}`);
       return;
     }
+    comp.reload();
     try { require('fs').unlinkSync(filePath); } catch {}
     res.redirect('/competition/upload.html');
   });
@@ -23,7 +26,7 @@ export function getCompetitionSummary(req: Request, res: Response) {
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
   const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
   try {
-    const summary = getMeetSummary(meetIndex, sessionIndex);
+    const summary = comp.getMeetSummary(meetIndex, sessionIndex);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
   } catch (e) {

@@ -1,9 +1,4 @@
-import {
-  getAthletesByHeatId,
-  findAthleteById,
-  extractRelay,
-  readAndProcessCompetitionJSON,
-} from '../../src/modules/competition';
+import Competition from '../../src/modules/competition';
 import type { CompetitionData } from '../../src/types/types';
 
 // Mock fs and parseLenex for readAndProcessCompetitionJSON
@@ -74,21 +69,31 @@ const mockCompetitionData: CompetitionData = {
 };
 
 describe('competition module', () => {
+  let comp: any;
+  beforeEach(() => {
+    comp = new Competition();
+    // Directly set the private competitionData for testing
+    comp.competitionData = mockCompetitionData;
+  });
+
   test('getAthletesByHeatId returns correct athlete', () => {
-    const result = getAthletesByHeatId(mockCompetitionData, 'H1');
+    // @ts-ignore: access private for test
+    const result = comp.getAthletesByHeatId('H1');
     expect(result).toHaveLength(1);
     expect(result[0].athletes[0].firstname).toBe('John');
     expect(result[0].lane).toBe(3);
   });
 
   test('findAthleteById finds correct athlete', () => {
-    const athlete = findAthleteById(mockCompetitionData, 'A1');
+    // @ts-ignore: access private for test
+    const athlete = comp.findAthleteById('A1');
     expect(athlete).toBeDefined();
     expect(athlete?.firstname).toBe('John');
   });
 
   test('extractRelay returns correct relay entry', () => {
-    const relays = extractRelay(mockCompetitionData, 'E1', 'H1');
+    // @ts-ignore: access private for test
+    const relays = comp.extractRelay('E1', 'H1');
     expect(relays).toHaveLength(1);
     expect(relays[0].relayid).toBe('R1');
     expect(relays[0].athletes[0].firstname).toBe('John');
@@ -97,7 +102,7 @@ describe('competition module', () => {
   test('readAndProcessCompetitionJSON calls callback with error if fs.readFile fails', (done) => {
     const fs = require('fs');
     fs.readFile.mockImplementation((path: any, cb: any) => cb(new Error('fail'), null));
-    readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
+    Competition.readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
       expect(err).toBeInstanceOf(Error);
       expect(result).toBeNull();
       done();
@@ -110,7 +115,7 @@ describe('competition module', () => {
     fs.readFile.mockImplementation((path: any, cb: any) => cb(null, Buffer.from('data')));
     parseLenex.mockResolvedValue(mockCompetitionData);
     fs.writeFileSync.mockImplementation(() => {});
-    readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
+    Competition.readAndProcessCompetitionJSON('dummy', (err: Error | string | null, result: CompetitionData | null) => {
       expect(err).toBeNull();
       expect(result).toBeDefined();
       expect(result?.meets[0].name).toBe('Test Meet');
@@ -125,7 +130,11 @@ describe('getAthletesByHeatId edge cases', () => {
       ...mockCompetitionData,
       meets: [{ ...mockCompetitionData.meets[0], clubs: [] }],
     };
-    const result = getAthletesByHeatId(data, 'H1');
+    const comp = new Competition();
+    // @ts-expect-error: access private for test
+    comp.competitionData = data;
+    // @ts-expect-error: access private for test
+    const result = comp.getAthletesByHeatId('H1');
     expect(result).toEqual([]);
   });
 
@@ -137,7 +146,11 @@ describe('getAthletesByHeatId edge cases', () => {
         clubs: [{ name: 'Club B', athletes: [], relays: [] } as any],
       }],
     };
-    const result = getAthletesByHeatId(data, 'H1');
+    const comp = new Competition();
+    // @ts-expect-error: access private for test
+    comp.competitionData = data;
+    // @ts-expect-error: access private for test
+    const result = comp.getAthletesByHeatId('H1');
     expect(result).toEqual([]);
   });
 
@@ -149,7 +162,11 @@ describe('getAthletesByHeatId edge cases', () => {
         clubs: [{ name: 'Club C', relays: [] } as any],
       }],
     };
-    const result = getAthletesByHeatId(data, 'H1');
+    const comp = new Competition();
+    // @ts-expect-error: access private for test
+    comp.competitionData = data;
+    // @ts-expect-error: access private for test
+    const result = comp.getAthletesByHeatId('H1');
     expect(result).toEqual([]);
   });
 
@@ -167,7 +184,11 @@ describe('getAthletesByHeatId edge cases', () => {
         } as any],
       }],
     };
-    const result = getAthletesByHeatId(data, 'H1');
+    const comp = new Competition();
+    // @ts-expect-error: access private for test
+    comp.competitionData = data;
+    // @ts-expect-error: access private for test
+    const result = comp.getAthletesByHeatId('H1');
     expect(result).toEqual([]);
   });
 });
