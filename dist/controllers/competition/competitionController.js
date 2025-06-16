@@ -3,14 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.comp = void 0;
 exports.uploadCompetition = uploadCompetition;
 exports.getCompetitionSummary = getCompetitionSummary;
 exports.deleteCompetition = deleteCompetition;
 const fs_1 = __importDefault(require("fs"));
 const competition_1 = __importDefault(require("../../modules/competition"));
-exports.comp = new competition_1.default();
 function uploadCompetition(req, res) {
+    // Use object destructuring for file
     const { file } = req;
     if (!file) {
         res.status(400).send('No file uploaded');
@@ -19,14 +18,17 @@ function uploadCompetition(req, res) {
     const filePath = file.path;
     competition_1.default.readAndProcessCompetitionJSON(filePath, (err) => {
         if (err) {
-            res.status(500).send(`Error reading file - ${err}`);
+            res.status(500).send(`Error reading file - ${err instanceof Error ? err.message : String(err)}`);
             return;
         }
-        exports.comp.reload();
         try {
-            require('fs').unlinkSync(filePath);
+            fs_1.default.unlinkSync(filePath);
         }
-        catch { }
+        catch (unlinkErr) {
+            // Log error for dev/ops, but do not block user
+            // eslint-disable-next-line no-console
+            console.error('Failed to delete uploaded file:', unlinkErr);
+        }
         res.redirect('/competition/upload.html');
     });
 }
@@ -34,7 +36,7 @@ function getCompetitionSummary(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
     const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
     try {
-        const summary = exports.comp.getMeetSummary(meetIndex, sessionIndex);
+        const summary = competition_1.default.getMeetSummary(meetIndex, sessionIndex);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
     }

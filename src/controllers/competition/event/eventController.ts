@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
-export const comp = new Competition();
-
 export function getEvents(req: Request, res: Response) {
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
   const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
   try {
-    const events = comp.getEvents(meetIndex, sessionIndex);
+    const events = Competition.getEvents(meetIndex, sessionIndex);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(events));
   } catch (e) {
@@ -24,7 +22,7 @@ export function getEvent(req: Request, res: Response) {
     return;
   }
   try {
-    const event = comp.getEvent(meetIndex, sessionIndex, eventNumber);
+    const event = Competition.getEvent(meetIndex, sessionIndex, eventNumber);
     if (!event) {
       res.status(404).send('Event not found');
       return;

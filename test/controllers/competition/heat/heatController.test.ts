@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import { getHeat, comp } from '../../../../src/controllers/competition/heat/heatController';
+import { getHeat } from '../../../../src/controllers/competition/heat/heatController';
 import Competition from '../../../../src/modules/competition';
 
 jest.mock('../../../../src/modules/competition');
@@ -9,12 +9,8 @@ const app = express();
 app.get('/competition/event/:event/heat/:heat', getHeat);
 
 describe('heatController', () => {
-  let mockGetHeat: jest.SpyInstance;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockGetHeat = jest.spyOn(comp, 'getHeat');
-  });
+  let getHeatSpy: jest.SpyInstance;
+  afterEach(() => { if (getHeatSpy) getHeatSpy.mockRestore(); });
 
   it('should return 400 if eventNumber or heatNumber is missing', async () => {
     const res = await request(app).get('/competition/event//heat/');
@@ -22,22 +18,45 @@ describe('heatController', () => {
   });
 
   it('should return 404 if heat or entries not found', async () => {
-    mockGetHeat.mockReturnValue(null);
+    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue(null);
     const res = await request(app).get('/competition/event/1/heat/2');
     expect(res.status).toBe(404);
     expect(res.text).toMatch(/Heat or entries not found/);
   });
 
   it('should return heat data if found', async () => {
-    mockGetHeat.mockReturnValue([{ lane: 3 }]);
+    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue([
+      {
+        lane: 3,
+        entrytime: '1:00.00',
+        club: 'Test Club',
+        athletes: [
+          {
+            athleteid: 'A1',
+            firstname: 'John',
+            lastname: 'Doe',
+            birthdate: '2000-01-01',
+            entries: [],
+          },
+        ],
+      },
+    ]);
     const res = await request(app).get('/competition/event/1/heat/1');
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body[0].lane).toBe(3);
+    const arr: unknown = res.body;
+    if (
+      Array.isArray(arr)
+      && arr.length > 0
+      && typeof arr[0] === 'object'
+      && arr[0] !== null
+      && Object.prototype.hasOwnProperty.call(arr[0], 'lane')
+    ) {
+      expect((arr[0] as { lane: number }).lane).toBe(3);
+    }
   });
 
   it('should return 500 if module throws', async () => {
-    mockGetHeat.mockImplementation(() => { throw new Error('fail'); });
+    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
     const res = await request(app).get('/competition/event/1/heat/1');
     expect(res.status).toBe(500);
     expect(res.text).toMatch(/Error getting heat/);

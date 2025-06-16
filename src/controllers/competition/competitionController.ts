@@ -2,17 +2,9 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import Competition from '../../modules/competition';
 
-export const comp = new Competition();
-
-// Define a type for file upload (Multer)
-interface MulterFile {
-  path: string;
-  [key: string]: unknown;
-}
-
 export function uploadCompetition(req: Request, res: Response): void {
   // Use object destructuring for file
-  const { file } = req as Request & { file?: MulterFile };
+  const { file } = req as Request & { file?: Express.Multer.File };
   if (!file) {
     res.status(400).send('No file uploaded');
     return;
@@ -23,7 +15,6 @@ export function uploadCompetition(req: Request, res: Response): void {
       res.status(500).send(`Error reading file - ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
-    comp.reload();
     try {
       fs.unlinkSync(filePath);
     } catch (unlinkErr) {
@@ -39,7 +30,7 @@ export function getCompetitionSummary(req: Request, res: Response) {
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
   const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
   try {
-    const summary = comp.getMeetSummary(meetIndex, sessionIndex);
+    const summary = Competition.getMeetSummary(meetIndex, sessionIndex);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
   } catch (e) {

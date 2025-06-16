@@ -3,16 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.comp = void 0;
 exports.getEvents = getEvents;
 exports.getEvent = getEvent;
 const competition_1 = __importDefault(require("../../../modules/competition"));
-exports.comp = new competition_1.default();
 function getEvents(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
     const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
     try {
-        const events = exports.comp.getEvents(meetIndex, sessionIndex);
+        const events = competition_1.default.getEvents(meetIndex, sessionIndex);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(events));
     }
@@ -29,7 +27,7 @@ function getEvent(req, res) {
         return;
     }
     try {
-        const event = exports.comp.getEvent(meetIndex, sessionIndex, eventNumber);
+        const event = competition_1.default.getEvent(meetIndex, sessionIndex, eventNumber);
         if (!event) {
             res.status(404).send('Event not found');
             return;
