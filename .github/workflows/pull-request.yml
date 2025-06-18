@@ -21,3 +21,15 @@ jobs:
         run: npm run build
       - name: Run tests
         run: npm test
+      - name: Run linter
+        run: npm run lint
+      # - name: Run Prettier
+      #   run: npm run format:check
+      - name: Check for outdated dependencies
+        run: npm outdated --json | jq 'length == 0' || (echo "There are outdated dependencies!" && exit 1)
+      - name: Check for security vulnerabilities
+        run: npm audit --audit-level=moderate || (echo "There are security vulnerabilities!" && exit 1)
+      - name: Check for unused dependencies
+        run: npx depcheck || (echo "There are unused dependencies!" && exit 1)
+      - name: Check for duplicate dependencies
+        run: npx depcheck --duplicates || (echo "There are duplicate dependencies!" && exit 1)
