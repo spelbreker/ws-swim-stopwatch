@@ -1,5 +1,12 @@
 import Competition from '../../src/modules/competition';
-import type { CompetitionData, Club, Athlete } from '../../src/types/competition-types';
+import {
+  CompetitionData,
+  CompetitionClub,
+  CompetitionAthlete,
+  CompetitionMeet,
+  Gender,
+  Stroke,
+} from '../../src/types/competition-types';
 import fs from 'fs';
 
 // Mock fs and dynamic import for readAndProcessCompetitionJSON
@@ -21,8 +28,8 @@ const mockCompetitionData: CompetitionData = {
               number: 1,
               order: 1,
               eventid: 'E1',
-              gender: 'M',
-              swimstyle: { relaycount: 1, stroke: 'freestyle', distance: 100 },
+              gender: Gender.M,
+              swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
               heats: [
                 {
                   heatid: 'H1',
@@ -36,8 +43,8 @@ const mockCompetitionData: CompetitionData = {
               number: 2,
               order: 2,
               eventid: 'E2',
-              gender: 'F',
-              swimstyle: { relaycount: 4, stroke: 'medley', distance: 200 },
+              gender: Gender.F,
+              swimstyle: { relaycount: 4, stroke: Stroke.MEDLEY, distance: 200 },
               heats: [
                 {
                   heatid: 'H2',
@@ -55,10 +62,11 @@ const mockCompetitionData: CompetitionData = {
           name: 'Club A',
           athletes: [
             {
-              athleteid: 'A1',
+              athleteid: 1,
               firstname: 'John',
               lastname: 'Doe',
               birthdate: '2000-01-01',
+              gender: Gender.M,
               entries: [
                 {
                   eventid: 'E1',
@@ -69,10 +77,11 @@ const mockCompetitionData: CompetitionData = {
               ],
             },
             {
-              athleteid: 'A2',
+              athleteid: 2,
               firstname: 'Jane',
               lastname: 'Smith',
               birthdate: '2001-01-01',
+              gender: Gender.F,
               entries: [],
             },
           ],
@@ -86,8 +95,8 @@ const mockCompetitionData: CompetitionData = {
                   entrytime: '2:00.00',
                   lane: 1,
                   relaypositions: [
-                    { athleteid: 'A1' },
-                    { athleteid: 'A2' },
+                    { athleteid: 1 },
+                    { athleteid: 2 },
                   ],
                 },
               ],
@@ -261,7 +270,9 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
       expect(err).toBeNull();
       expect(result).toBeDefined();
-      expect(result?.meets[0].name).toBe('Test Meet');
+      if (result && result.meets && result.meets[0]) {
+        expect(result.meets[0].name).toBe('Test Meet');
+      }
       done();
     });
   });
@@ -297,7 +308,7 @@ describe('getAthletesByHeatId edge cases', () => {
       ...mockCompetitionData,
       meets: [{
         ...mockCompetitionData.meets[0],
-        clubs: [{ name: 'Club B', athletes: [], relays: [] } as Club],
+        clubs: [{ name: 'Club B', athletes: [], relays: [] } as CompetitionClub],
       }],
     };
     const comp = new Competition();
@@ -311,7 +322,7 @@ describe('getAthletesByHeatId edge cases', () => {
       ...mockCompetitionData,
       meets: [{
         ...mockCompetitionData.meets[0],
-        clubs: [{ name: 'Club C', relays: [] } as unknown as Club],
+        clubs: [{ name: 'Club C', athletes: [], relays: [] } as CompetitionClub],
       }],
     };
     const comp = new Competition();
@@ -327,9 +338,15 @@ describe('getAthletesByHeatId edge cases', () => {
         ...mockCompetitionData.meets[0],
         clubs: [{
           name: 'Club D',
-          athletes: [{ athleteid: 'A2', firstname: 'Jane', lastname: 'Smith', birthdate: '2001-01-01' } as Athlete],
+          athletes: [{
+            athleteid: 2,
+            firstname: 'Jane',
+            lastname: 'Smith',
+            birthdate: '2001-01-01',
+            gender: Gender.F,
+          } as CompetitionAthlete],
           relays: [],
-        } as Club],
+        } as CompetitionClub],
       }],
     };
     const comp = new Competition();

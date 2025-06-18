@@ -1,131 +1,145 @@
-// Combined strict app types and Lenex (loose) types for competition data
+import {
+  LenexRaw,
+  Meet as LenexMeet,
+  Session as LenexSession,
+  Event as LenexEvent,
+  Heat as LenexHeat,
+  _Club,
+  MeetAthlete as LenexAthlete,
+  Entry as LenexEntry,
+  MeetRelay as LenexRelay,
+  MeetRelayPosition as LenexRelayPosition,
+  Swimstyle as LenexSwimStyle,
+  Gender,
+  Course,
+  Nation,
+  Stroke,
+} from 'js-lenex/build/src/lenex-type';
 
-// --- Strict App Types ---
-export interface Entry {
-  eventid: string;
-  heatid: string;
-  entrytime: string;
-  lane: number;
+// Re-export Lenex enums for use in the application
+export {
+  Gender,
+  Course,
+  Nation,
+  Stroke,
+};
+
+// Type alias for _Club to maintain backwards compatibility
+export type LenexClub = _Club;
+
+/**
+ * Our application's core types with strict requirements.
+ * Each type includes an 'original' field to access the full Lenex data when needed.
+ */
+
+// CompetitionData represents the root structure of our application
+export interface CompetitionData {
+  meets: CompetitionMeet[];
+  original?: LenexRaw;
 }
 
-export interface Athlete {
-  athleteid: string;
+// CompetitionMeet with required fields for our application
+export interface CompetitionMeet {
+  name: string;
+  sessions: CompetitionSession[];
+  clubs: CompetitionClub[];
+  city?: string;
+  nation?: Nation;
+  original?: LenexMeet;
+}
+
+// CompetitionSession with required fields
+export interface CompetitionSession {
+  date: string;
+  events: CompetitionEvent[];
+  original?: LenexSession;
+}
+
+// CompetitionEvent with required fields and original data
+export interface CompetitionEvent {
+  number: number;
+  order: number;
+  eventid: string;
+  gender: Gender;
+  swimstyle: CompetitionSwimStyle;
+  heats: CompetitionHeat[];
+  original?: LenexEvent;
+}
+
+// CompetitionSwimStyle with required fields
+export interface CompetitionSwimStyle {
+  relaycount: number;
+  stroke: Stroke;
+  distance: number;
+  original?: LenexSwimStyle;
+}
+
+// CompetitionHeat with required fields
+export interface CompetitionHeat {
+  heatid: string;
+  number: number;
+  order: number;
+  daytime?: string;
+  original?: LenexHeat;
+}
+
+// CompetitionClub with required fields
+export interface CompetitionClub {
+  name: string;
+  athletes: CompetitionAthlete[];
+  relays?: CompetitionRelay[];
+  original?: _Club;
+}
+
+// CompetitionAthlete with required fields
+export interface CompetitionAthlete {
+  athleteid: number;
   firstname: string;
   lastname: string;
   birthdate: string;
-  entries: Entry[];
+  entries: CompetitionEntry[];
+  gender: Gender;
+  original?: LenexAthlete;
 }
 
-export interface Club {
-  name: string;
-  athletes: Athlete[];
-  relays?: Relay[];
-}
-
-export interface RelayPosition {
-  athleteid: string;
-}
-
-export interface RelayEntry {
+// CompetitionEntry with required fields
+export interface CompetitionEntry {
   eventid: string;
   heatid: string;
   entrytime: string;
   lane: number;
-  relaypositions: RelayPosition[];
+  original?: LenexEntry;
 }
 
-export interface Relay {
+// CompetitionRelay with required fields
+export interface CompetitionRelay {
   relayid: string;
-  entries: RelayEntry[];
+  entries: CompetitionRelayEntry[];
+  original?: LenexRelay;
 }
 
-export interface Heat {
-  heatid: string;
-  number: number;
-  order: number;
-  daytime?: string;
+// CompetitionRelayEntry with required fields
+export interface CompetitionRelayEntry extends CompetitionEntry {
+  relaypositions: CompetitionRelayPosition[];
+  original?: LenexEntry;
 }
 
-export interface SwimStyle {
-  relaycount: number;
-  stroke: string;
-  distance: number;
+// CompetitionRelayPosition with required fields
+export interface CompetitionRelayPosition {
+  athleteid: number;
+  original?: LenexRelayPosition;
 }
 
-export interface Event {
-  number: number;
-  order: number;
-  eventid: string;
-  gender: string;
-  swimstyle: SwimStyle;
-  heats: Heat[];
-}
-
-export interface Session {
-  date: string;
-  events: Event[];
-}
-
-export interface Meet {
-  name: string;
-  sessions: Session[];
-  clubs: Club[];
-}
-
-export interface CompetitionData {
-  meets: Meet[];
-}
-
-// --- Lenex (Loose) Types ---
-export interface LenexRelayPosition { athleteid?: string }
-export interface LenexRelayEntry {
-  eventid?: string | number;
-  heatid?: string | number;
-  entrytime?: string;
-  lane?: number;
-  relaypositions?: LenexRelayPosition[];
-}
-export interface LenexRelay { relayid?: string; entries?: LenexRelayEntry[] }
-export interface LenexEntry {
-  eventid?: string | number;
-  heatid?: string | number;
-  entrytime?: string;
-  lane?: number;
-}
-export interface LenexAthlete {
-  athleteid?: string;
-  firstname?: string;
-  lastname?: string;
-  birthdate?: string;
-  entries?: LenexEntry[];
-}
-export interface LenexClub {
-  name?: string;
-  athletes?: LenexAthlete[];
-  relays?: LenexRelay[];
-}
-export interface LenexHeat {
-  heatid?: string;
-  number?: number;
-  order?: number;
-  daytime?: string;
-}
-export interface LenexSwimStyle { relaycount?: number; stroke?: string; distance?: number }
-export interface LenexEvent {
-  number?: number;
-  order?: number;
-  eventid?: string | number;
-  gender?: string;
-  swimstyle?: LenexSwimStyle;
-  heats?: LenexHeat[];
-}
-export interface LenexSession {
-  date?: string;
-  events?: LenexEvent[];
-}
-export interface LenexMeet {
-  name?: string;
-  sessions?: LenexSession[];
-  clubs?: LenexClub[];
-}
-export interface LenexRoot { meets?: LenexMeet[] }
+// Type aliases for external use
+export type {
+  LenexRaw as LenexRoot,
+  LenexMeet,
+  LenexSession,
+  LenexEvent,
+  LenexHeat,
+  LenexAthlete,
+  LenexEntry,
+  LenexRelay,
+  LenexRelayPosition,
+  LenexSwimStyle,
+};

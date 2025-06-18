@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import { getEvents, getEvent } from '../../../../src/controllers/competition/event/eventController';
 import Competition from '../../../../src/modules/competition';
+import { Gender, Stroke } from '../../../../src/types/competition-types';
 
 jest.mock('../../../../src/modules/competition');
 
@@ -29,16 +30,16 @@ describe('eventController', () => {
           number: 1,
           order: 1,
           eventid: 'E1',
-          gender: 'M',
-          swimstyle: { relaycount: 1, stroke: 'freestyle', distance: 100 },
+          gender: Gender.M,
+          swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
           heats: [],
         },
         {
           number: 2,
           order: 2,
           eventid: 'E2',
-          gender: 'F',
-          swimstyle: { relaycount: 1, stroke: 'backstroke', distance: 200 },
+          gender: Gender.F,
+          swimstyle: { relaycount: 1, stroke: Stroke.BACK, distance: 200 },
           heats: [],
         },
       ]);
@@ -71,8 +72,8 @@ describe('eventController', () => {
         number: 1,
         order: 1,
         eventid: 'E1',
-        gender: 'M',
-        swimstyle: { relaycount: 1, stroke: 'freestyle', distance: 100 },
+        gender: Gender.M,
+        swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
         heats: [],
       });
       const res = await request(app).get('/competition/event/1');

@@ -32,11 +32,10 @@ describe('heatController', () => {
         club: 'Test Club',
         athletes: [
           {
-            athleteid: 'A1',
+            athleteid: 1,
             firstname: 'John',
             lastname: 'Doe',
             birthdate: '2000-01-01',
-            entries: [],
           },
         ],
       },

@@ -1,87 +1,19 @@
 import fs from 'fs';
 import path from 'path';
+import { LenexRaw } from 'js-lenex/src/lenex-type';
 import {
-  CompetitionData, Athlete, Session, Event, Club, Relay, Entry, Heat,
-  LenexRoot, LenexMeet, LenexSession, LenexEvent, LenexHeat, LenexClub,
-  LenexAthlete, LenexEntry, LenexRelay, LenexRelayEntry, LenexRelayPosition,
+  CompetitionData,
+  CompetitionEvent,
+  CompetitionHeat,
+  CompetitionSession,
+  CompetitionClub,
+  CompetitionAthlete,
+  CompetitionEntry,
 } from '../types/competition-types';
-
-// Minimal Lenex types for conversion
-function convertLenexToCompetitionData(lenex: unknown): CompetitionData {
-  const l = lenex as LenexRoot;
-  return {
-    meets: Array.isArray(l.meets)
-      ? l.meets.map((meet: LenexMeet) => ({
-        name: String(meet.name ?? ''),
-        sessions: Array.isArray(meet.sessions)
-          ? meet.sessions.map((session: LenexSession) => ({
-            date: String(session.date ?? ''),
-            events: Array.isArray(session.events)
-              ? session.events.map((event: LenexEvent) => ({
-                number: Number(event.number),
-                order: Number(event.order),
-                eventid: String(event.eventid ?? event.number ?? ''),
-                gender: String(event.gender ?? ''),
-                swimstyle: {
-                  relaycount: Number(event.swimstyle?.relaycount ?? 0),
-                  stroke: String(event.swimstyle?.stroke ?? ''),
-                  distance: Number(event.swimstyle?.distance ?? 0),
-                },
-                heats: Array.isArray(event.heats)
-                  ? event.heats.map((heat: LenexHeat) => ({
-                    heatid: String(heat.heatid ?? ''),
-                    number: Number(heat.number),
-                    order: Number(heat.order),
-                    daytime: heat.daytime ? String(heat.daytime) : undefined,
-                  }))
-                  : [],
-              }))
-              : [],
-          }))
-          : [],
-        clubs: Array.isArray(meet.clubs)
-          ? meet.clubs.map((club: LenexClub) => ({
-            name: String(club.name ?? ''),
-            athletes: Array.isArray(club.athletes)
-              ? club.athletes.map((athlete: LenexAthlete) => ({
-                athleteid: String(athlete.athleteid ?? ''),
-                firstname: String(athlete.firstname ?? ''),
-                lastname: String(athlete.lastname ?? ''),
-                birthdate: String(athlete.birthdate ?? ''),
-                entries: Array.isArray(athlete.entries)
-                  ? athlete.entries.map((entry: LenexEntry) => ({
-                    eventid: String(entry.eventid ?? ''),
-                    heatid: String(entry.heatid ?? ''),
-                    entrytime: String(entry.entrytime ?? ''),
-                    lane: Number(entry.lane),
-                  }))
-                  : [],
-              }))
-              : [],
-            relays: Array.isArray(club.relays)
-              ? club.relays.map((relay: LenexRelay) => ({
-                relayid: String(relay.relayid ?? ''),
-                entries: Array.isArray(relay.entries)
-                  ? relay.entries.map((relayEntry: LenexRelayEntry) => ({
-                    eventid: String(relayEntry.eventid ?? ''),
-                    heatid: String(relayEntry.heatid ?? ''),
-                    entrytime: String(relayEntry.entrytime ?? ''),
-                    lane: Number(relayEntry.lane),
-                    relaypositions: Array.isArray(relayEntry.relaypositions)
-                      ? relayEntry.relaypositions.map((pos: LenexRelayPosition) => ({
-                        athleteid: String(pos.athleteid ?? ''),
-                      }))
-                      : [],
-                  }))
-                  : [],
-              }))
-              : [],
-          }))
-          : [],
-      }))
-      : [],
-  };
-}
+import {
+  AthleteResult,
+  RelayResult,
+} from '../types/competition-result-types';
 
 class Competition {
   private static readonly COMPETITION_FILE_PATH = './public/competition.json';
@@ -126,7 +58,7 @@ class Competition {
       first_session_date: session.date,
       session_count: meet.sessions.length,
       event_count: meet.sessions
-        .map((s: Session) => s.events.length)
+        .map((s: CompetitionSession) => s.events.length)
         .reduce((a: number, b: number) => a + b, 0),
       club_count: meet.clubs.length,
     };
@@ -135,7 +67,7 @@ class Competition {
   /**
    * Returns all events for a given meet/session.
    */
-  public static getEvents(meetIndex: number, sessionIndex: number): Event[] {
+  public static getEvents(meetIndex: number, sessionIndex: number): CompetitionEvent[] {
     const data = Competition.readCompetitionDataFromDisk();
     Competition.assertValidIndices(data, meetIndex, sessionIndex);
     return data.meets[meetIndex].sessions[sessionIndex].events;
@@ -144,11 +76,11 @@ class Competition {
   /**
    * Returns a single event by event number.
    */
-  public static getEvent(meetIndex: number, sessionIndex: number, eventNumber: number): Event | null {
+  public static getEvent(meetIndex: number, sessionIndex: number, eventNumber: number): CompetitionEvent | null {
     const data = Competition.readCompetitionDataFromDisk();
     Competition.assertValidIndices(data, meetIndex, sessionIndex);
     return data.meets[meetIndex].sessions[sessionIndex].events
-      .find((event: Event) => event.number === eventNumber) || null;
+      .find((event: CompetitionEvent) => event.number === eventNumber) || null;
   }
 
   /**
@@ -157,9 +89,10 @@ class Competition {
   public static getHeat(meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
     const data = Competition.readCompetitionDataFromDisk();
     Competition.assertValidIndices(data, meetIndex, sessionIndex);
-    const event = data.meets[meetIndex].sessions[sessionIndex].events.find((ev: Event) => ev.number === eventNumber);
+    const { events } = data.meets[meetIndex].sessions[sessionIndex];
+    const event = events.find((ev: CompetitionEvent) => ev.number === eventNumber);
     if (!event) return null;
-    const heat = event.heats.find((ht: Heat) => ht.number === heatNumber);
+    const heat = event.heats.find((ht: CompetitionHeat) => ht.number === heatNumber);
     if (!heat) return null;
     if (event.swimstyle.relaycount > 1) {
       return Competition.extractRelay(data, event.eventid, heat.heatid);
@@ -174,9 +107,9 @@ class Competition {
     if (!data.meets[0]) return [];
     return data.meets[0].clubs
       .flatMap(
-        (club: Club) => (Array.isArray(club.athletes) ? club.athletes : [])
-          .filter((athlete: Athlete) => !Array.isArray(athlete.entries) || athlete.entries.length === 0)
-          .map((athlete: Athlete) => ({
+        (club: CompetitionClub) => (Array.isArray(club.athletes) ? club.athletes : [])
+          .filter((athlete: CompetitionAthlete) => !Array.isArray(athlete.entries) || athlete.entries.length === 0)
+          .map((athlete: CompetitionAthlete) => ({
             club: club.name,
             athleteid: athlete.athleteid,
             firstname: athlete.firstname,
@@ -187,72 +120,83 @@ class Competition {
   }
 
   private static getAthletesByHeatId(data: CompetitionData, heatId: string) {
-    if (!data.meets[0]) return [];
-    const entries = data.meets[0].clubs
-      .map((club: Club) => (Array.isArray(club.athletes) ? club.athletes : []).map((athlete: Athlete) => {
-        if (!Array.isArray(athlete.entries)) {
-          return null;
-        }
-        const filterResult = athlete.entries.filter((entry: Entry) => entry.heatid === heatId);
-        if (filterResult.length === 0) {
-          return null;
-        }
-        return {
-          lane: filterResult[0]?.lane,
-          entrytime: filterResult[0]?.entrytime,
-          club: club.name,
-          athletes: [{
-            athleteid: athlete.athleteid,
-            firstname: athlete.firstname,
-            lastname: athlete.lastname,
-            birthdate: athlete.birthdate,
-          }],
-        };
-      }))
-      .flat()
-      .filter((x): x is { lane: number; entrytime: string; club: string; athletes: Athlete[] } => x !== null)
+    const defaultMeet = data.meets[0];
+    if (!defaultMeet) return [];
+
+    const entries = defaultMeet.clubs
+      .flatMap((club: CompetitionClub) => {
+        if (!Array.isArray(club.athletes)) return [];
+
+        return club.athletes.map((athlete: CompetitionAthlete) => {
+          if (!Array.isArray(athlete.entries)) return null;
+
+          const filterResult = athlete.entries.filter(
+            (entry: CompetitionEntry) => entry.heatid === heatId,
+          );
+          if (filterResult.length === 0) return null;
+
+          const [firstEntry] = filterResult;
+          return {
+            lane: firstEntry.lane,
+            entrytime: firstEntry.entrytime,
+            club: club.name,
+            athletes: [{
+              athleteid: athlete.athleteid,
+              firstname: athlete.firstname,
+              lastname: athlete.lastname,
+              birthdate: athlete.birthdate,
+            }],
+          };
+        });
+      })
+      .filter((x): x is AthleteResult => x !== null)
       .sort((a, b) => a.lane - b.lane);
+
     return entries;
   }
 
-  private static findAthleteById(data: CompetitionData, athleteId: string): Athlete | null {
-    if (!data.meets[0]) return null;
-    const found = data.meets[0].clubs
-      .flatMap((club: Club) => (Array.isArray(club.athletes) ? club.athletes : []))
-      .find((athlete: Athlete) => athlete.athleteid === athleteId);
+  private static findAthleteById(data: CompetitionData, athleteId: number): CompetitionAthlete | null {
+    const defaultMeet = data.meets[0];
+    if (!defaultMeet) return null;
+
+    const found = defaultMeet.clubs
+      .flatMap((club) => (Array.isArray(club.athletes) ? club.athletes : []))
+      .find((athlete) => athlete.athleteid === athleteId);
+
     return found || null;
   }
 
   private static extractRelay(data: CompetitionData, event: string, heat: string) {
-    if (!data.meets[0]) return [];
-    const relayEntries = data.meets[0].clubs
-      .flatMap((club: Club) => (Array.isArray(club.relays) ? club.relays : []).map((relay: Relay) => {
-        if (!relay.entries.length || relay.entries[0].heatid !== heat || relay.entries[0].eventid !== event) {
-          return null;
-        }
-        return {
-          lane: relay.entries[0].lane,
-          entrytime: relay.entries[0].entrytime,
-          club: club.name,
-          relayid: relay.relayid,
-          athletes: relay.entries[0].relaypositions.map((position) => {
-            const athlete = Competition.findAthleteById(data, position.athleteid);
-            return {
-              athleteid: position.athleteid,
-              firstname: athlete ? athlete.firstname : '',
-              lastname: athlete ? athlete.lastname : '',
-            };
-          }),
-        };
-      }))
-      .filter((x): x is {
-        lane: number;
-        entrytime: string;
-        club: string;
-        relayid: string;
-        athletes: { athleteid: string; firstname: string; lastname: string; }[]
-      } => x !== null)
+    const defaultMeet = data.meets[0];
+    if (!defaultMeet) return [];
+
+    const relayEntries = defaultMeet.clubs
+      .flatMap((club) => {
+        if (!Array.isArray(club.relays)) return [];
+
+        return club.relays.map((relay) => {
+          const firstEntry = relay.entries[0];
+          if (!firstEntry || firstEntry.heatid !== heat || firstEntry.eventid !== event) return null;
+
+          return {
+            lane: firstEntry.lane,
+            entrytime: firstEntry.entrytime,
+            club: club.name,
+            relayid: relay.relayid,
+            athletes: firstEntry.relaypositions.map((position) => {
+              const athlete = Competition.findAthleteById(data, position.athleteid);
+              return {
+                athleteid: position.athleteid,
+                firstname: athlete?.firstname ?? '',
+                lastname: athlete?.lastname ?? '',
+              };
+            }),
+          };
+        });
+      })
+      .filter((x): x is RelayResult => x !== null)
       .sort((a, b) => a.lane - b.lane);
+
     return relayEntries;
   }
 
@@ -261,7 +205,7 @@ class Competition {
    */
   public static readAndProcessCompetitionJSON(
     filePath: string,
-    callback: (err: Error | string | null, result: CompetitionData | null) => void,
+    callback: (err: Error | string | null, result: LenexRaw | null) => void,
   ): void {
     fs.readFile(filePath, async (err, data) => {
       if (err) {
@@ -271,8 +215,7 @@ class Competition {
       // Dynamic import for ESM compatibility
       // eslint-disable-next-line import/extensions
       const { parseLenex } = await import('js-lenex/build/src/lenex-parse');
-      const lenexRaw = await parseLenex(data);
-      const result = convertLenexToCompetitionData(lenexRaw);
+      const result = await parseLenex(data);
       // Fallbacks for type safety
       if (!result.meets?.length) {
         callback('No meets found', null);

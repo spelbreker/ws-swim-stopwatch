@@ -87,7 +87,7 @@ function updateLaneDisplay(athlete) {
 
 function formatLapTime(ts) {
     // Zet timestamp om naar mm:ss:ms
-    const base = window.startTime || 0;
+    const base = startTime || 0;
     return window.formatLapTime(ts, base);
 }
 
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Start the stopwatch */
         if (message.type === 'start') {
-            window.startTime = message.timestamp + serverTimeOffset;
+            startTime = message.timestamp + serverTimeOffset;
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
             }
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearInterval(stopwatchInterval);
                 stopwatchInterval = null;
             }
-            window.startTime = null;
+            startTime = null;
             stopwatchElement.textContent = '00:00:00';
             return;
         }
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
                     if (splitCell) {
-                        splitCell.textContent = window.formatLapTime(message.timestamp, window.startTime || 0);
+                        splitCell.textContent = window.formatLapTime(message.timestamp, startTime || 0);
                     }
                     laneElement.classList.add('highlight');
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
