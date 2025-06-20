@@ -223,6 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetStopwatch(sendSocket = true) {
         clearInterval(stopwatchInterval);
         stopwatchInterval = null;
+        window.startTime = null;
         stopwatchElement.textContent = '00:00:00';
         if (sendSocket) {
             window.socket.send(JSON.stringify({ type: 'reset' }));
@@ -346,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (message.type === 'event-heat') {
             eventSelect.value = message.event;
             heatSelect.value = message.heat;
-            fetchCompetitionData(message.event, message.heat);
             resetSplitTimes();
             updateEventHeatInfoBar(message.event, message.heat);
         }
