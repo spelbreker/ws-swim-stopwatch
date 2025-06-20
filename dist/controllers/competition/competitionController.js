@@ -26,7 +26,6 @@ function uploadCompetition(req, res) {
         }
         catch (unlinkErr) {
             // Log error for dev/ops, but do not block user
-            // eslint-disable-next-line no-console
             console.error('Failed to delete uploaded file:', unlinkErr);
         }
         res.redirect('/competition/upload.html');
@@ -40,7 +39,7 @@ function getCompetitionSummary(req, res) {
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
     }
-    catch (e) {
+    catch {
         res.status(500).send('Error generating summary');
     }
 }
@@ -53,8 +52,8 @@ function deleteCompetition(req, res) {
         if (fs_1.default.existsSync('./public/athletes.json'))
             fs_1.default.unlinkSync('./public/athletes.json');
         res.status(200).send('Competition deleted');
-    }
-    catch (e) {
+    } // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    catch (_e) {
         res.status(500).send('Error deleting competition');
     }
 }

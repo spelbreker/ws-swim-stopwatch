@@ -46,7 +46,7 @@ describe('eventController', () => {
       const res = await request(app).get('/competition/event');
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+       
       const arr: unknown = res.body;
       if (
         Array.isArray(arr)

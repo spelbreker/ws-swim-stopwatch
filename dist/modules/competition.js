@@ -215,7 +215,6 @@ class Competition {
                 return;
             }
             // Dynamic import for ESM compatibility
-            // eslint-disable-next-line import/extensions
             const { parseLenex } = await Promise.resolve().then(() => __importStar(require('js-lenex/build/src/lenex-parse')));
             const result = await parseLenex(data);
             // Fallbacks for type safety
@@ -259,4 +258,4 @@ Competition.COMPETITION_FILE_PATH = './public/competition.json';
 exports.default = Competition;
 // Usage: import Competition from './competition';
 // const comp = new Competition();
-// comp.getMeetSummary(...)
+// comp.getMeetSummary(...

@@ -19,7 +19,7 @@ export function uploadCompetition(req: Request, res: Response): void {
       fs.unlinkSync(filePath);
     } catch (unlinkErr) {
       // Log error for dev/ops, but do not block user
-      // eslint-disable-next-line no-console
+
       console.error('Failed to delete uploaded file:', unlinkErr);
     }
     res.redirect('/competition/upload.html');
@@ -33,7 +33,8 @@ export function getCompetitionSummary(req: Request, res: Response) {
     const summary = Competition.getMeetSummary(meetIndex, sessionIndex);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
-  } catch (e) {
+  } // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  catch (_e) {
     res.status(500).send('Error generating summary');
   }
 }
@@ -44,7 +45,8 @@ export function deleteCompetition(req: Request, res: Response) {
     if (fs.existsSync('./public/events.json')) fs.unlinkSync('./public/events.json');
     if (fs.existsSync('./public/athletes.json')) fs.unlinkSync('./public/athletes.json');
     res.status(200).send('Competition deleted');
-  } catch (e) {
+  } // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  catch (_e) {
     res.status(500).send('Error deleting competition');
   }
 }

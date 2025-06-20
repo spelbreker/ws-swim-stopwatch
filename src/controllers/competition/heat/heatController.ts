@@ -18,7 +18,8 @@ export function getHeat(req: Request, res: Response) {
     }
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(result));
-  } catch (e) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e) {
     res.status(500).send('Error getting heat');
   }
 }

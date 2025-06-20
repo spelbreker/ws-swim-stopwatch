@@ -193,14 +193,18 @@ describe('Competition class', () => {
   });
 });
 
+// Shared type alias for fs.readFile callback signature
+type FsReadFileCallback = (err: Error | null, data: Buffer | null) => void;
+
 describe('Competition static readAndProcessCompetitionJSON', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require('fs');
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   test('calls callback with error if fs.readFile fails', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(new Error('fail'), null));
+    fs.readFile.mockImplementation((_path: unknown, cb: FsReadFileCallback) => cb(new Error('fail'), null));
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
       expect(err).toBeInstanceOf(Error);
       expect(result).toBeNull();
@@ -209,7 +213,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if no meets found', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((_path: unknown, cb: FsReadFileCallback) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue({ meets: [] });
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -220,7 +224,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if no sessions found', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue({ meets: [{ name: 'X', sessions: [] }] });
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -231,7 +235,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if no events found', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue({ meets: [{ name: 'X', sessions: [{ date: 'd', events: [] }] }] });
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -242,7 +246,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if no heats found', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue({ meets: [{ name: 'X', sessions: [{ date: 'd', events: [{ number: 1, heats: [] }] }] }] });
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -253,7 +257,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if no clubs found', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue({ meets: [{ name: 'X', sessions: [{ date: 'd', events: [{ number: 1, heats: [{}] }] }], clubs: [] }] });
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -264,7 +268,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with result if parseLenex succeeds', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue(mockCompetitionData);
     fs.writeFileSync.mockImplementation(() => {});
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -278,7 +282,7 @@ describe('Competition static readAndProcessCompetitionJSON', () => {
   });
 
   test('calls callback with error if writeFileSync throws', (done) => {
-    fs.readFile.mockImplementation((path: unknown, cb: any) => cb(null, Buffer.from('data')));
+    fs.readFile.mockImplementation((path: unknown, cb: (err: Error | null, data: Buffer | null) => void) => cb(null, Buffer.from('data')));
     mockParseLenex.mockResolvedValue(mockCompetitionData);
     fs.writeFileSync.mockImplementation(() => { throw new Error('write fail'); });
     Competition.readAndProcessCompetitionJSON('dummy', (err, result) => {
@@ -299,7 +303,7 @@ describe('getAthletesByHeatId edge cases', () => {
     };
     const comp = new Competition();
     injectCompetitionData(comp, data);
-    const result = (Competition as any)['getAthletesByHeatId'](data, 'H1');
+    const result = (Competition as unknown as { getAthletesByHeatId: (data: typeof mockCompetitionData, heatId: string) => unknown[] }).getAthletesByHeatId(data, 'H1');
     expect(result).toEqual([]);
   });
 
@@ -313,7 +317,7 @@ describe('getAthletesByHeatId edge cases', () => {
     };
     const comp = new Competition();
     injectCompetitionData(comp, data);
-    const result = (Competition as any)['getAthletesByHeatId'](data, 'H1');
+    const result = (Competition as unknown as { getAthletesByHeatId: (data: typeof mockCompetitionData, heatId: string) => unknown[] }).getAthletesByHeatId(data, 'H1');
     expect(result).toEqual([]);
   });
 
@@ -327,7 +331,7 @@ describe('getAthletesByHeatId edge cases', () => {
     };
     const comp = new Competition();
     injectCompetitionData(comp, data);
-    const result = (Competition as any)['getAthletesByHeatId'](data, 'H1');
+    const result = (Competition as unknown as { getAthletesByHeatId: (data: typeof mockCompetitionData, heatId: string) => unknown[] }).getAthletesByHeatId(data, 'H1');
     expect(result).toEqual([]);
   });
 
@@ -351,7 +355,10 @@ describe('getAthletesByHeatId edge cases', () => {
     };
     const comp = new Competition();
     injectCompetitionData(comp, data);
-    const result = (Competition as any)['getAthletesByHeatId'](data, 'H1');
+    const result = (Competition as unknown as { getAthletesByHeatId: (data: typeof mockCompetitionData, heatId: string) => unknown[] }).getAthletesByHeatId(data, 'H1');
     expect(result).toEqual([]);
   });
 });
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const CompetitionMeet = {};

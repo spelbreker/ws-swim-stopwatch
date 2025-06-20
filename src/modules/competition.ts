@@ -213,7 +213,6 @@ class Competition {
         return;
       }
       // Dynamic import for ESM compatibility
-      // eslint-disable-next-line import/extensions
       const { parseLenex } = await import('js-lenex/build/src/lenex-parse');
       const result = await parseLenex(data);
       // Fallbacks for type safety
@@ -257,4 +256,4 @@ export default Competition;
 
 // Usage: import Competition from './competition';
 // const comp = new Competition();
-// comp.getMeetSummary(...)
+// comp.getMeetSummary(...
