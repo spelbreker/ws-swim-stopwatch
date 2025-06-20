@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: "22.x"
       - name: Install dependencies
         run: npm ci
       - name: Build TypeScript
@@ -33,7 +33,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: "22.x"
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,13 +45,15 @@ jobs:
       - name: Run linter
         run: npm run lint
   security:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Use Node.js 22.x
-          uses: actions/setup-node@v4
-          with:
-            node-version: '22.x'
-        - name: Run security audit
-          run: npm audit --audit-level=moderate
-        - name: Run security linter
-          run: npm run lint-security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+      - name: Run security linter
+        run: npm run lint-security
