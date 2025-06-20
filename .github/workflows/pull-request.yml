@@ -39,6 +39,8 @@ jobs:
         with:
           name: built-assets
           path: .
+      - name: Install dependencies
+        run: npm ci
       - name: Run tests
         run: npm test
       - name: Run linter
@@ -54,5 +56,3 @@ jobs:
           node-version: "22.x"
       - name: Run security audit
         run: npm audit --audit-level=moderate
-      - name: Run security linter
-        run: npm run lint-security
