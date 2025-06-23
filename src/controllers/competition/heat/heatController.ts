@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getHeat as getHeatModule } from '../../../modules/competition';
+import Competition from '../../../modules/competition';
 
 export function getHeat(req: Request, res: Response) {
   const eventNumber = parseInt(req.params.event, 10);
@@ -11,14 +11,15 @@ export function getHeat(req: Request, res: Response) {
     return;
   }
   try {
-    const result = getHeatModule(meetIndex, sessionIndex, eventNumber, heatNumber);
+    const result = Competition.getHeat(meetIndex, sessionIndex, eventNumber, heatNumber);
     if (!result) {
       res.status(404).send('Heat or entries not found');
       return;
     }
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(result));
-  } catch (e) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e) {
     res.status(500).send('Error getting heat');
   }
 }

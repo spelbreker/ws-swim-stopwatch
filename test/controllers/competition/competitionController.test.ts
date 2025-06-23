@@ -1,42 +1,47 @@
 import request from 'supertest';
 import express from 'express';
-import * as competitionController from '../../../src/controllers/competition/competitionController';
-import * as competitionModule from '../../../src/modules/competition';
-
-jest.mock('../../../src/modules/competition');
+import { getCompetitionSummary, deleteCompetition } from '../../../src/controllers/competition/competitionController';
+import Competition from '../../../src/modules/competition';
 
 const app = express();
 app.use(express.json());
-app.get('/competition/summary', competitionController.getCompetitionSummary);
-app.get('/competition/delete', competitionController.deleteCompetition);
+app.get('/competition/summary', getCompetitionSummary);
+app.get('/competition/delete', deleteCompetition);
 
 describe('competitionController', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('getCompetitionSummary', () => {
+    let spy: jest.SpyInstance;
+    afterEach(() => { if (spy) spy.mockRestore(); });
+
     it('should return 500 if module throws', async () => {
-      (competitionModule.getMeetSummary as jest.Mock).mockImplementation(() => { throw new Error('fail'); });
+      spy = jest.spyOn(Competition, 'getMeetSummary').mockImplementation(() => { throw new Error('fail'); });
       const res = await request(app).get('/competition/summary');
       expect(res.status).toBe(500);
       expect(res.text).toMatch(/Error generating summary/);
     });
     it('should return summary if module returns data', async () => {
-      (competitionModule.getMeetSummary as jest.Mock).mockReturnValue({ meet: 'Test Meet', club_count: 2 });
+      const mockSummary = {
+        meet: 'Test Meet',
+        club_count: 2,
+        first_session_date: '2025-06-01',
+        session_count: 1,
+        event_count: 2,
+      };
+      spy = jest.spyOn(Competition, 'getMeetSummary').mockReturnValue(mockSummary);
       const res = await request(app).get('/competition/summary');
       expect(res.status).toBe(200);
-      expect(res.body.meet).toBe('Test Meet');
-      expect(res.body.club_count).toBe(2);
+      // Lint: object destructuring not used because type is unknown and we need safe property access
+      const body: unknown = res.body;
+      if (body && typeof body === 'object' && body !== null && 'meet' in body && 'club_count' in body) {
+        expect((body as { meet: string }).meet).toBe('Test Meet');
+        expect((body as { club_count: number }).club_count).toBe(2);
+      }
     });
   });
 
   describe('deleteCompetition', () => {
     it('should delete files and return 200', async () => {
-      // This controller deletes files directly, so we can't mock the module for this
-      // Instead, we can spy on fs.unlinkSync and fs.existsSync if needed, or just check status
       const res = await request(app).get('/competition/delete');
-      // Accept 200 or 500 depending on file system state
       expect([200, 500]).toContain(res.status);
     });
   });

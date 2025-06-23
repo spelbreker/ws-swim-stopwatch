@@ -19,7 +19,7 @@ function updateStopwatch() {
     const minutes = Math.floor(elapsedTime / 60000);
     const seconds = Math.floor((elapsedTime % 60000) / 1000);
     const milliseconds = Math.floor((elapsedTime % 1000) / 10);
-    stopwatchElement.textContent = 
+    stopwatchElement.textContent =
         `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`;
 }
 
@@ -39,7 +39,7 @@ function fetchCompetitionData(eventNum, heatNum) {
             if (swimStyleElement) {
                 swimStyleElement.textContent = formatSwimStyle(eventData.swimstyle);
             }
-            
+
             // Then fetch heat data
             return fetch(`/competition/event/${eventNum}/heat/${heatNum}`);
         })
@@ -74,12 +74,12 @@ function updateLaneDisplay(athlete) {
         clearSplitTimes();
 
         if (athlete.athletes) {
-            let athleteNames = athlete.athletes.length === 1 
+            let athleteNames = athlete.athletes.length === 1
                 ? `${athlete.athletes[0].firstname} ${athlete.athletes[0].lastname}`
                 : athlete.athletes.map(a => `${a.firstname.substring(0, 3)}...`).join(' / ');
             laneElement.querySelector('.athlete').textContent = athleteNames;
         } else {
-            laneElement.querySelector('.athlete').textContent = 
+            laneElement.querySelector('.athlete').textContent =
                 `${athlete.firstname} ${athlete.lastname}`;
         }
     }
@@ -87,7 +87,7 @@ function updateLaneDisplay(athlete) {
 
 function formatLapTime(ts) {
     // Zet timestamp om naar mm:ss:ms
-    const base = window.startTime || 0;
+    const base = startTime || 0;
     return window.formatLapTime(ts, base);
 }
 
@@ -121,7 +121,7 @@ function formatSwimStyle(swimstyle) {
         BREAST: 'Schoolslag',
         FLY: 'Vlinderslag'
     };
-    const translatedStroke =  strokeTranslation[stroke] || stroke; 
+    const translatedStroke =  strokeTranslation[stroke] || stroke;
     if (relaycount > 1) {
         return `${relaycount} x ${distance}M ${translatedStroke}`;
     }
@@ -145,16 +145,13 @@ document.addEventListener('DOMContentLoaded', function () {
         /** Start the stopwatch */
         if (message.type === 'start') {
             startTime = message.timestamp + serverTimeOffset;
-            window.startTime = startTime;
-            startTime = message.timestamp + serverTimeOffset;
-            window.startTime = startTime;
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
             clearSplitTimes();
             return
-        } 
+        }
 
         /** Stop the stopwatch */
         if (message.type === 'reset') {
@@ -165,8 +162,8 @@ document.addEventListener('DOMContentLoaded', function () {
             startTime = null;
             stopwatchElement.textContent = '00:00:00';
             return;
-        } 
-        
+        }
+
         /** Update lane information */
         if (message.type === 'split') {
             const lane = message.lane;
@@ -175,14 +172,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
                     if (splitCell) {
-                        splitCell.textContent = window.formatLapTime(message.timestamp, window.startTime || 0);
+                        splitCell.textContent = window.formatLapTime(message.timestamp, startTime || 0);
                     }
                     laneElement.classList.add('highlight');
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
                 }
             }
             return;
-        } 
+        }
 
         /** change event and heat information */
         if (message.type === 'event-heat') {
@@ -190,14 +187,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('heat-number').textContent = message.heat;
             fetchCompetitionData(message.event, message.heat);
             return;
-        } 
+        }
 
         /** clear all lane information */
         if (message.type === 'clear') {
             clearLaneInformation();
             return;
-        } 
-        
+        }
+
         /** Update server time offset */
         if (message.type === 'pong' || message.type === 'time_sync') {
             let rtt = 0;
@@ -207,6 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const estimatedServerTimeNow = message.server_time + (rtt / 2);
             serverTimeOffset = estimatedServerTimeNow - Date.now();
             return;
-        } 
+        }
     });
 });

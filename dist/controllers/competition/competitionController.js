@@ -6,24 +6,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadCompetition = uploadCompetition;
 exports.getCompetitionSummary = getCompetitionSummary;
 exports.deleteCompetition = deleteCompetition;
-const competition_1 = require("../../modules/competition");
 const fs_1 = __importDefault(require("fs"));
+const competition_1 = __importDefault(require("../../modules/competition"));
 function uploadCompetition(req, res) {
-    const file = req.file;
+    // Use object destructuring for file
+    const { file } = req;
     if (!file) {
         res.status(400).send('No file uploaded');
         return;
     }
     const filePath = file.path;
-    (0, competition_1.readAndProcessCompetitionJSON)(filePath, (err) => {
+    competition_1.default.readAndProcessCompetitionJSON(filePath, (err) => {
         if (err) {
-            res.status(500).send(`Error reading file - ${err}`);
+            res.status(500).send(`Error reading file - ${err instanceof Error ? err.message : String(err)}`);
             return;
         }
         try {
-            require('fs').unlinkSync(filePath);
+            fs_1.default.unlinkSync(filePath);
         }
-        catch { }
+        catch (unlinkErr) {
+            // Log error for dev/ops, but do not block user
+            console.error('Failed to delete uploaded file:', unlinkErr);
+        }
         res.redirect('/competition/upload.html');
     });
 }
@@ -31,11 +35,11 @@ function getCompetitionSummary(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
     const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
     try {
-        const summary = (0, competition_1.getMeetSummary)(meetIndex, sessionIndex);
+        const summary = competition_1.default.getMeetSummary(meetIndex, sessionIndex);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
     }
-    catch (e) {
+    catch {
         res.status(500).send('Error generating summary');
     }
 }
@@ -48,8 +52,8 @@ function deleteCompetition(req, res) {
         if (fs_1.default.existsSync('./public/athletes.json'))
             fs_1.default.unlinkSync('./public/athletes.json');
         res.status(200).send('Competition deleted');
-    }
-    catch (e) {
+    } // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    catch (_e) {
         res.status(500).send('Error deleting competition');
     }
 }

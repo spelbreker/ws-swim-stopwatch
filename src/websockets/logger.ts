@@ -8,7 +8,7 @@ function appendLog(message: string) {
     console.log(message); // Log to console for real-time visibility
     fs.appendFileSync(LOG_FILE, `${message}\n`);
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.error('Failed to write to competition.log:', err);
   }
 }
@@ -18,7 +18,7 @@ let lastStartTimestamp: number | null = null;
 export function logStart(event: string | number, heat: string | number, timestamp: number) {
   lastStartTimestamp = timestamp;
   const startLine = '====================================================================';
-  // eslint-disable-next-line max-len
+   
   const startMsg = `[${new Date(Number(timestamp)).toISOString()}] START - Event: ${event}, Heat: ${heat}, Timestamp: ${timestamp}`;
   appendLog(`\n${startLine}\n${startMsg}\n${startLine}`);
 }
