@@ -53,11 +53,11 @@ function broadcastAllClients(wss, payload) {
     });
 }
 function handleStart(msg, wss) {
-    const { event, heat, time } = msg;
-    if ((typeof time === 'number')
+    const { event, heat, timestamp } = msg;
+    if ((typeof timestamp === 'number')
         && (typeof event === 'string' || typeof event === 'number')
         && (typeof heat === 'string' || typeof heat === 'number')) {
-        (0, logger_1.logStart)(event, heat, time);
+        (0, logger_1.logStart)(event, heat, timestamp);
     }
     const payload = {
         ...msg,

@@ -28,13 +28,13 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
 }
 
 function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { event, heat, time } = msg;
+  const { event, heat, timestamp } = msg;
   if (
-    (typeof time === 'number')
+    (typeof timestamp === 'number')
     && (typeof event === 'string' || typeof event === 'number')
     && (typeof heat === 'string' || typeof heat === 'number')
   ) {
-    logStart(event, heat, time);
+    logStart(event, heat, timestamp);
   }
   const payload = {
     ...msg,

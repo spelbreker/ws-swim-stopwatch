@@ -38,8 +38,8 @@ function getCompetitionSummary(req, res) {
         const summary = competition_1.default.getMeetSummary(meetIndex, sessionIndex);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
-    }
-    catch {
+    } // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    catch (_e) {
         res.status(500).send('Error generating summary');
     }
 }

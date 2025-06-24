@@ -41,12 +41,11 @@ This document describes all WebSocket message types exchanged between the fronte
 - **Description:** Starts the stopwatch for a specific event/heat.
 - **Payload:**
   ```json
-  { "type": "start", "event": 1, "heat": 2, "time": 1718035200000, "timestamp": 1718035200000 }
+  { "type": "start", "event": 1, "heat": 2, "timestamp": 1718035200000 }
   ```
   - `event`: Event number or string
   - `heat`: Heat number or string
-  - `time`: (optional) Start time
-  - `timestamp`: Server-generated timestamp
+  - `timestamp`: Start time (ms since epoch, client or server generated)
 
 ### `reset` / `stop`
 - **Direction:** Client → Server (broadcast to all clients)

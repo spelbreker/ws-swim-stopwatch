@@ -2,13 +2,10 @@
 export type Message =
   | { type: 'ping'; time: number }
   | { type: 'pong'; client_ping_time: number; server_time: number }
-  | { type: 'start'; time?: number; timestamp: number }
+  | { type: 'start'; timestamp: number; event?: number | string; heat?: number | string }
   | { type: 'reset'; timestamp: number }
   | { type: 'stop'; timestamp: number }
   | { type: 'split'; lane: number; time: string }
-
-  | { type: 'start'; time?: number; timestamp: number, event?: number | string, heat?: number | string }
-
   | { type: 'split'; lane: number; timestamp: string }
   | { type: 'event-heat'; event: number | string; heat: number | string }
   | { type: 'clear' }
