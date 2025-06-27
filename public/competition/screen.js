@@ -116,7 +116,7 @@ function clearArrivalOrders() {
     document.querySelectorAll('.arrival-order').forEach(element => {
         element.textContent = '';
     });
-    
+
     // Reset tracking variables
     arrivalOrder = 1;
     if (arrivalClearTimer) {
@@ -203,19 +203,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (splitCell && arrivalCell) {
                         const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
                         const currentArrivalOrder = arrivalOrder;
-                        
+
                         // Display time and arrival order in separate columns
                         splitCell.textContent = formattedTime;
                         arrivalCell.textContent = currentArrivalOrder;
-                        
+
                         // Increment arrival order for next split
-                        arrivalOrder++;
-                        
+                        if(arrivalOrder < 10) {
+                            // Only increment if we have less than 10 arrivals
+                            arrivalOrder++;
+                        }
+
                         // Start 20-second timer after first split
                         if (currentArrivalOrder === 1) {
                             arrivalClearTimer = setTimeout(() => {
                                 clearArrivalOrders();
-                            }, 20000); // 20 seconds as requested
+                            }, 20000);
                         }
                     }
                     laneElement.classList.add('highlight');
