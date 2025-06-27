@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (currentArrivalOrder === 1) {
                             arrivalClearTimer = setTimeout(() => {
                                 clearArrivalOrders();
-                            }, 20000); // 20 seconds
+                            }, 20000); // 20 seconds as requested
                         }
                     }
                     laneElement.classList.add('highlight');
