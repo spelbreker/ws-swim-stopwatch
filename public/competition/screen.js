@@ -5,6 +5,8 @@ let stopwatchInterval;
 let startTime;
 let stopwatchElement;
 let serverTimeOffset = 0;
+let arrivalOrder = 1; // Track next arrival order number
+let arrivalClearTimer = null; // Timer for clearing arrival order numbers
 
 // ------------------------------------------------------------------
 // Stopwatch functions
@@ -108,6 +110,34 @@ function clearSplitTimes() {
     });
 }
 
+function clearArrivalOrders() {
+    // Clear arrival order numbers from all split times
+    document.querySelectorAll('.split-time').forEach(element => {
+        const timeText = element.textContent;
+        // Remove arrival order pattern like "(1)" or " (2)" 
+        if (timeText && timeText.includes('(') && timeText !== '---:---:---') {
+            const cleanTime = timeText.replace(/\s*\(\d+\)$/, '');
+            element.textContent = cleanTime;
+        }
+    });
+    
+    // Reset tracking variables
+    arrivalOrder = 1;
+    if (arrivalClearTimer) {
+        clearTimeout(arrivalClearTimer);
+        arrivalClearTimer = null;
+    }
+}
+
+function resetArrivalOrderTracking() {
+    // Reset only the tracking variables, don't clear displayed orders
+    arrivalOrder = 1;
+    if (arrivalClearTimer) {
+        clearTimeout(arrivalClearTimer);
+        arrivalClearTimer = null;
+    }
+}
+
 // ------------------------------------------------------------------
 // Formatting and translation
 // ------------------------------------------------------------------
@@ -150,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
             clearSplitTimes();
+            resetArrivalOrderTracking(); // Reset arrival order tracking without clearing displayed orders
             return
         }
 
@@ -161,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             startTime = null;
             stopwatchElement.textContent = '00:00:00';
+            clearArrivalOrders(); // Reset arrival order tracking
             return;
         }
 
@@ -172,7 +204,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
                     if (splitCell) {
-                        splitCell.textContent = window.formatLapTime(message.timestamp, startTime || 0);
+                        const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
+                        const currentArrivalOrder = arrivalOrder;
+                        
+                        // Display time with arrival order
+                        splitCell.textContent = `${formattedTime} (${currentArrivalOrder})`;
+                        
+                        // Increment arrival order for next split
+                        arrivalOrder++;
+                        
+                        // Start 20-second timer after first split
+                        if (currentArrivalOrder === 1) {
+                            arrivalClearTimer = setTimeout(() => {
+                                clearArrivalOrders();
+                            }, 20000); // 20 seconds
+                        }
                     }
                     laneElement.classList.add('highlight');
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
@@ -192,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
         /** clear all lane information */
         if (message.type === 'clear') {
             clearLaneInformation();
+            clearArrivalOrders(); // Reset arrival order tracking
             return;
         }
 
