@@ -5,6 +5,8 @@ let stopwatchInterval;
 let startTime;
 let stopwatchElement;
 let serverTimeOffset = 0;
+let arrivalOrder = 1; // Track next arrival order number
+let arrivalClearTimer = null; // Timer for clearing arrival order numbers
 
 // ------------------------------------------------------------------
 // Stopwatch functions
@@ -98,6 +100,7 @@ function clearLaneInformation() {
             laneElement.querySelector('.athlete').textContent = '';
             laneElement.querySelector('.club').textContent = '';
             laneElement.querySelector('.split-time').textContent = '---:---:---';
+            laneElement.querySelector('.arrival-order').textContent = '';
         }
     }
 }
@@ -106,6 +109,29 @@ function clearSplitTimes() {
     document.querySelectorAll('.split-time').forEach(element => {
         element.textContent = '---:---:---';
     });
+}
+
+function clearArrivalOrders() {
+    // Clear arrival order numbers from all arrival-order cells
+    document.querySelectorAll('.arrival-order').forEach(element => {
+        element.textContent = '';
+    });
+
+    // Reset tracking variables
+    arrivalOrder = 1;
+    if (arrivalClearTimer) {
+        clearTimeout(arrivalClearTimer);
+        arrivalClearTimer = null;
+    }
+}
+
+function resetArrivalOrderTracking() {
+    // Reset only the tracking variables, don't clear displayed orders
+    arrivalOrder = 1;
+    if (arrivalClearTimer) {
+        clearTimeout(arrivalClearTimer);
+        arrivalClearTimer = null;
+    }
 }
 
 // ------------------------------------------------------------------
@@ -150,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
             clearSplitTimes();
+            resetArrivalOrderTracking(); // Reset arrival order tracking without clearing displayed orders
             return
         }
 
@@ -161,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             startTime = null;
             stopwatchElement.textContent = '00:00:00';
+            clearArrivalOrders(); // Reset arrival order tracking
             return;
         }
 
@@ -171,8 +199,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 const laneElement = document.getElementById(`lane-${lane}`);
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
-                    if (splitCell) {
-                        splitCell.textContent = window.formatLapTime(message.timestamp, startTime || 0);
+                    const arrivalCell = laneElement.querySelector('.arrival-order');
+                    if (splitCell && arrivalCell) {
+                        const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
+                        const currentArrivalOrder = arrivalOrder;
+
+                        // Display time and arrival order in separate columns
+                        splitCell.textContent = formattedTime;
+                        arrivalCell.textContent = currentArrivalOrder;
+
+                        // Increment arrival order for next split
+                        if(arrivalOrder < 10) {
+                            // Only increment if we have less than 10 arrivals
+                            arrivalOrder++;
+                        }
+
+                        // Start 20-second timer after first split
+                        if (currentArrivalOrder === 1) {
+                            arrivalClearTimer = setTimeout(() => {
+                                clearArrivalOrders();
+                            }, 20000);
+                        }
                     }
                     laneElement.classList.add('highlight');
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
@@ -192,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
         /** clear all lane information */
         if (message.type === 'clear') {
             clearLaneInformation();
+            clearArrivalOrders(); // Reset arrival order tracking
             return;
         }
 
