@@ -100,6 +100,7 @@ function clearLaneInformation() {
             laneElement.querySelector('.athlete').textContent = '';
             laneElement.querySelector('.club').textContent = '';
             laneElement.querySelector('.split-time').textContent = '---:---:---';
+            laneElement.querySelector('.arrival-order').textContent = '';
         }
     }
 }
@@ -111,14 +112,9 @@ function clearSplitTimes() {
 }
 
 function clearArrivalOrders() {
-    // Clear arrival order numbers from all split times
-    document.querySelectorAll('.split-time').forEach(element => {
-        const timeText = element.textContent;
-        // Remove arrival order pattern like "(1)" or " (2)" 
-        if (timeText && timeText.includes('(') && timeText !== '---:---:---') {
-            const cleanTime = timeText.replace(/\s*\(\d+\)$/, '');
-            element.textContent = cleanTime;
-        }
+    // Clear arrival order numbers from all arrival-order cells
+    document.querySelectorAll('.arrival-order').forEach(element => {
+        element.textContent = '';
     });
     
     // Reset tracking variables
@@ -203,12 +199,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const laneElement = document.getElementById(`lane-${lane}`);
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
-                    if (splitCell) {
+                    const arrivalCell = laneElement.querySelector('.arrival-order');
+                    if (splitCell && arrivalCell) {
                         const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
                         const currentArrivalOrder = arrivalOrder;
                         
-                        // Display time with arrival order
-                        splitCell.textContent = `${formattedTime} (${currentArrivalOrder})`;
+                        // Display time and arrival order in separate columns
+                        splitCell.textContent = formattedTime;
+                        arrivalCell.textContent = currentArrivalOrder;
                         
                         // Increment arrival order for next split
                         arrivalOrder++;
