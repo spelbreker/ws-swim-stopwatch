@@ -288,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const lane = button.getAttribute('data-lane');
             // Gebruik timestamp voor lap time
             const lapTimestamp = Date.now() + serverTimeOffset;
+            // Display time should also account for server offset to match what's shown on screen
             updateLaneInfo(lane, window.formatLapTime(lapTimestamp, startTime || 0));
             window.socket.send(JSON.stringify({ type: 'split', lane, timestamp: lapTimestamp }));
             highlightLaneButton(button);
@@ -346,7 +347,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Start the stopwatch */
         if (message.type === 'start') {
-            startTime = message.timestamp + serverTimeOffset;
+            // The timestamp from server is already server-synchronized, don't add offset again
+            startTime = message.timestamp;
             window.startTime = startTime;
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
@@ -369,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (message.type === 'split') {
             const lane = message.lane;
             if (message.timestamp) {
+                // When receiving split from server, the timestamp is already server-synchronized
                 updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0));
             }
             const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
