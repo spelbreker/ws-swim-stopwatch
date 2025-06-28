@@ -286,9 +286,9 @@ document.addEventListener('DOMContentLoaded', function () {
     laneButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
-            // Gebruik timestamp voor lap time
+            // Use server-synchronized timestamp for sending, but calculate display time consistently
             const lapTimestamp = Date.now() + serverTimeOffset;
-            // Display time should also account for server offset to match what's shown on screen
+            // For display, use the same calculation as will be used on screen
             updateLaneInfo(lane, window.formatLapTime(lapTimestamp, startTime || 0));
             window.socket.send(JSON.stringify({ type: 'split', lane, timestamp: lapTimestamp }));
             highlightLaneButton(button);
@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Start the stopwatch */
         if (message.type === 'start') {
-            // The timestamp from server is already server-synchronized, don't add offset again
+            // Use the same timestamp as all other devices - don't add individual offset
             startTime = message.timestamp;
             window.startTime = startTime;
             if (stopwatchInterval) {

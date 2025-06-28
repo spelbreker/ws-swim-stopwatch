@@ -180,7 +180,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Start the stopwatch */
         if (message.type === 'start') {
-            startTime = message.timestamp + serverTimeOffset;
+            // Use the same timestamp as all other devices - don't add individual offset
+            startTime = message.timestamp;
             if (stopwatchInterval) {
                 clearInterval(stopwatchInterval);
             }
@@ -211,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const splitCell = laneElement.querySelector('.split-time');
                     const arrivalCell = laneElement.querySelector('.arrival-order');
                     if (splitCell && arrivalCell) {
+                        // Use the same calculation method as remote: timestamp vs startTime directly
                         const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
                         const currentArrivalOrder = arrivalOrder;
 
