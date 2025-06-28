@@ -7,6 +7,8 @@ let stopwatchElement;
 let serverTimeOffset = 0;
 let arrivalOrder = 1; // Track next arrival order number
 let arrivalClearTimer = null; // Timer for clearing arrival order numbers
+// Time synchronization instance
+let timeSync;
 
 // ------------------------------------------------------------------
 // Stopwatch functions
@@ -158,6 +160,14 @@ function formatSwimStyle(swimstyle) {
 // Initialization and event handlers
 // ------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize TimeSync
+    timeSync = new TimeSync({
+        debugLogging: true,
+        onOffsetUpdate: (offset) => {
+            serverTimeOffset = offset;
+        }
+    });
+
     // Initialize elements
     stopwatchElement = document.getElementById('stopwatch');
 
@@ -245,12 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Update server time offset */
         if (message.type === 'pong' || message.type === 'time_sync') {
-            let rtt = 0;
-            if (message.type === 'pong') {
-                rtt = Date.now() - message.client_ping_time;
-            }
-            const estimatedServerTimeNow = message.server_time + (rtt / 2);
-            serverTimeOffset = estimatedServerTimeNow - Date.now();
+            timeSync.processTimeSync(message);
             return;
         }
     });

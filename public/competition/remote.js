@@ -7,6 +7,8 @@ let heatSelect;
 // Global variable for ping
 let pingStartTime;
 let serverTimeOffset = 0;
+// Time synchronization instance
+let timeSync;
 
 // ------------------------------------------------------------------
 // Utility functions
@@ -185,6 +187,20 @@ async function updateEventHeatInfoBar(eventNr, heatNr) {
 document.addEventListener('DOMContentLoaded', function () {
     let stopwatchInterval;
 
+    // Initialize TimeSync with callbacks
+    timeSync = new TimeSync({
+        debugLogging: true,
+        onPingUpdate: (rtt) => {
+            const pingDisplay = document.getElementById('ping-display');
+            if (pingDisplay) {
+                pingDisplay.textContent = Number.isFinite(rtt) && rtt >= 0 ? `${rtt} ms` : '';
+            }
+        },
+        onOffsetUpdate: (offset) => {
+            serverTimeOffset = offset;
+        }
+    });
+
     // Get elements
     const stopwatchElement = document.getElementById('stopwatch');
     const startButton = document.getElementById('start-button');
@@ -300,7 +316,26 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('open', function () {
         fillSelectOptions(eventSelect, 25);
         fillSelectOptions(heatSelect, 25);
-        setInterval(sendPing, 5000); // send ping every 5 seconds
+        
+        // Start initial fast sync sequence
+        let pingCount = 0;
+        const maxInitialPings = 5;
+        const initialPingInterval = 500; // 500ms for initial sync
+        const normalPingInterval = 5000; // 5 seconds for normal operation
+        
+        // Initial rapid ping sequence
+        const initialSync = setInterval(() => {
+            sendPing();
+            pingCount++;
+            
+            if (pingCount >= maxInitialPings) {
+                clearInterval(initialSync);
+                // Switch to normal ping interval
+                setInterval(sendPing, normalPingInterval);
+                console.log('[Remote] Switched to normal ping interval after initial sync');
+            }
+        }, initialPingInterval);
+        
         // Fetch and display initial event/heat info bar
         updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1);
     });
@@ -366,16 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /** Update server time offset */
         if (message.type === 'pong' || message.type === 'time_sync') {
-            let rtt = 0;
-            if (message.type === 'pong') {
-                rtt = Date.now() - (message.client_ping_time ?? Date.now());
-                const pingDisplay = document.getElementById('ping-display');
-                if (pingDisplay) {
-                    pingDisplay.textContent = Number.isFinite(rtt) && rtt >= 0 ? `${rtt} ms` : '';
-                }
-            }
-            const estimatedServerTimeNow = message.server_time + (rtt / 2);
-            serverTimeOffset = estimatedServerTimeNow - Date.now();
+            timeSync.processTimeSync(message);
             return;
         }
     });
