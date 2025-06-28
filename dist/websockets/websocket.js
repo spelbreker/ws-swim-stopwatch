@@ -59,9 +59,10 @@ function handleStart(msg, wss) {
         && (typeof heat === 'string' || typeof heat === 'number')) {
         (0, logger_1.logStart)(event, heat, timestamp);
     }
+    // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,
-        timestamp: Date.now(),
+        // timestamp: original timestamp is preserved
     };
     broadcastAllClients(wss, payload);
 }
@@ -71,9 +72,10 @@ function handleLap(msg, wss) {
         && typeof timestamp === 'number') {
         (0, logger_1.logLap)(lane, timestamp);
     }
+    // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,
-        timestamp: Date.now(),
+        // timestamp: original timestamp is preserved
     };
     broadcastAllClients(wss, payload);
 }

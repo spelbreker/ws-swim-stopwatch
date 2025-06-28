@@ -36,9 +36,10 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   ) {
     logStart(event, heat, timestamp);
   }
+  // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
-    timestamp: Date.now(),
+    // timestamp: original timestamp is preserved
   };
   broadcastAllClients(wss, payload);
 }
@@ -51,9 +52,10 @@ function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
   ) {
     logLap(lane, timestamp);
   }
+  // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
-    timestamp: Date.now(),
+    // timestamp: original timestamp is preserved
   };
   broadcastAllClients(wss, payload);
 }
