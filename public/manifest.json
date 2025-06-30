@@ -19,8 +19,8 @@
     "display": "standalone",
     "dir": "auto",
     "lang": "nl-NL",
-    "name": "AZC swimming",
-    "short_name": "AZC swimming",
-    "start_url": "http://scherm.azckamp.nl:8080/",
-    "scope": "http://scherm.azckamp.nl:8080/"
+    "name": "Swimwatch",
+    "short_name": "Swimwatch",
+    "start_url": "https://scherm.azckamp.nl/",
+    "scope": "https://scherm.azckamp.nl/"
 }

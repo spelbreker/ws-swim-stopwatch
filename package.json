@@ -8,8 +8,8 @@
     "build": "tsc",
     "test": "jest",
     "dev": "ts-node server/server.ts",
-    "build:css": "tailwindcss build src/styles.css -o public/styles.css",
-    "watch:css": "tailwindcss build src/styles.css -o public/styles.css --watch",
+    "build:css": "tailwindcss -i ./public/css/base.css -o ./public/css/output.css",
+    "watch:css": "tailwindcss -i ./public/css/base.css -o ./public/css/output.css --watch",
     "lint": "eslint 'src/**/*.{ts,js}' 'test/**/*.{ts,js}' --max-warnings=0"
   },
   "dependencies": {

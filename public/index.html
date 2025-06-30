@@ -1,102 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
-    <link rel="manifest" href="/public/manifest.json" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Swim Stopwatch Dashboard</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link href="/css/output.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-100">
-    <header class="bg-blue-600 text-white p-4">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="competition/remote.html" class="hover:underline">Remote</a></li>
-                <li><a href="competition/screen.html" class="hover:underline">Screen</a></li>
-                <li><a href="competition/upload.html" class="hover:underline">Upload</a></li>
-                <li><a href="training/training-remote.html" class="hover:underline">Training Remote</a></li>
-                <li><a href="training/training-screen.html" class="hover:underline">Training Screen</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main class="p-4">
-        <h2 class="text-xl font-semibold">Welcome to the Dashboard</h2>
-        <div class="mt-4 grid grid-cols-2 gap-4">
-            <a href="competition/remote.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased">
+    <div class="relative flex min-h-screen flex-col justify-center overflow-hidden py-6 sm:py-12">
+        <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-12 text-center">
+                <div class="flex items-center justify-center mb-4">
+                    <svg class="h-12 w-12 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
+                    <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white ml-3">SwimWatch</h1>
                 </div>
-                Go to Remote
-            </a>
-            <a href="competition/screen.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                <p class="text-lg text-gray-600 dark:text-gray-400">Your central hub for managing swim competitions and
+                    training sessions.</p>
+            </header>
+
+            <!-- Competition Tools -->
+            <section class="mb-12">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 text-center">Competition Tools
+                </h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    <!-- Upload Card -->
+                    <a href="competition/upload.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-blue-100 dark:bg-blue-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-blue-500 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Upload Lenex</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Import competition data and schedules.</p>
+                    </a>
+                    <!-- Remote Card -->
+                    <a href="competition/remote.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-100 dark:bg-green-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-green-500 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M6 12h.01M12 12h.01M18 12h.01M7.5 16.5h.01M12 16.5h.01M16.5 16.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Competition Remote</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Control the live stopwatch and manage heats.</p>
+                    </a>
+                    <!-- Screen Card -->
+                    <a href="competition/screen.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-cyan-100 dark:bg-cyan-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-cyan-500 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-1.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Competition Screen</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Display live results for the audience.</p>
+                    </a>
+                    <!-- Log Card -->
+                    <a href="competition/log.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-yellow-100 dark:bg-yellow-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-yellow-500 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Competition Log</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">View a detailed log of all system events.</p>
+                    </a>
                 </div>
-                Go to Screen
-            </a>
-            <a href="competition/upload.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+            </section>
+
+            <!-- Training Tools -->
+            <section class="mb-12">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 text-center">Training Tools <span class="text-red-400">(Still worked on, can be broken)</span></h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <!-- Training Remote Card -->
+                    <a href="training/training-remote.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-purple-100 dark:bg-purple-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-purple-500 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Training Remote</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">A simple stopwatch for training sessions.</p>
+                    </a>
+                    <!-- Training Screen Card -->
+                    <a href="training/training-screen.html"
+                        class="group block rounded-lg p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-blue-100 dark:bg-gray-700 shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
+                                <svg class="h-6 w-6 text-indigo-500 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-1.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Training Screen</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Display the training stopwatch on a large screen.</p>
+                    </a>
                 </div>
-                Upload Lenex File
-            </a>
-            <a href="competition/log.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+            </section>
+
+            <!-- Pro Tip Section -->
+            <aside class="p-6 rounded-lg bg-sky-50/50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Pro Tip: Borderless Browser</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">For a professional display on the main screen, run your browser in app mode. This hides the address bar and tabs.</p>
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-800 dark:text-gray-300"><strong>Chrome:</strong> <code
+                            class="bg-gray-200 dark:bg-gray-700 rounded px-2 py-1">chrome --app="https://YOUR_ADDRESS/competition/screen.html"</code>
+                    </p>
+                    <p class="text-gray-800 dark:text-gray-300"><strong>Edge:</strong> <code
+                            class="bg-gray-200 dark:bg-gray-700 rounded px-2 py-1">msedge --app="https://YOUR_ADDRESS/competition/screen.html"</code>
+                    </p>
                 </div>
-                View Competition Log
-            </a>
+            </aside>
+
         </div>
-        <div class="mt-16 grid grid-cols-2 gap-4">
-            <a href="training/training-remote.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                </div>
-                Go to Training Remote
-            </a>
-            <a href="training/training-screen.html"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-col items-center">
-                <div class="bg-white text-blue-500 p-2 rounded-full mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                </div>
-                Go to Training Screen
-            </a>
-        </div>
-        <aside class="bg-gray-100 p-4 mt-4">
-            <h3 class="text-lg font-semibold">Open Borderless Browser</h3>
-            <p>Use the following commands in your terminal or Run dialog:</p>
-            <strong>Chrome:</strong> <pre>chrome --app="http://scherm.azckamp.nl:8080" --window-size=1002,487</pre>
-            <strong>Edge: </strong> <pre>msedge --app="http://scherm.azckamp.nl:8080" --window-size=1002,487</pre> 
-        </aside>
-    </main>
-    <footer class="bg-gray-800 text-white p-4 text-center">
-        <p>&copy; Patrick Development 2023</p>
+    </div>
+    <footer class="bg-gray-800 text-white p-4 text-center mt-auto">
+        <p>&copy; Patrick Development 2025</p>
     </footer>
 </body>
+
 </html>

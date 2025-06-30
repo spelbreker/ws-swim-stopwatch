@@ -1,44 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Competition Log Viewer</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .log-container {
-      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competition Log</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link href="/css/output.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-blue-600 text-white py-4 px-6 text-center text-2xl tracking-wide">
-    Wedstrijd Logboek
-  </header>
-  <main class="flex-1 flex flex-col items-center py-8 px-2">
-    <button id="refresh-btn" aria-label="Ververs log"
-      class="bg-green-400 text-gray-900 font-semibold rounded px-6 py-2 mb-4 transition hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400">
-      Ververs log
-    </button>
-    <div class="log-container text-gray-100  w-full max-w-5xl bg-gray-800 rounded-lg shadow-lg p-6 mb-8 overflow-x-auto">
-      <pre id="log-content" class="text-base leading-relaxed whitespace-pre-wrap break-words bg-transparent border-0 p-0 m-0">Log wordt geladen...</pre>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans antialiased">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-cyan-500 dark:bg-cyan-600 text-white shadow-lg sticky top-0 z-10">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="flex items-center">
+                    <a href="/index.html" class="flex-shrink-0 flex items-center space-x-2">
+                        <svg class="h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-2xl font-bold">SwimWatch</span>
+                    </a>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold">Competition Log</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="relative flex min-h-screen flex-col justify-center overflow-hidden py-6 sm:py-12">
+        <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+            <!-- Log Viewer -->
+            <main>
+                <div class="flex justify-center mb-6">
+                    <button id="refresh-btn" aria-label="Refresh Log"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-6 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+                        Refresh Log
+                    </button>
+                </div>
+                <div class="card rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-200 dark:bg-gray-700 p-2 flex items-center">
+                        <div class="flex-1 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 pr-10">
+                            competition.log
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6">
+                        <pre id="log-content"
+                            class="text-sm text-gray-900 dark:text-gray-200 whitespace-pre-wrap break-words">Loading log...</pre>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
-  </main>
-  <script>
-    async function fetchLog() {
-      try {
-        const res = await fetch('/logs/competition.log', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Kan logbestand niet laden');
-        const text = await res.text();
-        document.getElementById('log-content').textContent = text || 'Logbestand is leeg.';
-      } catch (e) {
-        document.getElementById('log-content').textContent = 'Fout bij laden van log: ' + e.message;
-      }
-    }
-    document.getElementById('refresh-btn').addEventListener('click', fetchLog);
-    window.addEventListener('DOMContentLoaded', fetchLog);
-    // Auto-refresh every 10 seconds
-    setInterval(fetchLog, 10000);
-  </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        <p>&copy; Patrick Development 2025</p>
+    </footer>
+
+    <script>
+        async function fetchLog() {
+            const logContent = document.getElementById('log-content');
+            try {
+                const res = await fetch('/logs/competition.log', { cache: 'no-store' });
+                if (!res.ok) throw new Error(`Could not load log file (status: ${res.status})`);
+                const text = await res.text();
+                logContent.textContent = text.trim() || 'Log file is empty.';
+            } catch (e) {
+                logContent.textContent = `Error loading log: ${e.message}`;
+            }
+        }
+        document.getElementById('refresh-btn').addEventListener('click', fetchLog);
+        window.addEventListener('DOMContentLoaded', fetchLog);
+        // Auto-refresh every 10 seconds
+        setInterval(fetchLog, 10000);
+    </script>
 </body>
+
 </html>

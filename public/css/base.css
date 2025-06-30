@@ -1,0 +1,6 @@
+/*
+  Base Tailwind CSS file for the project
+  - Uses Tailwind 4+ recommended setup
+  - Add custom styles below the Tailwind directives
+*/
+@import "tailwindcss";
