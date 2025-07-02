@@ -8,7 +8,7 @@
     <link href="/css/output.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 dark:bg-gray-900 font-sans">
     <!-- Fixed Header -->
     <header class="bg-cyan-500 dark:bg-cyan-600 text-white shadow-lg text-center p-4 fixed top-0 w-full z-20">
         <div class="container mx-auto flex justify-between items-center">
@@ -22,7 +22,8 @@
 
     <!-- Main scrollable content -->
     <main class="pt-18 pb-[460px]"> <!-- Padding top for header, padding bottom for fixed footer -->
-        <div id="event-heat-info-bar" class="text-center p-2 bg-white shadow-md mb-4 sticky top-16 z-10">
+        <div id="event-heat-info-bar"
+            class="text-center p-2 bg-white dark:bg-gray-800 dark:text-gray-200 shadow-md mb-4 sticky top-16 z-10">
             Select Event and Heat
         </div>
 
@@ -30,73 +31,84 @@
         <section class="lane-info container mx-auto flex flex-row gap-4 px-2">
             <!-- Left column: lanes 0-4 -->
             <div class="flex flex-col flex-1 gap-1">
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 0:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="0">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 0:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="0">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 1:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="1">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 1:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="1">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 2:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="2">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 2:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="2">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 3:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="3">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 3:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="3">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 4:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="4">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 4:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="4">---:---:---</span>
                 </div>
             </div>
             <!-- Right column: lanes 5-9 -->
             <div class="flex flex-col flex-1 gap-1">
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 5:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="5">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 5:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="5">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 6:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="6">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 6:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="6">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 7:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="7">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 7:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="7">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 8:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="8">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 8:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="8">---:---:---</span>
                 </div>
-                <div class="bg-white px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Lane 9:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900" data-lane="9">---:---:---</span>
+                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 9:</span>
+                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
+                        data-lane="9">---:---:---</span>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- Fixed Bottom Controls -->
-    <footer class="fixed bottom-0 w-full bg-white shadow-lg border-t border-gray-200 z-20">
+    <footer
+        class="fixed bottom-0 w-full bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 z-20">
         <div class="container mx-auto max-w-2xl">
             <!-- Controls Section -->
             <section class="controls p-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <div class="flex gap-4">
                     <div class="flex flex-col items-center">
-                        <label for="event-select" class="text-sm font-medium text-gray-700 mb-1">Event</label>
+                        <label for="event-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event</label>
                         <select id="event-select"
-                            class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                            class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
                     </div>
                     <div class="flex flex-col items-center">
-                        <label for="heat-select" class="text-sm font-medium text-gray-700 mb-1">Heat</label>
+                        <label for="heat-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Heat</label>
                         <select id="heat-select"
-                            class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                            class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
                     </div>
                 </div>
                 <div class="flex gap-2">
                     <button id="increment-event"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition-colors">
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md transition-colors">
                         +1 Event
                     </button>
                     <button id="clear-screen"
@@ -104,14 +116,14 @@
                         Clear
                     </button>
                     <button id="increment-heat"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition-colors">
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md transition-colors">
                         +1 Heat
                     </button>
                 </div>
             </section>
 
             <!-- Grid Buttons Section -->
-            <section class="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-100">
+            <section class="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700">
                 <button
                     class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
                     data-lane="7">7</button>

@@ -25,7 +25,8 @@
 	"updateContentCommand": "npm install",
 	"postCreateCommand": "",
 	"postAttachCommand": {
-		"server": "npm start"
+		"server": "npm start",
+		"css": "npm run watch:css"
 	},
 	// Configure tool-specific properties.
 	// "customizations": {},
