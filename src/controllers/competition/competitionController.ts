@@ -1,3 +1,35 @@
+/**
+ * Controller to return all meets and their sessions for selector UI.
+ *
+ * Route: GET /competition/meets
+ * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
+ *
+ * Example response:
+ * [
+ *   {
+ *     meetIndex: 0,
+ *     name: 'Meet 1',
+ *     city: 'Amsterdam',
+ *     nation: 'NED',
+ *     sessions: [
+ *       { sessionIndex: 0, date: '2025-07-01', eventCount: 12 },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+export function getMeetsAndSessions(req: Request, res: Response): void {
+  try {
+    const meets = Competition.getMeetsAndSessions();
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(meets);
+  } catch (err) {
+    // Log error for dev/ops, but return user-friendly message
+    console.error('[getMeetsAndSessions] Failed:', err);
+    res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
+  }
+}
 import { Request, Response } from 'express';
 import fs from 'fs';
 import Competition from '../../modules/competition';

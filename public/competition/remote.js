@@ -1,4 +1,117 @@
 // ------------------------------------------------------------------
+// Meet/Session Selector State and Dialog Logic
+// ------------------------------------------------------------------
+let selectedMeetIndex = 0;
+let selectedSessionIndex = 0;
+let meetsData = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Dialog elements
+  const optionsBtn = document.getElementById('options-btn');
+  const dialog = document.getElementById('meet-session-dialog');
+  const meetSelect = document.getElementById('meet-select');
+  const sessionSelect = document.getElementById('session-select');
+  const dialogConfirm = document.getElementById('dialog-confirm');
+  const dialogCancel = document.getElementById('dialog-cancel');
+  const dialogError = document.getElementById('dialog-error');
+
+  // Feature-detect <dialog>
+  if (dialog && typeof dialog.showModal !== 'function') {
+    dialog.showModal = function () { dialog.style.display = 'block'; };
+    dialog.close = function () { dialog.style.display = 'none'; };
+  }
+
+  // Open dialog handler
+  optionsBtn?.addEventListener('click', async () => {
+    dialogError.classList.add('hidden');
+    dialogError.textContent = '';
+    try {
+      await fetchAndPopulateMeets();
+      dialog.showModal();
+      meetSelect.focus();
+    } catch (err) {
+      dialogError.textContent = 'Failed to load meets/sessions.';
+      dialogError.classList.remove('hidden');
+    }
+  });
+
+  // Cancel button handler
+  dialogCancel?.addEventListener('click', () => { dialog.close(); });
+
+  // Confirm button handler
+  dialogConfirm?.addEventListener('click', (e) => {
+    e.preventDefault();
+    selectedMeetIndex = parseInt(meetSelect.value, 10) || 0;
+    selectedSessionIndex = parseInt(sessionSelect.value, 10) || 0;
+    dialog.close();
+    sendMeetSessionSelection();
+  });
+
+  // Meet select change: update sessions
+  meetSelect?.addEventListener('change', () => { populateSessions(meetSelect.value); });
+
+  /**
+   * Fetches meets/sessions from API and populates dropdowns.
+   */
+  async function fetchAndPopulateMeets() {
+    const res = await fetch('/competition/meets');
+    if (!res.ok) throw new Error('API error');
+    meetsData = await res.json();
+    // Populate meets
+    meetSelect.innerHTML = '';
+    meetsData.forEach((meet, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = meet.name + (meet.city ? ` (${meet.city})` : '');
+      meetSelect.appendChild(opt);
+    });
+    // Populate sessions for first meet
+    populateSessions(0);
+    meetSelect.value = selectedMeetIndex;
+    sessionSelect.value = selectedSessionIndex;
+  }
+
+  /**
+   * Populates session dropdown for a given meet index.
+   */
+  function populateSessions(meetIdx) {
+    const idx = parseInt(meetIdx, 10) || 0;
+    sessionSelect.innerHTML = '';
+    if (!meetsData[idx]) return;
+    meetsData[idx].sessions.forEach((session, sidx) => {
+      const opt = document.createElement('option');
+      opt.value = sidx;
+      opt.textContent = `${session.date} (${session.eventCount} events)`;
+      sessionSelect.appendChild(opt);
+    });
+  }
+
+  /**
+   * Sends the selected meet/session to the server (WebSocket),
+   * and updates UI state as needed.
+   */
+  function sendMeetSessionSelection() {
+    window.socket.send(JSON.stringify({
+      type: 'select-meet-session',
+      meetIndex: selectedMeetIndex,
+      sessionIndex: selectedSessionIndex
+    }));
+    // Optionally, reload event/heat selectors here if needed
+  }
+
+  // Accessibility: close dialog on Escape
+  dialog?.addEventListener('cancel', (e) => { e.preventDefault(); dialog.close(); });
+
+  // If only one meet/session, skip dialog and set defaults
+  fetch('/competition/meets').then(res => res.json()).then(data => {
+    meetsData = data;
+    if (meetsData.length === 1 && meetsData[0].sessions.length === 1) {
+      selectedMeetIndex = 0;
+      selectedSessionIndex = 0;
+    }
+  });
+});
+// ------------------------------------------------------------------
 // Global variables
 // ------------------------------------------------------------------
 let startTime;
@@ -145,7 +258,13 @@ function incrementHeat() {
 }
 
 function sendEventAndHeat(event, heat) {
-    window.socket.send(JSON.stringify({ type: 'event-heat', event: event, heat: heat }));
+    window.socket.send(JSON.stringify({
+      type: 'event-heat',
+      event: event,
+      heat: heat,
+      meetIndex: selectedMeetIndex,
+      sessionIndex: selectedSessionIndex
+    }));
 }
 
 // ------------------------------------------------------------------
@@ -226,7 +345,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
-            window.socket.send(JSON.stringify({ type: 'start', timestamp: startTime, heat: heatSelect.value, event: eventSelect.value }));
+            window.socket.send(JSON.stringify({
+                type: 'start',
+                timestamp: startTime,
+                heat: heatSelect.value,
+                event: eventSelect.value,
+                meetIndex: selectedMeetIndex,
+                sessionIndex: selectedSessionIndex
+            }));
         }
         disableControls(true, controlElements);
 

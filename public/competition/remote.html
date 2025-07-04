@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote Control</title>
     <link href="/css/output.css" rel="stylesheet">
+    <!-- Custom dialog centering and backdrop styles moved to base.css -->
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 font-sans">
@@ -13,9 +14,19 @@
     <header class="bg-cyan-500 dark:bg-cyan-600 text-white shadow-lg text-center p-4 fixed top-0 w-full z-20">
         <div class="container mx-auto flex justify-between items-center">
             <div><span id="stopwatch" class="text-2xl font-mono">00:00:00</span></div>
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
                 <div id="connection-indicator" class="w-4 h-4 rounded-full bg-red-500"></div>
                 <div id="ping-display" class="ml-2 text-sm">-- ms</div>
+                <!-- Options Button for Meet/Session Selector -->
+                <button id="options-btn" aria-label="Options" title="Options"
+                    class="ml-4 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-transparent" tabindex="0" style="min-width:2.5rem; min-height:2.5rem;">
+                    <!-- Vertical 3-dots menu icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+                        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="12" cy="19" r="1.5" fill="currentColor" />
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
@@ -163,6 +174,26 @@
             </button>
         </div>
     </footer>
+
+    <!-- Meet/Session Selector Dialog -->
+    <dialog id="meet-session-dialog" aria-modal="true" aria-labelledby="dialog-title" class="rounded-lg shadow-lg p-0 w-full max-w-md bg-white dark:bg-gray-800">
+        <form method="dialog" class="p-6 flex flex-col gap-4">
+            <h2 id="dialog-title" class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Select Meet & Session</h2>
+            <div class="flex flex-col gap-2">
+                <label for="meet-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">Meet</label>
+                <select id="meet-select" name="meet" class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"></select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="session-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">Session</label>
+                <select id="session-select" name="session" class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"></select>
+            </div>
+            <div class="flex gap-2 justify-end mt-4">
+                <button type="button" id="dialog-cancel" class="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">Cancel</button>
+                <button type="submit" id="dialog-confirm" class="px-4 py-2 rounded-md bg-cyan-600 text-white hover:bg-cyan-700 focus:outline-none">Confirm</button>
+            </div>
+            <div id="dialog-error" class="text-red-600 dark:text-red-400 text-sm mt-2 hidden" role="alert"></div>
+        </form>
+    </dialog>
 
     <script src="/js/main.js"></script>
     <script src="/js/timeSync.js"></script>

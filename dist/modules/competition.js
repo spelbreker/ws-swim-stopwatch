@@ -39,6 +39,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 class Competition {
+    /**
+     * Returns a summary of all meets and their sessions for selector UI.
+     * Each meet includes its name, index, and a sessions array (with date/index/count).
+     *
+     * @returns {MeetSessionSummary[]} Array of meet/session summary objects.
+     * @throws {Error} If the competition data file is missing or invalid.
+     */
+    static getMeetsAndSessions() {
+        const data = Competition.readCompetitionDataFromDisk();
+        return data.meets.map((meet, meetIndex) => ({
+            meetIndex,
+            name: meet.name,
+            city: meet.city,
+            nation: meet.nation?.toString?.() ?? undefined,
+            sessions: meet.sessions.map((session, sessionIndex) => ({
+                sessionIndex,
+                date: session.date,
+                eventCount: Array.isArray(session.events) ? session.events.length : 0,
+            })),
+        }));
+    }
     static readCompetitionDataFromDisk() {
         if (!fs_1.default.existsSync(Competition.COMPETITION_FILE_PATH)) {
             throw new Error('Missing competition.json');

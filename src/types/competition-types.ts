@@ -1,3 +1,17 @@
+/**
+ * Type representing a summary of all meets and their sessions for selector UI.
+ */
+export interface MeetSessionSummary {
+  meetIndex: number;
+  name: string;
+  city?: string;
+  nation?: string;
+  sessions: Array<{
+    sessionIndex: number;
+    date: string;
+    eventCount: number;
+  }>;
+}
 import {
   LenexRaw,
   Meet as LenexMeet,

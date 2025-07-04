@@ -1,3 +1,4 @@
+import { MeetSessionSummary } from '../../src/types/competition-types';
 import Competition from '../../src/modules/competition';
 import {
   CompetitionData,
@@ -114,6 +115,17 @@ function injectCompetitionData(comp: Competition, data: CompetitionData) {
 }
 
 describe('Competition class', () => {
+
+  test('getMeetsAndSessions returns correct meet/session summary', () => {
+    const meets: MeetSessionSummary[] = Competition.getMeetsAndSessions();
+    expect(Array.isArray(meets)).toBe(true);
+    expect(meets.length).toBe(1);
+    expect(meets[0].name).toBe('Test Meet');
+    expect(meets[0].meetIndex).toBe(0);
+    expect(meets[0].sessions.length).toBe(1);
+    expect(meets[0].sessions[0].date).toBe('2025-06-01');
+    expect(meets[0].sessions[0].eventCount).toBe(2);
+  });
   let comp: Competition;
   beforeEach(() => {
     comp = new Competition();

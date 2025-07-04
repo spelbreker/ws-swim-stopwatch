@@ -3,9 +3,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMeetsAndSessions = getMeetsAndSessions;
 exports.uploadCompetition = uploadCompetition;
 exports.getCompetitionSummary = getCompetitionSummary;
 exports.deleteCompetition = deleteCompetition;
+/**
+ * Controller to return all meets and their sessions for selector UI.
+ *
+ * Route: GET /competition/meets
+ * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
+ *
+ * Example response:
+ * [
+ *   {
+ *     meetIndex: 0,
+ *     name: 'Meet 1',
+ *     city: 'Amsterdam',
+ *     nation: 'NED',
+ *     sessions: [
+ *       { sessionIndex: 0, date: '2025-07-01', eventCount: 12 },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+function getMeetsAndSessions(req, res) {
+    try {
+        const meets = competition_1.default.getMeetsAndSessions();
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).json(meets);
+    }
+    catch (err) {
+        // Log error for dev/ops, but return user-friendly message
+        console.error('[getMeetsAndSessions] Failed:', err);
+        res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
+    }
+}
 const fs_1 = __importDefault(require("fs"));
 const competition_1 = __importDefault(require("../../modules/competition"));
 function uploadCompetition(req, res) {
