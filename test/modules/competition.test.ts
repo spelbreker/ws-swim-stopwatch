@@ -20,10 +20,13 @@ jest.mock('js-lenex/build/src/lenex-parse', () => ({
 const mockCompetitionData: CompetitionData = {
   meets: [
     {
+      number: 101,
       name: 'Test Meet',
       sessions: [
         {
+          number: 201,
           date: '2025-06-01',
+          daytime: '09:00',
           events: [
             {
               number: 1,
@@ -116,14 +119,16 @@ function injectCompetitionData(comp: Competition, data: CompetitionData) {
 
 describe('Competition class', () => {
 
-  test('getMeetsAndSessions returns correct meet/session summary', () => {
+  test('getMeetsAndSessions returns correct meet/session summary (by number)', () => {
     const meets: MeetSessionSummary[] = Competition.getMeetsAndSessions();
     expect(Array.isArray(meets)).toBe(true);
     expect(meets.length).toBe(1);
     expect(meets[0].name).toBe('Test Meet');
-    expect(meets[0].meetIndex).toBe(0);
+    expect(meets[0].meetNumber).toBe(101);
     expect(meets[0].sessions.length).toBe(1);
+    expect(meets[0].sessions[0].sessionNumber).toBe(201);
     expect(meets[0].sessions[0].date).toBe('2025-06-01');
+    expect(meets[0].sessions[0].daytime).toBe('09:00');
     expect(meets[0].sessions[0].eventCount).toBe(2);
   });
   let comp: Competition;
@@ -137,8 +142,8 @@ describe('Competition class', () => {
     jest.restoreAllMocks();
   });
 
-  test('getMeetSummary returns correct summary', () => {
-    const summary = Competition.getMeetSummary(0, 0);
+  test('getMeetSummary returns correct summary (by number)', () => {
+    const summary = Competition.getMeetSummary(101, 201);
     expect(summary.meet).toBe('Test Meet');
     expect(summary.first_session_date).toBe('2025-06-01');
     expect(summary.session_count).toBe(1);
@@ -146,26 +151,26 @@ describe('Competition class', () => {
     expect(summary.club_count).toBe(1);
   });
 
-  test('getEvents returns all events for session', () => {
-    const events = Competition.getEvents(0, 0);
+  test('getEvents returns all events for session (by number)', () => {
+    const events = Competition.getEvents(101, 201);
     expect(events).toHaveLength(2);
     expect(events[0].eventid).toBe('E1');
     expect(events[1].eventid).toBe('E2');
   });
 
-  test('getEvent returns correct event by number', () => {
-    const event = Competition.getEvent(0, 0, 2);
+  test('getEvent returns correct event by number (by number)', () => {
+    const event = Competition.getEvent(101, 201, 2);
     expect(event).not.toBeNull();
     expect(event?.eventid).toBe('E2');
   });
 
-  test('getEvent returns null for missing event', () => {
-    const event = Competition.getEvent(0, 0, 99);
+  test('getEvent returns null for missing event (by number)', () => {
+    const event = Competition.getEvent(101, 201, 99);
     expect(event).toBeNull();
   });
 
-  test('getHeat returns athlete entries for individual event', () => {
-    const entries = Competition.getHeat(0, 0, 1, 1);
+  test('getHeat returns athlete entries for individual event (by number)', () => {
+    const entries = Competition.getHeat(101, 201, 1, 1);
     expect(entries).not.toBeNull();
     if (Array.isArray(entries)) {
       expect(entries[0].athletes[0].firstname).toBe('John');
@@ -175,8 +180,8 @@ describe('Competition class', () => {
     }
   });
 
-  test('getHeat returns relay entries for relay event', () => {
-    const relays = Competition.getHeat(0, 0, 2, 1);
+  test('getHeat returns relay entries for relay event (by number)', () => {
+    const relays = Competition.getHeat(101, 201, 2, 1);
     expect(relays).not.toBeNull();
     if (
       Array.isArray(relays)
@@ -199,9 +204,9 @@ describe('Competition class', () => {
     expect(result[0].firstname).toBe('Jane');
   });
 
-  test('throws error for invalid indices', () => {
-    expect(() => Competition.getMeetSummary(1, 0)).toThrow();
-    expect(() => Competition.getMeetSummary(0, 2)).toThrow();
+  test('throws error for invalid numbers', () => {
+    expect(() => Competition.getMeetSummary(999, 201)).toThrow();
+    expect(() => Competition.getMeetSummary(101, 999)).toThrow();
   });
 });
 

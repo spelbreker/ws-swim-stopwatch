@@ -1,30 +1,64 @@
+/**
+ * Helper to get the first available meet and session number from competition data.
+ * @returns {{ meetNumber: number, sessionNumber: number } | undefined}
+ */
+function getFirstMeetSession(): { meetNumber: number, sessionNumber: number } | undefined {
+  try {
+    const data = Competition.getMeetsAndSessions();
+    if (data.length > 0 && data[0].sessions.length > 0) {
+      return {
+        meetNumber: data[0].meetNumber,
+        sessionNumber: data[0].sessions[0].sessionNumber,
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
 import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
 export function getEvents(req: Request, res: Response) {
-  const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
-  const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
+  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
+  if (!meetNumber || !sessionNumber) {
+    const first = getFirstMeetSession();
+    if (!first) {
+      res.status(400).send('No meet/session data available');
+      return;
+    }
+    meetNumber = first.meetNumber;
+    sessionNumber = first.sessionNumber;
+  }
   try {
-    const events = Competition.getEvents(meetIndex, sessionIndex);
+    const events = Competition.getEvents(meetNumber, sessionNumber);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(events));
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  catch (_e) {
+  } catch {
     res.status(500).send('Error getting events');
   }
 }
 
 export function getEvent(req: Request, res: Response) {
   const eventNumber = parseInt(req.params.event, 10);
-  const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
-  const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
+  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
+  if (!meetNumber || !sessionNumber) {
+    const first = getFirstMeetSession();
+    if (!first) {
+      res.status(404).send('No meet/session data available');
+      return;
+    }
+    meetNumber = first.meetNumber;
+    sessionNumber = first.sessionNumber;
+  }
   if (!eventNumber) {
     res.status(404).send('Missing eventNumber');
     return;
   }
   try {
-    const event = Competition.getEvent(meetIndex, sessionIndex, eventNumber);
+    const event = Competition.getEvent(meetNumber, sessionNumber, eventNumber);
     if (!event) {
       res.status(404).send('Event not found');
       return;
@@ -36,11 +70,12 @@ export function getEvent(req: Request, res: Response) {
     console.error('[getEvent] Error getting event:', {
       error: e,
       eventNumber,
-      meetIndex,
-      sessionIndex,
+      meetNumber,
+      sessionNumber,
       stack: e instanceof Error ? e.stack : undefined,
     });
     const errorMsg = e instanceof Error ? e.message : JSON.stringify(e);
     res.status(500).send(`Error getting event: ${errorMsg}`);
   }
 }
+

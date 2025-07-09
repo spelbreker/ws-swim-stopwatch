@@ -1,4 +1,22 @@
 /**
+ * Helper to get the first available meet and session number from competition data.
+ * @returns {{ meetNumber: number, sessionNumber: number } | undefined}
+ */
+function getFirstMeetSession(): { meetNumber: number, sessionNumber: number } | undefined {
+  try {
+    const data = Competition.getMeetsAndSessions();
+    if (data.length > 0 && data[0].sessions.length > 0) {
+      return {
+        meetNumber: data[0].meetNumber,
+        sessionNumber: data[0].sessions[0].sessionNumber,
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+/**
  * Controller to return all meets and their sessions for selector UI.
  *
  * Route: GET /competition/meets
@@ -59,14 +77,25 @@ export function uploadCompetition(req: Request, res: Response): void {
 }
 
 export function getCompetitionSummary(req: Request, res: Response) {
-  const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
-  const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
+  /**
+   * Accept meet/session as number (not index). If missing, default to first available.
+   */
+  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
+  if (!meetNumber || !sessionNumber) {
+    const first = getFirstMeetSession();
+    if (!first) {
+      res.status(400).send('No meet/session data available');
+      return;
+    }
+    meetNumber = first.meetNumber;
+    sessionNumber = first.sessionNumber;
+  }
   try {
-    const summary = Competition.getMeetSummary(meetIndex, sessionIndex);
+    const summary = Competition.getMeetSummary(meetNumber, sessionNumber);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
-  } // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  catch (_e) {
+  } catch {
     res.status(500).send('Error generating summary');
   }
 }

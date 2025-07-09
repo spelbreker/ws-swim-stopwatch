@@ -23,17 +23,22 @@ class Competition {
    * @returns {MeetSessionSummary[]} Array of meet/session summary objects.
    * @throws {Error} If the competition data file is missing or invalid.
    */
+  /**
+   * Returns a summary of all meets and their sessions for selector UI.
+   * Uses meetNumber/sessionNumber (from data) instead of array index.
+   */
   public static getMeetsAndSessions(): import('../types/competition-types').MeetSessionSummary[] {
     const data = Competition.readCompetitionDataFromDisk();
-    return data.meets.map((meet, meetIndex) => ({
-      meetIndex,
+    return data.meets.map((meet) => ({
+      meetNumber: meet.number,
       name: meet.name,
       city: meet.city,
       nation: meet.nation?.toString?.() ?? undefined,
-      sessions: meet.sessions.map((session, sessionIndex) => ({
-        sessionIndex,
+      sessions: meet.sessions.map((session) => ({
+        sessionNumber: session.number,
         date: session.date,
         eventCount: Array.isArray(session.events) ? session.events.length : 0,
+        daytime: session.daytime,
       })),
     }));
   }
@@ -55,15 +60,26 @@ class Competition {
   /**
    * Helper to validate competitionData, meetIndex, and sessionIndex.
    */
-  private static assertValidIndices(data: CompetitionData, meetIndex: number, sessionIndex: number): void {
-    if (!data.meets[meetIndex]) throw new Error('Invalid meetIndex');
-    if (!data.meets[meetIndex].sessions[sessionIndex]) throw new Error('Invalid sessionIndex');
+
+  /**
+   * Helper to map meetNumber/sessionNumber to array indices.
+   * Throws if not found.
+   */
+  private static getIndicesByNumber(data: CompetitionData, meetNumber: number, sessionNumber: number): { meetIdx: number, sessionIdx: number } {
+    const meetIdx = data.meets.findIndex(m => m.number === meetNumber);
+    if (meetIdx === -1) throw new Error('Invalid meetNumber');
+    const sessionIdx = data.meets[meetIdx].sessions.findIndex(s => s.number === sessionNumber);
+    if (sessionIdx === -1) throw new Error('Invalid sessionNumber');
+    return { meetIdx, sessionIdx };
   }
 
   /**
    * Returns meet summary for given indices.
    */
-  public static getMeetSummary(meetIndex: number, sessionIndex: number): {
+  /**
+   * Returns meet summary for given meet/session numbers.
+   */
+  public static getMeetSummary(meetNumber: number, sessionNumber: number): {
     meet: string;
     first_session_date: string;
     session_count: number;
@@ -71,9 +87,9 @@ class Competition {
     club_count: number;
   } {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
-    const meet = data.meets[meetIndex];
-    const session = meet.sessions[sessionIndex];
+    const { meetIdx, sessionIdx } = Competition.getIndicesByNumber(data, meetNumber, sessionNumber);
+    const meet = data.meets[meetIdx];
+    const session = meet.sessions[sessionIdx];
     return {
       meet: meet.name,
       first_session_date: session.date,
@@ -88,29 +104,38 @@ class Competition {
   /**
    * Returns all events for a given meet/session.
    */
-  public static getEvents(meetIndex: number, sessionIndex: number): CompetitionEvent[] {
+  /**
+   * Returns all events for a given meet/session number.
+   */
+  public static getEvents(meetNumber: number, sessionNumber: number): CompetitionEvent[] {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
-    return data.meets[meetIndex].sessions[sessionIndex].events;
+    const { meetIdx, sessionIdx } = Competition.getIndicesByNumber(data, meetNumber, sessionNumber);
+    return data.meets[meetIdx].sessions[sessionIdx].events;
   }
 
   /**
    * Returns a single event by event number.
    */
-  public static getEvent(meetIndex: number, sessionIndex: number, eventNumber: number): CompetitionEvent | null {
+  /**
+   * Returns a single event by event number, for a given meet/session number.
+   */
+  public static getEvent(meetNumber: number, sessionNumber: number, eventNumber: number): CompetitionEvent | null {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
-    return data.meets[meetIndex].sessions[sessionIndex].events
+    const { meetIdx, sessionIdx } = Competition.getIndicesByNumber(data, meetNumber, sessionNumber);
+    return data.meets[meetIdx].sessions[sessionIdx].events
       .find((event: CompetitionEvent) => event.number === eventNumber) || null;
   }
 
   /**
    * Returns heat data or relay entries for a given event/heat.
    */
-  public static getHeat(meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
+  /**
+   * Returns heat data or relay entries for a given event/heat, by meet/session number.
+   */
+  public static getHeat(meetNumber: number, sessionNumber: number, eventNumber: number, heatNumber: number) {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
-    const { events } = data.meets[meetIndex].sessions[sessionIndex];
+    const { meetIdx, sessionIdx } = Competition.getIndicesByNumber(data, meetNumber, sessionNumber);
+    const { events } = data.meets[meetIdx].sessions[sessionIdx];
     const event = events.find((ev: CompetitionEvent) => ev.number === eventNumber);
     if (!event) return null;
     const heat = event.heats.find((ht: CompetitionHeat) => ht.number === heatNumber);

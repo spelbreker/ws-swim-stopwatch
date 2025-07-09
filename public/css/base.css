@@ -1,4 +1,11 @@
 /* Custom dialog centering and backdrop styles for native <dialog> */
+/*
+  Base Tailwind CSS file for the project
+  - Uses Tailwind 4+ recommended setup
+  - Add custom styles below the Tailwind directives
+*/
+@import "tailwindcss";
+
 dialog[open] {
   @apply fixed inset-0 m-auto flex items-center justify-center max-w-[90vw] w-full max-h-[90vh] border-none p-0 bg-white dark:bg-gray-800 shadow-2xl z-50;
 }
@@ -11,9 +18,3 @@ dialog::backdrop {
     @apply max-w-[98vw] max-h-[98vh] rounded-lg;
   }
 }
-/*
-  Base Tailwind CSS file for the project
-  - Uses Tailwind 4+ recommended setup
-  - Add custom styles below the Tailwind directives
-*/
-@import "tailwindcss";

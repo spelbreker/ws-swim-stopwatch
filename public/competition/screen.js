@@ -34,18 +34,51 @@ function pad(number) {
 // ------------------------------------------------------------------
 // Competition data handling
 // ------------------------------------------------------------------
-function fetchCompetitionData(eventNum, heatNum) {
+let cachedCompetitionMeets = null;
+async function getCompetitionMeets() {
+    if (cachedCompetitionMeets) return cachedCompetitionMeets;
+    const res = await fetch('/competition/meets');
+    const data = await res.json();
+    cachedCompetitionMeets = data;
+    return data;
+}
+
+async function fetchCompetitionData(eventNum, heatNum) {
+    // Always include meet/session, fallback to first if not set
+    let meet = window.selectedMeetNumber;
+    let session = window.selectedSessionNumber;
+    // Fallback: fetch first meet/session if not set
+    if (!meet || !session) {
+        const data = await getCompetitionMeets();
+        if (data.length > 0) {
+            meet = data[0].meetNumber;
+            session = data[0].sessions[0].sessionNumber;
+            window.selectedMeetNumber = meet;
+            window.selectedSessionNumber = session;
+        } else {
+            clearLaneInformation();
+            return;
+        }
+    }
+    // If eventNum is missing, fetch first event for meet/session
+    if (!eventNum) {
+        const data = await getCompetitionMeets();
+        const foundMeet = data.find(m => m.meetNumber === meet);
+        const foundSession = foundMeet?.sessions.find(s => s.sessionNumber === session);
+        const firstEvent = foundSession?.events?.[0]?.number || 1;
+        await fetchCompetitionData(firstEvent, heatNum);
+        return;
+    }
     // Fetch event data first
-    fetch(`/competition/event/${eventNum}`)
+    fetch(`/competition/event/${eventNum}?meet=${meet}&session=${session}`)
         .then(response => response.json())
         .then(eventData => {
             const swimStyleElement = document.getElementById('swim-style');
             if (swimStyleElement) {
                 swimStyleElement.textContent = formatSwimStyle(eventData.swimstyle);
             }
-
             // Then fetch heat data
-            return fetch(`/competition/event/${eventNum}/heat/${heatNum}`);
+            return fetch(`/competition/event/${eventNum}/heat/${heatNum}?meet=${meet}&session=${session}`);
         })
         .then(response => response.json())
         .then(heatData => {

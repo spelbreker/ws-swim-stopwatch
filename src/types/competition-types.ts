@@ -1,15 +1,17 @@
 /**
  * Type representing a summary of all meets and their sessions for selector UI.
+ * Uses meetNumber/sessionNumber (from data) instead of array index.
  */
 export interface MeetSessionSummary {
-  meetIndex: number;
+  meetNumber: number;
   name: string;
   city?: string;
   nation?: string;
   sessions: Array<{
-    sessionIndex: number;
+    sessionNumber: number;
     date: string;
     eventCount: number;
+    daytime?: string; // Session start time (optional)
   }>;
 }
 import {
@@ -54,6 +56,7 @@ export interface CompetitionData {
 
 // CompetitionMeet with required fields for our application
 export interface CompetitionMeet {
+  number: number; // Unique meet number (from Lenex)
   name: string;
   sessions: CompetitionSession[];
   clubs: CompetitionClub[];
@@ -64,7 +67,9 @@ export interface CompetitionMeet {
 
 // CompetitionSession with required fields
 export interface CompetitionSession {
+  number: number; // Unique session number (from Lenex)
   date: string;
+  daytime?: string; // Session start time (optional)
   events: CompetitionEvent[];
   original?: LenexSession;
 }
