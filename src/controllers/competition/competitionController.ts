@@ -1,53 +1,3 @@
-/**
- * Helper to get the first available meet and session number from competition data.
- * @returns {{ meetNumber: number, sessionNumber: number } | undefined}
- */
-function getFirstMeetSession(): { meetNumber: number, sessionNumber: number } | undefined {
-  try {
-    const data = Competition.getMeetsAndSessions();
-    if (data.length > 0 && data[0].sessions.length > 0) {
-      return {
-        meetNumber: data[0].meetNumber,
-        sessionNumber: data[0].sessions[0].sessionNumber,
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return undefined;
-}
-/**
- * Controller to return all meets and their sessions for selector UI.
- *
- * Route: GET /competition/meets
- * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
- *
- * Example response:
- * [
- *   {
- *     meetIndex: 0,
- *     name: 'Meet 1',
- *     city: 'Amsterdam',
- *     nation: 'NED',
- *     sessions: [
- *       { sessionIndex: 0, date: '2025-07-01', eventCount: 12 },
- *       ...
- *     ]
- *   },
- *   ...
- * ]
- */
-export function getMeetsAndSessions(req: Request, res: Response): void {
-  try {
-    const meets = Competition.getMeetsAndSessions();
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json(meets);
-  } catch (err) {
-    // Log error for dev/ops, but return user-friendly message
-    console.error('[getMeetsAndSessions] Failed:', err);
-    res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
-  }
-}
 import { Request, Response } from 'express';
 import fs from 'fs';
 import Competition from '../../modules/competition';
@@ -83,7 +33,7 @@ export function getCompetitionSummary(req: Request, res: Response) {
   let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
   let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   if (!meetNumber || !sessionNumber) {
-    const first = getFirstMeetSession();
+    const first = Competition.getFirstMeetSession();
     if (!first) {
       res.status(400).send('No meet/session data available');
       return;
@@ -109,5 +59,38 @@ export function deleteCompetition(req: Request, res: Response) {
   } // eslint-disable-next-line @typescript-eslint/no-unused-vars
   catch (_e) {
     res.status(500).send('Error deleting competition');
+  }
+}
+
+/**
+ * Controller to return all meets and their sessions for selector UI.
+ *
+ * Route: GET /competition/meets
+ * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
+ *
+ * Example response:
+ * [
+ *   {
+ *     meetNumber: 1,
+ *     name: 'Meet 1',
+ *     city: 'Amsterdam',
+ *     nation: 'NED',
+ *     sessions: [
+ *       { sessionNumber: 1, date: '2025-07-01', eventCount: 12 },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+export function getMeetsAndSessions(req: Request, res: Response): void {
+  try {
+    const meets = Competition.getMeetsAndSessions();
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(meets);
+  } catch (err) {
+    // Log error for dev/ops, but return user-friendly message
+    console.error('[getMeetsAndSessions] Failed:', err);
+    res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
   }
 }

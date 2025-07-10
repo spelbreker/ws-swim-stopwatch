@@ -11,7 +11,20 @@ app.get('/competition/delete', deleteCompetition);
 describe('competitionController', () => {
   describe('getCompetitionSummary', () => {
     let spy: jest.SpyInstance;
-    afterEach(() => { if (spy) spy.mockRestore(); });
+    let getFirstMeetSessionSpy: jest.SpyInstance;
+    
+    beforeEach(() => {
+      // Mock the helper method to return default values
+      getFirstMeetSessionSpy = jest.spyOn(Competition, 'getFirstMeetSession').mockReturnValue({
+        meetNumber: 1,
+        sessionNumber: 1,
+      });
+    });
+    
+    afterEach(() => { 
+      if (spy) spy.mockRestore(); 
+      if (getFirstMeetSessionSpy) getFirstMeetSessionSpy.mockRestore();
+    });
 
     it('should return 500 if module throws', async () => {
       spy = jest.spyOn(Competition, 'getMeetSummary').mockImplementation(() => { throw new Error('fail'); });

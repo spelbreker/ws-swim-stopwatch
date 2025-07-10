@@ -3,27 +3,6 @@ import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
 /**
- * Helper to get the first available meet/session/event/heat from competition data.
- * @returns {{ meetNumber: number, sessionNumber: number, eventNumber: number, heatNumber: number } | undefined}
- */
-function getFirstMeetSessionEventHeat(): { meetNumber: number, sessionNumber: number, eventNumber: number, heatNumber: number } | undefined {
-  try {
-    const meets = Competition.getMeetsAndSessions();
-    if (!meets.length || !meets[0].sessions.length) return undefined;
-    const meetNumber = meets[0].meetNumber;
-    const sessionNumber = meets[0].sessions[0].sessionNumber;
-    // Get events for this meet/session
-    const events = Competition.getEvents(meetNumber, sessionNumber);
-    if (!events.length || !events[0].heats?.length) return undefined;
-    const eventNumber = events[0].number;
-    const heatNumber = events[0].heats[0].number;
-    return { meetNumber, sessionNumber, eventNumber, heatNumber };
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * Controller to return heat data for a given event/heat/meet/session, or defaults to the first available if missing.
  *
  * Route: GET /competition/heat/:event/:heat?meet=...&session=...
@@ -37,7 +16,7 @@ export function getHeat(req: Request, res: Response) {
   let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
 
   if (!eventNumber || !heatNumber || !meetNumber || !sessionNumber) {
-    const first = getFirstMeetSessionEventHeat();
+    const first = Competition.getFirstMeetSessionEventHeat();
     if (!first) {
       res.status(400).send('No meet/session/event/heat data available');
       return;

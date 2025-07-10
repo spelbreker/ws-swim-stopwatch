@@ -1,21 +1,3 @@
-/**
- * Helper to get the first available meet and session number from competition data.
- * @returns {{ meetNumber: number, sessionNumber: number } | undefined}
- */
-function getFirstMeetSession(): { meetNumber: number, sessionNumber: number } | undefined {
-  try {
-    const data = Competition.getMeetsAndSessions();
-    if (data.length > 0 && data[0].sessions.length > 0) {
-      return {
-        meetNumber: data[0].meetNumber,
-        sessionNumber: data[0].sessions[0].sessionNumber,
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return undefined;
-}
 import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
@@ -23,7 +5,7 @@ export function getEvents(req: Request, res: Response) {
   let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
   let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   if (!meetNumber || !sessionNumber) {
-    const first = getFirstMeetSession();
+    const first = Competition.getFirstMeetSession();
     if (!first) {
       res.status(400).send('No meet/session data available');
       return;
@@ -45,7 +27,7 @@ export function getEvent(req: Request, res: Response) {
   let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
   let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   if (!meetNumber || !sessionNumber) {
-    const first = getFirstMeetSession();
+    const first = Competition.getFirstMeetSession();
     if (!first) {
       res.status(404).send('No meet/session data available');
       return;

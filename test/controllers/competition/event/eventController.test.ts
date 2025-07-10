@@ -13,9 +13,20 @@ app.get('/competition/event/:event', getEvent);
 describe('eventController', () => {
   let getEventsSpy: jest.SpyInstance;
   let getEventSpy: jest.SpyInstance;
+  let getFirstMeetSessionSpy: jest.SpyInstance;
+  
+  beforeEach(() => {
+    // Mock the helper method to return default values
+    getFirstMeetSessionSpy = jest.spyOn(Competition, 'getFirstMeetSession').mockReturnValue({
+      meetNumber: 1,
+      sessionNumber: 1,
+    });
+  });
+  
   afterEach(() => {
     if (getEventsSpy) getEventsSpy.mockRestore();
     if (getEventSpy) getEventSpy.mockRestore();
+    if (getFirstMeetSessionSpy) getFirstMeetSessionSpy.mockRestore();
   });
   describe('getEvents', () => {
     it('should return 500 if module throws', async () => {

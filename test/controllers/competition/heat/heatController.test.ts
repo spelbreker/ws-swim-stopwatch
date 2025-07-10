@@ -10,7 +10,22 @@ app.get('/competition/event/:event/heat/:heat', getHeat);
 
 describe('heatController', () => {
   let getHeatSpy: jest.SpyInstance;
-  afterEach(() => { if (getHeatSpy) getHeatSpy.mockRestore(); });
+  let getFirstMeetSessionEventHeatSpy: jest.SpyInstance;
+  
+  beforeEach(() => {
+    // Mock the helper method to return default values
+    getFirstMeetSessionEventHeatSpy = jest.spyOn(Competition, 'getFirstMeetSessionEventHeat').mockReturnValue({
+      meetNumber: 1,
+      sessionNumber: 1,
+      eventNumber: 1,
+      heatNumber: 1,
+    });
+  });
+  
+  afterEach(() => { 
+    if (getHeatSpy) getHeatSpy.mockRestore(); 
+    if (getFirstMeetSessionEventHeatSpy) getFirstMeetSessionEventHeatSpy.mockRestore();
+  });
 
   it('should return 400 if eventNumber or heatNumber is missing', async () => {
     const res = await request(app).get('/competition/event//heat/');
