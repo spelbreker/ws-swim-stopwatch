@@ -10,14 +10,13 @@ app.get('/competition/delete', deleteCompetition);
 
 describe('competitionController', () => {
   describe('getCompetitionSummary', () => {
-  let spy: jest.SpyInstance | undefined;
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
     it('should return 500 if module throws', async () => {
-      spy = jest.spyOn(Competition, 'getMeetSummary').mockImplementation(() => { throw new Error('fail'); });
+      jest.spyOn(Competition, 'getMeetSummary').mockImplementation(() => { throw new Error('fail'); });
       const res = await request(app).get('/competition/summary');
       expect(res.status).toBe(500);
       expect(res.text).toMatch(/Error generating summary/);
@@ -30,7 +29,7 @@ describe('competitionController', () => {
         session_count: 1,
         event_count: 2,
       };
-      spy = jest.spyOn(Competition, 'getMeetSummary').mockReturnValue(mockSummary);
+      jest.spyOn(Competition, 'getMeetSummary').mockReturnValue(mockSummary);
       const res = await request(app).get('/competition/summary');
       expect(res.status).toBe(200);
       // Lint: object destructuring not used because type is unknown and we need safe property access
