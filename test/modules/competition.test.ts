@@ -116,8 +116,27 @@ function injectCompetitionData(comp: Competition, data: CompetitionData) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (comp as any).competitionData = data;
 }
-
+// Type alias to access private static method for testing
+type CompetitionPrivate = {
+  readCompetitionDataFromDisk(): CompetitionData;
+} & typeof Competition;
 describe('Competition class', () => {
+  let readCompetitionDataFromDiskSpy: jest.SpyInstance<CompetitionData, []>;
+
+  beforeEach(() => {
+    // Spy on the private static method
+    readCompetitionDataFromDiskSpy = jest.spyOn(
+      Competition as CompetitionPrivate,
+      'readCompetitionDataFromDisk'
+    );
+    readCompetitionDataFromDiskSpy.mockReturnValue(mockCompetitionData);
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockCompetitionData));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   test('getMeetsAndSessions returns correct meet/session summary (by number)', () => {
     const meets: MeetSessionSummary[] = Competition.getMeetsAndSessions();
@@ -130,16 +149,6 @@ describe('Competition class', () => {
     expect(meets[0].sessions[0].date).toBe('2025-06-01');
     expect(meets[0].sessions[0].daytime).toBe('09:00');
     expect(meets[0].sessions[0].eventCount).toBe(2);
-  });
-  let comp: Competition;
-  beforeEach(() => {
-    comp = new Competition();
-    injectCompetitionData(comp, mockCompetitionData);
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockCompetitionData));
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   test('getMeetSummary returns correct summary (by number)', () => {

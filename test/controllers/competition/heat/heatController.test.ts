@@ -13,9 +13,10 @@ describe('heatController', () => {
     jest.restoreAllMocks();
   });
 
-  it('should return 400 if eventNumber or heatNumber is missing', async () => {
+  it('should return 404 if eventNumber or heatNumber is missing', async () => {
+    // Route does not match the defined pattern, Express returns 404
     const res = await request(app).get('/competition/event//heat/');
-    expect(res.status).toBe(404); // Express default for missing param
+    expect(res.status).toBe(404);
   });
 
   it('should return 404 if heat or entries not found', async () => {

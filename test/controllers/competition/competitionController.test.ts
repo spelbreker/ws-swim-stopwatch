@@ -10,14 +10,10 @@ app.get('/competition/delete', deleteCompetition);
 
 describe('competitionController', () => {
   describe('getCompetitionSummary', () => {
-  let spy: jest.SpyInstance;
-
-    beforeEach(() => {
-      // Reset spy before each test
-    });
+  let spy: jest.SpyInstance | undefined;
 
     afterEach(() => {
-      if (spy) spy.mockRestore();
+      jest.restoreAllMocks();
     });
 
     it('should return 500 if module throws', async () => {
