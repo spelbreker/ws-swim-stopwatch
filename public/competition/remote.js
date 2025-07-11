@@ -92,6 +92,12 @@ document.addEventListener('DOMContentLoaded', function () {
       eventSelect.value = events[0]?.number ?? '';
       // Now update heats for the first event
       await window.updateHeatSelectForEvent(events[0]?.number);
+
+      // Send event-heat message with the new meet/session and first event/heat
+      const firstEvent = events[0]?.number || 1;
+      const firstHeat = 1; // Default to heat 1
+      sendEventAndHeat(firstEvent, firstHeat);
+      updateEventHeatInfoBar(firstEvent, firstHeat);
     } catch {
       eventSelect.innerHTML = '';
       heatSelect.innerHTML = '';
@@ -177,12 +183,24 @@ document.addEventListener('DOMContentLoaded', function () {
    * and updates UI state as needed. Now sends .number, not index.
    */
   function sendMeetSessionSelection() {
+    // Get current event and heat values from the UI
+    const eventSelect = document.getElementById('event-select');
+    const heatSelect = document.getElementById('heat-select');
+
+    const currentEvent = eventSelect ? parseInt(eventSelect.value, 10) || 1 : 1;
+    const currentHeat = heatSelect ? parseInt(heatSelect.value, 10) || 1 : 1;
+
+    // Send event-heat message with updated meet/session information
     window.socket.send(JSON.stringify({
-      type: 'select-meet-session',
+      type: 'event-heat',
+      event: currentEvent,
+      heat: currentHeat,
       meetNumber: selectedMeetNumber,
       sessionNumber: selectedSessionNumber
     }));
-    // Optionally, reload event/heat selectors here if needed
+
+    // Also update the event-heat info bar
+    updateEventHeatInfoBar(currentEvent, currentHeat);
   }
 
   // Accessibility: close dialog on Escape
@@ -552,18 +570,18 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('open', function () {
         fillSelectOptions(eventSelect, 25);
         fillSelectOptions(heatSelect, 25);
-        
+
         // Start initial fast sync sequence
         let pingCount = 0;
         const maxInitialPings = 5;
         const initialPingInterval = 500; // 500ms for initial sync
         const normalPingInterval = 5000; // 5 seconds for normal operation
-        
+
         // Initial rapid ping sequence
         const initialSync = setInterval(() => {
             sendPing();
             pingCount++;
-            
+
             if (pingCount >= maxInitialPings) {
                 clearInterval(initialSync);
                 // Switch to normal ping interval
@@ -571,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('[Remote] Switched to normal ping interval after initial sync');
             }
         }, initialPingInterval);
-        
+
         // Fetch and display initial event/heat info bar
         updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1);
     });

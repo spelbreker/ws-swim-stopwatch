@@ -70,24 +70,38 @@ async function fetchCompetitionData(eventNum, heatNum) {
         return;
     }
     // Fetch event data first
-    fetch(`/competition/event/${eventNum}?meet=${meet}&session=${session}`)
-        .then(response => response.json())
-        .then(eventData => {
-            const swimStyleElement = document.getElementById('swim-style');
-            if (swimStyleElement) {
-                swimStyleElement.textContent = formatSwimStyle(eventData.swimstyle);
-            }
-            // Then fetch heat data
-            return fetch(`/competition/event/${eventNum}/heat/${heatNum}?meet=${meet}&session=${session}`);
-        })
-        .then(response => response.json())
-        .then(heatData => {
-            updateLaneInformation(heatData);
-        })
-        .catch(error => {
-            clearLaneInformation();
-            console.warn('Error fetching competition data');
-        });
+    const eventResponse = await fetch(`/competition/event/${eventNum}?meet=${meet}&session=${session}`);
+
+    if (!eventResponse.ok) {
+        // If event not found in specified session, try to find it in other sessions
+        console.warn(`Event ${eventNum} not found in session ${session}, searching other sessions...`);
+        const correctSession = await findEventInAllSessions(meet, eventNum);
+        if (correctSession) {
+            console.log(`Found event ${eventNum} in session ${correctSession}, updating URL...`);
+            window.selectedSessionNumber = correctSession;
+            updateURLParameters(meet, correctSession, eventNum, heatNum);
+            // Retry with correct session
+            await fetchCompetitionData(eventNum, heatNum);
+            return;
+        } else {
+            throw new Error(`Event ${eventNum} not found in any session of meet ${meet}`);
+        }
+    }
+
+    const eventData = await eventResponse.json();
+    const swimStyleElement = document.getElementById('swim-style');
+    if (swimStyleElement) {
+        swimStyleElement.textContent = formatSwimStyle(eventData.swimstyle);
+    }
+
+    // Then fetch heat data
+    const heatResponse = await fetch(`/competition/event/${eventNum}/heat/${heatNum}?meet=${meet}&session=${session}`);
+    if (!heatResponse.ok) {
+        throw new Error(`Heat ${heatNum} not found for event ${eventNum}`);
+    }
+
+    const heatData = await heatResponse.json();
+    updateLaneInformation(heatData);
 }
 
 function updateLaneInformation(entries) {
@@ -190,6 +204,28 @@ function formatSwimStyle(swimstyle) {
 }
 
 // ------------------------------------------------------------------
+// URL parameter handling
+// ------------------------------------------------------------------
+function getURLParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        meet: urlParams.get('meet') ? parseInt(urlParams.get('meet'), 10) : null,
+        session: urlParams.get('session') ? parseInt(urlParams.get('session'), 10) : null,
+        event: urlParams.get('event') ? parseInt(urlParams.get('event'), 10) : null,
+        heat: urlParams.get('heat') ? parseInt(urlParams.get('heat'), 10) : null
+    };
+}
+
+function updateURLParameters(meet, session, event, heat) {
+    const url = new URL(window.location);
+    if (meet) url.searchParams.set('meet', meet);
+    if (session) url.searchParams.set('session', session);
+    if (event) url.searchParams.set('event', event);
+    if (heat) url.searchParams.set('heat', heat);
+    window.history.replaceState({}, '', url);
+}
+
+// ------------------------------------------------------------------
 // Initialization and event handlers
 // ------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
@@ -204,8 +240,27 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize elements
     stopwatchElement = document.getElementById('stopwatch');
 
-    // Initialize with first event and heat
-    fetchCompetitionData(1, 1);
+    // Read URL parameters and initialize global variables
+    const initialParams = getURLParameters();
+    window.selectedMeetNumber = initialParams.meet;
+    window.selectedSessionNumber = initialParams.session;
+
+    // Initialize with URL parameters or defaults
+    const eventNum = initialParams.event || 1;
+    const heatNum = initialParams.heat || 1;
+
+    // Update display with URL parameters
+    document.getElementById('event-number').textContent = eventNum;
+    document.getElementById('heat-number').textContent = heatNum;
+
+    (async () => {
+        try {
+            await fetchCompetitionData(eventNum, heatNum);
+        } catch (error) {
+            console.error('Failed to fetch competition data:', error);
+            clearLaneInformation();
+        }
+    })();
 
     // Add WebSocket message handler for screen updates
     window.socket.addEventListener('message', function (event) {
@@ -277,6 +332,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (message.type === 'event-heat') {
             document.getElementById('event-number').textContent = message.event;
             document.getElementById('heat-number').textContent = message.heat;
+
+            // Update meet and session if provided in the message
+            if (message.meetNumber !== undefined) {
+                window.selectedMeetNumber = parseInt(message.meetNumber, 10);
+            }
+            if (message.sessionNumber !== undefined) {
+                window.selectedSessionNumber = parseInt(message.sessionNumber, 10);
+            }
+
+            // Update URL parameters to reflect the change
+            updateURLParameters(window.selectedMeetNumber, window.selectedSessionNumber, message.event, message.heat);
+
             fetchCompetitionData(message.event, message.heat);
             return;
         }
@@ -294,4 +361,32 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
     });
+
+    // Handle URL parameters on initial load
+    const urlParams = getURLParameters();
+    if (urlParams.meet && urlParams.session) {
+        window.selectedMeetNumber = urlParams.meet;
+        window.selectedSessionNumber = urlParams.session;
+        // Fetch and display the correct event/heat if specified
+        fetchCompetitionData(urlParams.event, urlParams.heat);
+    }
 });
+
+async function findEventInAllSessions(meet, eventNum) {
+    try {
+        const meetsData = await getCompetitionMeets();
+        const foundMeet = meetsData.find(m => m.meetNumber === meet);
+        if (!foundMeet) return null;
+
+        for (const session of foundMeet.sessions) {
+            const response = await fetch(`/competition/event/${eventNum}?meet=${meet}&session=${session.sessionNumber}`);
+            if (response.ok) {
+                return session.sessionNumber;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error finding event in sessions:', error);
+        return null;
+    }
+}

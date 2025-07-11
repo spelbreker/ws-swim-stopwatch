@@ -9,22 +9,8 @@ const app = express();
 app.get('/competition/event/:event/heat/:heat', getHeat);
 
 describe('heatController', () => {
-  let getHeatSpy: jest.SpyInstance;
-  let getFirstMeetSessionEventHeatSpy: jest.SpyInstance;
-  
-  beforeEach(() => {
-    // Mock the helper method to return default values
-    getFirstMeetSessionEventHeatSpy = jest.spyOn(Competition, 'getFirstMeetSessionEventHeat').mockReturnValue({
-      meetNumber: 1,
-      sessionNumber: 1,
-      eventNumber: 1,
-      heatNumber: 1,
-    });
-  });
-  
-  afterEach(() => { 
-    if (getHeatSpy) getHeatSpy.mockRestore(); 
-    if (getFirstMeetSessionEventHeatSpy) getFirstMeetSessionEventHeatSpy.mockRestore();
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should return 400 if eventNumber or heatNumber is missing', async () => {
@@ -33,14 +19,14 @@ describe('heatController', () => {
   });
 
   it('should return 404 if heat or entries not found', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue(null);
+    jest.spyOn(Competition, 'getHeat').mockReturnValue(null);
     const res = await request(app).get('/competition/event/1/heat/2');
     expect(res.status).toBe(404);
     expect(res.text).toMatch(/Heat or entries not found/);
   });
 
   it('should return heat data if found', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue([
+    jest.spyOn(Competition, 'getHeat').mockReturnValue([
       {
         lane: 3,
         entrytime: '1:00.00',
@@ -70,7 +56,7 @@ describe('heatController', () => {
   });
 
   it('should return 500 if module throws', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
+    jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
     const res = await request(app).get('/competition/event/1/heat/1');
     expect(res.status).toBe(500);
     expect(res.text).toMatch(/Error getting heat/);

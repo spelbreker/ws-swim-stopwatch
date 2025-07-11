@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
@@ -10,22 +9,16 @@ import Competition from '../../../modules/competition';
  * If any parameter is missing, defaults to the first available meet/session/event/heat.
  */
 export function getHeat(req: Request, res: Response) {
-  let eventNumber = req.params.event ? parseInt(req.params.event, 10) : undefined;
-  let heatNumber = req.params.heat ? parseInt(req.params.heat, 10) : undefined;
-  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
-  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
-
-  if (!eventNumber || !heatNumber || !meetNumber || !sessionNumber) {
-    const first = Competition.getFirstMeetSessionEventHeat();
-    if (!first) {
-      res.status(400).send('No meet/session/event/heat data available');
-      return;
-    }
-    meetNumber = first.meetNumber;
-    sessionNumber = first.sessionNumber;
-    eventNumber = first.eventNumber;
-    heatNumber = first.heatNumber;
+  // Ensure route parameters are present; if missing, return 404
+  if (!req.params.event || !req.params.heat) {
+    res.status(400).send('Missing event or heat parameters');
+    return;
   }
+  const eventNumber = req.params.event ? parseInt(req.params.event, 10) : undefined;
+  const heatNumber = req.params.heat ? parseInt(req.params.heat, 10) : undefined;
+  const meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
+
   try {
     const result = Competition.getHeat(meetNumber, sessionNumber, eventNumber, heatNumber);
     if (!result) {

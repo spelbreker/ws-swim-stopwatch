@@ -27,20 +27,8 @@ export function uploadCompetition(req: Request, res: Response): void {
 }
 
 export function getCompetitionSummary(req: Request, res: Response) {
-  /**
-   * Accept meet/session as number (not index). If missing, default to first available.
-   */
-  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
-  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
-  if (!meetNumber || !sessionNumber) {
-    const first = Competition.getFirstMeetSession();
-    if (!first) {
-      res.status(400).send('No meet/session data available');
-      return;
-    }
-    meetNumber = first.meetNumber;
-    sessionNumber = first.sessionNumber;
-  }
+  const meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   try {
     const summary = Competition.getMeetSummary(meetNumber, sessionNumber);
     res.setHeader('Content-Type', 'application/json');

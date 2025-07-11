@@ -2,17 +2,8 @@ import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
 export function getEvents(req: Request, res: Response) {
-  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
-  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
-  if (!meetNumber || !sessionNumber) {
-    const first = Competition.getFirstMeetSession();
-    if (!first) {
-      res.status(400).send('No meet/session data available');
-      return;
-    }
-    meetNumber = first.meetNumber;
-    sessionNumber = first.sessionNumber;
-  }
+  const meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   try {
     const events = Competition.getEvents(meetNumber, sessionNumber);
     res.setHeader('Content-Type', 'application/json');
@@ -23,22 +14,9 @@ export function getEvents(req: Request, res: Response) {
 }
 
 export function getEvent(req: Request, res: Response) {
-  const eventNumber = parseInt(req.params.event, 10);
-  let meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
-  let sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
-  if (!meetNumber || !sessionNumber) {
-    const first = Competition.getFirstMeetSession();
-    if (!first) {
-      res.status(404).send('No meet/session data available');
-      return;
-    }
-    meetNumber = first.meetNumber;
-    sessionNumber = first.sessionNumber;
-  }
-  if (!eventNumber) {
-    res.status(404).send('Missing eventNumber');
-    return;
-  }
+  const eventNumber = req.params.event ? parseInt(req.params.event, 10) : undefined;
+  const meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   try {
     const event = Competition.getEvent(meetNumber, sessionNumber, eventNumber);
     if (!event) {
