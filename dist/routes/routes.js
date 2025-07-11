@@ -13,6 +13,10 @@ function registerRoutes(app, upload) {
     app.get('/competition/event/:event', eventController_1.getEvent);
     app.get('/competition/event/:event/heat/:heat', heatController_1.getHeat);
     app.get('/competition/delete', competitionController_1.deleteCompetition);
+    // New: Meets and sessions selector endpoint
+    // Returns all meets and their sessions for the selector UI
+    // GET /competition/meets
+    app.get('/competition/meets', competitionController_1.getMeetsAndSessions);
     // Serve the log file securely for the log viewer
     app.get('/logs/competition.log', logController_1.getCompetitionLog);
 }

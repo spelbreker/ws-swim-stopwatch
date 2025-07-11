@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadCompetition = uploadCompetition;
 exports.getCompetitionSummary = getCompetitionSummary;
 exports.deleteCompetition = deleteCompetition;
+exports.getMeetsAndSessions = getMeetsAndSessions;
 const fs_1 = __importDefault(require("fs"));
 const competition_1 = __importDefault(require("../../modules/competition"));
 function uploadCompetition(req, res) {
@@ -32,14 +33,14 @@ function uploadCompetition(req, res) {
     });
 }
 function getCompetitionSummary(req, res) {
-    const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
-    const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
+    const meetNumber = req.query.meet ? parseInt(req.query.meet, 10) : undefined;
+    const sessionNumber = req.query.session ? parseInt(req.query.session, 10) : undefined;
     try {
-        const summary = competition_1.default.getMeetSummary(meetIndex, sessionIndex);
+        const summary = competition_1.default.getMeetSummary(meetNumber, sessionNumber);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
-    } // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    catch (_e) {
+    }
+    catch {
         res.status(500).send('Error generating summary');
     }
 }
@@ -55,5 +56,38 @@ function deleteCompetition(req, res) {
     } // eslint-disable-next-line @typescript-eslint/no-unused-vars
     catch (_e) {
         res.status(500).send('Error deleting competition');
+    }
+}
+/**
+ * Controller to return all meets and their sessions for selector UI.
+ *
+ * Route: GET /competition/meets
+ * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
+ *
+ * Example response:
+ * [
+ *   {
+ *     meetNumber: 1,
+ *     name: 'Meet 1',
+ *     city: 'Amsterdam',
+ *     nation: 'NED',
+ *     sessions: [
+ *       { sessionNumber: 1, date: '2025-07-01', eventCount: 12 },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+function getMeetsAndSessions(req, res) {
+    try {
+        const meets = competition_1.default.getMeetsAndSessions();
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).json(meets);
+    }
+    catch (err) {
+        // Log error for dev/ops, but return user-friendly message
+        console.error('[getMeetsAndSessions] Failed:', err);
+        res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
     }
 }

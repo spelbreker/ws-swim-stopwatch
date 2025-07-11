@@ -1,3 +1,220 @@
+
+// ------------------------------------------------------------------
+// Meet/Session Selector State and Dialog Logic (now using .number, not index)
+// ------------------------------------------------------------------
+let selectedMeetNumber = null;
+let selectedSessionNumber = null;
+let meetsData = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Dialog elements
+  const optionsBtn = document.getElementById('options-btn');
+  const dialog = document.getElementById('meet-session-dialog');
+  const meetSelect = document.getElementById('meet-select');
+  const sessionSelect = document.getElementById('session-select');
+  const dialogConfirm = document.getElementById('dialog-confirm');
+  const dialogCancel = document.getElementById('dialog-cancel');
+  const dialogError = document.getElementById('dialog-error');
+
+  // Feature-detect <dialog>
+  if (dialog && typeof dialog.showModal !== 'function') {
+    dialog.showModal = function () { dialog.style.display = 'block'; };
+    dialog.close = function () { dialog.style.display = 'none'; };
+  }
+
+  // Open dialog handler
+  optionsBtn?.addEventListener('click', async () => {
+    dialogError.classList.add('hidden');
+    dialogError.textContent = '';
+    try {
+      await fetchAndPopulateMeets();
+      dialog.showModal();
+      meetSelect.focus();
+    } catch {
+      dialogError.textContent = 'Failed to load meets/sessions.';
+      dialogError.classList.remove('hidden');
+    }
+  });
+
+  // Cancel button handler
+  dialogCancel?.addEventListener('click', () => { dialog.close(); });
+
+
+  // Confirm button handler (now using .number)
+  dialogConfirm?.addEventListener('click', (e) => {
+    e.preventDefault();
+    selectedMeetNumber = Number(meetSelect.value);
+    selectedSessionNumber = Number(sessionSelect.value);
+    dialog.close();
+    sendMeetSessionSelection();
+  });
+
+
+  // Meet select change: update sessions, events, and heats
+  meetSelect?.addEventListener('change', () => {
+    populateSessions(Number(meetSelect.value));
+    // After sessions are populated, update events and heats for the new meet/session
+    // Use first session by default
+    const newSessionNumber = sessionSelect.options[0]?.value;
+    selectedMeetNumber = Number(meetSelect.value);
+    selectedSessionNumber = Number(newSessionNumber);
+    window.updateEventAndHeatSelects();
+  });
+
+  // Session select change: update events and heats
+  sessionSelect?.addEventListener('change', () => {
+    selectedSessionNumber = Number(sessionSelect.value);
+    window.updateEventAndHeatSelects();
+  });
+  /**
+   * Fetches events and heats for the current meet/session and updates the dropdowns.
+   */
+  window.updateEventAndHeatSelects = async function updateEventAndHeatSelects() {
+    // Update event-select
+    const eventSelect = document.getElementById('event-select');
+    const heatSelect = document.getElementById('heat-select');
+    if (!eventSelect || !heatSelect) return;
+    try {
+      const meet = selectedMeetNumber;
+      const session = selectedSessionNumber;
+      // Fetch events for this meet/session
+      const res = await fetch(`/competition/event?meet=${meet}&session=${session}`);
+      if (!res.ok) throw new Error('Failed to fetch events');
+      const events = await res.json();
+      eventSelect.innerHTML = '';
+      events.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.number;
+        option.textContent = event.number;
+        eventSelect.appendChild(option);
+      });
+      // Select first event by default
+      eventSelect.value = events[0]?.number ?? '';
+      // Now update heats for the first event
+      await window.updateHeatSelectForEvent(events[0]?.number);
+
+      // Send event-heat message with the new meet/session and first event/heat
+      const firstEvent = events[0]?.number || 1;
+      const firstHeat = 1; // Default to heat 1
+      sendEventAndHeat(firstEvent, firstHeat);
+      updateEventHeatInfoBar(firstEvent, firstHeat);
+    } catch {
+      eventSelect.innerHTML = '';
+      heatSelect.innerHTML = '';
+    }
+  }
+
+  /**
+   * Fetches heats for a given event and updates the heat-select dropdown.
+   */
+  window.updateHeatSelectForEvent = async function updateHeatSelectForEvent(eventNumber) {
+    const heatSelect = document.getElementById('heat-select');
+    if (!heatSelect || !eventNumber) return;
+    try {
+      const meet = selectedMeetNumber;
+      const session = selectedSessionNumber;
+      const res = await fetch(`/competition/event/${eventNumber}?meet=${meet}&session=${session}`);
+      if (!res.ok) throw new Error('Failed to fetch event data');
+      const eventData = await res.json();
+      heatSelect.innerHTML = '';
+      (eventData.heats || []).forEach(heat => {
+        const option = document.createElement('option');
+        option.value = heat.number;
+        option.textContent = heat.number;
+        heatSelect.appendChild(option);
+      });
+      // Select first heat by default
+      heatSelect.value = eventData.heats?.[0]?.number ?? '';
+    } catch {
+      heatSelect.innerHTML = '';
+    }
+  }
+
+
+  /**
+   * Fetches meets/sessions from API and populates dropdowns (using .number).
+   */
+  async function fetchAndPopulateMeets() {
+    const res = await fetch('/competition/meets');
+    if (!res.ok) throw new Error('API error');
+    meetsData = await res.json();
+    // Populate meets
+    meetSelect.innerHTML = '';
+    meetsData.forEach((meet) => {
+      const opt = document.createElement('option');
+      opt.value = meet.meetNumber;
+      opt.textContent = meet.name + (meet.city ? ` (${meet.city})` : '');
+      meetSelect.appendChild(opt);
+    });
+    // Default: select first meet if none selected
+    if (selectedMeetNumber === null && meetsData.length > 0) {
+      selectedMeetNumber = meetsData[0].meetNumber;
+    }
+    meetSelect.value = selectedMeetNumber;
+    populateSessions(selectedMeetNumber);
+    sessionSelect.value = selectedSessionNumber ?? sessionSelect.options[0]?.value;
+  }
+
+
+  /**
+   * Populates session dropdown for a given meet number.
+   */
+  function populateSessions(meetNumber) {
+    const meet = meetsData.find(m => m.meetNumber === meetNumber);
+    sessionSelect.innerHTML = '';
+    if (!meet) return;
+    meet.sessions.forEach((session) => {
+      const opt = document.createElement('option');
+      opt.value = session.sessionNumber;
+      // Show date and start time if available
+      opt.textContent = `${session.date}${session.daytime ? ' ' + session.daytime : ''} (${session.eventCount} events)`;
+      sessionSelect.appendChild(opt);
+    });
+    // Default: select first session if none selected
+    if (selectedSessionNumber === null && meet.sessions.length > 0) {
+      selectedSessionNumber = meet.sessions[0].sessionNumber;
+    }
+    sessionSelect.value = selectedSessionNumber;
+  }
+
+
+  /**
+   * Sends the selected meet/session to the server (WebSocket),
+   * and updates UI state as needed. Now sends .number, not index.
+   */
+  function sendMeetSessionSelection() {
+    // Get current event and heat values from the UI
+    const eventSelect = document.getElementById('event-select');
+    const heatSelect = document.getElementById('heat-select');
+
+    const currentEvent = eventSelect ? parseInt(eventSelect.value, 10) || 1 : 1;
+    const currentHeat = heatSelect ? parseInt(heatSelect.value, 10) || 1 : 1;
+
+    // Send event-heat message with updated meet/session information
+    window.socket.send(JSON.stringify({
+      type: 'event-heat',
+      event: currentEvent,
+      heat: currentHeat,
+      meetNumber: selectedMeetNumber,
+      sessionNumber: selectedSessionNumber
+    }));
+
+    // Also update the event-heat info bar
+    updateEventHeatInfoBar(currentEvent, currentHeat);
+  }
+
+  // Accessibility: close dialog on Escape
+  dialog?.addEventListener('cancel', (e) => { e.preventDefault(); dialog.close(); });
+
+  // If only one meet/session, skip dialog and set defaults (by number)
+  fetch('/competition/meets').then(res => res.json()).then(data => {
+    meetsData = data;
+    if (meetsData.length === 1 && meetsData[0].sessions.length === 1) {
+      selectedMeetNumber = meetsData[0].number;
+      selectedSessionNumber = meetsData[0].sessions[0].number;
+    }
+  });
+});
 // ------------------------------------------------------------------
 // Global variables
 // ------------------------------------------------------------------
@@ -44,7 +261,16 @@ function fillSelectOptions(selectElement, maxValue) {
     // Overwrite: fetch event list and populate select with event numbers
     if (!selectElement) return;
     if (selectElement.id === 'event-select') {
-        fetch('/competition/event')
+        // Always include meet/session, fallback to first if not set
+        let meet = selectedMeetNumber;
+        let session = selectedSessionNumber;
+        if (!meet || !session) {
+            if (meetsData.length > 0) {
+                meet = meetsData[0].meetNumber;
+                session = meetsData[0].sessions[0].sessionNumber;
+            }
+        }
+        fetch(`/competition/event?meet=${meet}&session=${session}`)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch event list');
                 return res.json();
@@ -145,7 +371,13 @@ function incrementHeat() {
 }
 
 function sendEventAndHeat(event, heat) {
-    window.socket.send(JSON.stringify({ type: 'event-heat', event: event, heat: heat }));
+    window.socket.send(JSON.stringify({
+      type: 'event-heat',
+      event: event,
+      heat: heat,
+      meetNumber: selectedMeetNumber,
+      sessionNumber: selectedSessionNumber
+    }));
 }
 
 // ------------------------------------------------------------------
@@ -153,8 +385,17 @@ function sendEventAndHeat(event, heat) {
 // ------------------------------------------------------------------
 async function updateEventHeatInfoBar(eventNr, heatNr) {
     try {
+        // Always include meet/session, fallback to first if not set
+        let meet = selectedMeetNumber;
+        let session = selectedSessionNumber;
+        if (!meet || !session) {
+            if (meetsData.length > 0) {
+                meet = meetsData[0].meetNumber;
+                session = meetsData[0].sessions[0].sessionNumber;
+            }
+        }
         // Fetch event data
-        const eventRes = await fetch(`/competition/event/${eventNr}`);
+        const eventRes = await fetch(`/competition/event/${eventNr}?meet=${meet}&session=${session}`);
         if (!eventRes.ok) throw new Error('Event fetch failed');
         const eventData = await eventRes.json();
         const maxHeatNr = eventData.heats.length; // last item
@@ -175,7 +416,7 @@ async function updateEventHeatInfoBar(eventNr, heatNr) {
         // Update info bar
         const infoBar = document.getElementById('event-heat-info-bar');
         if (infoBar) infoBar.textContent = infoText;
-    } catch (err) {
+    } catch {
         const infoBar = document.getElementById('event-heat-info-bar');
         if (infoBar) infoBar.textContent = 'Onbekend event/serie';
     }
@@ -226,7 +467,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stopwatchInterval = setInterval(() => updateStopwatch(startTime, stopwatchElement), 10);
         resetSplitTimes();
         if (sendSocket) {
-            window.socket.send(JSON.stringify({ type: 'start', timestamp: startTime, heat: heatSelect.value, event: eventSelect.value }));
+            window.socket.send(JSON.stringify({
+                type: 'start',
+                timestamp: startTime,
+                heat: heatSelect.value,
+                event: eventSelect.value,
+                meetNumber: selectedMeetNumber,
+                sessionNumber: selectedSessionNumber
+            }));
         }
         disableControls(true, controlElements);
 
@@ -272,9 +520,14 @@ document.addEventListener('DOMContentLoaded', function () {
     incrementHeatButton.addEventListener('click', incrementHeat);
 
     eventSelect.addEventListener('change', () => {
-        heatSelect.value = 1;
-        sendEventAndHeat(eventSelect.value, 1);
-        updateEventHeatInfoBar(eventSelect.value, 1);
+        // When event changes, update heats for the new event
+        window.updateHeatSelectForEvent(eventSelect.value);
+        // After heats are updated, select first heat and send
+        setTimeout(() => {
+          heatSelect.value = heatSelect.options[0]?.value ?? '';
+          sendEventAndHeat(eventSelect.value, heatSelect.value);
+          updateEventHeatInfoBar(eventSelect.value, heatSelect.value);
+        }, 0);
     });
 
     heatSelect.addEventListener('change', () => {
@@ -317,18 +570,18 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('open', function () {
         fillSelectOptions(eventSelect, 25);
         fillSelectOptions(heatSelect, 25);
-        
+
         // Start initial fast sync sequence
         let pingCount = 0;
         const maxInitialPings = 5;
         const initialPingInterval = 500; // 500ms for initial sync
         const normalPingInterval = 5000; // 5 seconds for normal operation
-        
+
         // Initial rapid ping sequence
         const initialSync = setInterval(() => {
             sendPing();
             pingCount++;
-            
+
             if (pingCount >= maxInitialPings) {
                 clearInterval(initialSync);
                 // Switch to normal ping interval
@@ -336,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('[Remote] Switched to normal ping interval after initial sync');
             }
         }, initialPingInterval);
-        
+
         // Fetch and display initial event/heat info bar
         updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1);
     });

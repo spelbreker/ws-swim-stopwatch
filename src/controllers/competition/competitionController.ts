@@ -27,14 +27,13 @@ export function uploadCompetition(req: Request, res: Response): void {
 }
 
 export function getCompetitionSummary(req: Request, res: Response) {
-  const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
-  const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
+  const meetNumber = req.query.meet ? parseInt(req.query.meet as string, 10) : undefined;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   try {
-    const summary = Competition.getMeetSummary(meetIndex, sessionIndex);
+    const summary = Competition.getMeetSummary(meetNumber, sessionNumber);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
-  } // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  catch (_e) {
+  } catch {
     res.status(500).send('Error generating summary');
   }
 }
@@ -48,5 +47,38 @@ export function deleteCompetition(req: Request, res: Response) {
   } // eslint-disable-next-line @typescript-eslint/no-unused-vars
   catch (_e) {
     res.status(500).send('Error deleting competition');
+  }
+}
+
+/**
+ * Controller to return all meets and their sessions for selector UI.
+ *
+ * Route: GET /competition/meets
+ * Returns: Array of meets, each with sessions (see Competition.getMeetsAndSessions)
+ *
+ * Example response:
+ * [
+ *   {
+ *     meetNumber: 1,
+ *     name: 'Meet 1',
+ *     city: 'Amsterdam',
+ *     nation: 'NED',
+ *     sessions: [
+ *       { sessionNumber: 1, date: '2025-07-01', eventCount: 12 },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ */
+export function getMeetsAndSessions(req: Request, res: Response): void {
+  try {
+    const meets = Competition.getMeetsAndSessions();
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(meets);
+  } catch (err) {
+    // Log error for dev/ops, but return user-friendly message
+    console.error('[getMeetsAndSessions] Failed:', err);
+    res.status(500).json({ error: 'Could not load meets/sessions. Please try again later.' });
   }
 }

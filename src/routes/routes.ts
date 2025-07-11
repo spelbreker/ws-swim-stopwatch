@@ -4,6 +4,7 @@ import {
   uploadCompetition,
   getCompetitionSummary,
   deleteCompetition,
+  getMeetsAndSessions,
 } from '../controllers/competition/competitionController';
 import { getEvents, getEvent } from '../controllers/competition/event/eventController';
 import { getHeat } from '../controllers/competition/heat/heatController';
@@ -17,6 +18,11 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
   app.get('/competition/event/:event', getEvent);
   app.get('/competition/event/:event/heat/:heat', getHeat);
   app.get('/competition/delete', deleteCompetition);
+
+  // New: Meets and sessions selector endpoint
+  // Returns all meets and their sessions for the selector UI
+  // GET /competition/meets
+  app.get('/competition/meets', getMeetsAndSessions);
 
   // Serve the log file securely for the log viewer
   app.get('/logs/competition.log', getCompetitionLog);

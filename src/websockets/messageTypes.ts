@@ -7,7 +7,7 @@ export type Message =
   | { type: 'stop'; timestamp: number }
   | { type: 'split'; lane: number; time: string }
   | { type: 'split'; lane: number; timestamp: string }
-  | { type: 'event-heat'; event: number | string; heat: number | string }
+  | { type: 'event-heat'; event: number | string; heat: number | string; meetNumber?: number | string; sessionNumber?: number | string }
   | { type: 'clear' }
   | { type: 'add-interval'; newInterval: unknown }
   | { type: 'start-interval'; uid: string; interval: unknown }

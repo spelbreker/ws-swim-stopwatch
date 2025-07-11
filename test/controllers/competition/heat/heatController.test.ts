@@ -9,23 +9,25 @@ const app = express();
 app.get('/competition/event/:event/heat/:heat', getHeat);
 
 describe('heatController', () => {
-  let getHeatSpy: jest.SpyInstance;
-  afterEach(() => { if (getHeatSpy) getHeatSpy.mockRestore(); });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-  it('should return 400 if eventNumber or heatNumber is missing', async () => {
+  it('should return 404 if eventNumber or heatNumber is missing', async () => {
+    // Route does not match the defined pattern, Express returns 404
     const res = await request(app).get('/competition/event//heat/');
-    expect(res.status).toBe(404); // Express default for missing param
+    expect(res.status).toBe(404);
   });
 
   it('should return 404 if heat or entries not found', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue(null);
+    jest.spyOn(Competition, 'getHeat').mockReturnValue(null);
     const res = await request(app).get('/competition/event/1/heat/2');
     expect(res.status).toBe(404);
     expect(res.text).toMatch(/Heat or entries not found/);
   });
 
   it('should return heat data if found', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue([
+    jest.spyOn(Competition, 'getHeat').mockReturnValue([
       {
         lane: 3,
         entrytime: '1:00.00',
@@ -55,7 +57,7 @@ describe('heatController', () => {
   });
 
   it('should return 500 if module throws', async () => {
-    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
+    jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
     const res = await request(app).get('/competition/event/1/heat/1');
     expect(res.status).toBe(500);
     expect(res.text).toMatch(/Error getting heat/);

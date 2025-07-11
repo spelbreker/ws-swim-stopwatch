@@ -4,28 +4,24 @@ import { getEvents, getEvent } from '../../../../src/controllers/competition/eve
 import Competition from '../../../../src/modules/competition';
 import { Gender, Stroke } from '../../../../src/types/competition-types';
 
-jest.mock('../../../../src/modules/competition');
-
 const app = express();
 app.get('/competition/event', getEvents);
 app.get('/competition/event/:event', getEvent);
 
 describe('eventController', () => {
-  let getEventsSpy: jest.SpyInstance;
-  let getEventSpy: jest.SpyInstance;
   afterEach(() => {
-    if (getEventsSpy) getEventsSpy.mockRestore();
-    if (getEventSpy) getEventSpy.mockRestore();
+    jest.restoreAllMocks();
   });
+
   describe('getEvents', () => {
     it('should return 500 if module throws', async () => {
-      getEventsSpy = jest.spyOn(Competition, 'getEvents').mockImplementation(() => { throw new Error('fail'); });
+      jest.spyOn(Competition, 'getEvents').mockImplementation(() => { throw new Error('fail'); });
       const res = await request(app).get('/competition/event');
       expect(res.status).toBe(500);
       expect(res.text).toMatch(/Error getting events/);
     });
     it('should return events if module returns data', async () => {
-      getEventsSpy = jest.spyOn(Competition, 'getEvents').mockReturnValue([
+      jest.spyOn(Competition, 'getEvents').mockReturnValue([
         {
           number: 1,
           order: 1,
@@ -46,7 +42,7 @@ describe('eventController', () => {
       const res = await request(app).get('/competition/event');
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
-       
+
       const arr: unknown = res.body;
       if (
         Array.isArray(arr)
@@ -62,13 +58,13 @@ describe('eventController', () => {
 
   describe('getEvent', () => {
     it('should return 404 if event not found', async () => {
-      getEventSpy = jest.spyOn(Competition, 'getEvent').mockReturnValue(null);
+      jest.spyOn(Competition, 'getEvent').mockReturnValue(null);
       const res = await request(app).get('/competition/event/2');
       expect(res.status).toBe(404);
       expect(res.text).toMatch(/Event not found/);
     });
     it('should return event if found', async () => {
-      getEventSpy = jest.spyOn(Competition, 'getEvent').mockReturnValue({
+      jest.spyOn(Competition, 'getEvent').mockReturnValue({
         number: 1,
         order: 1,
         eventid: 'E1',
@@ -83,7 +79,7 @@ describe('eventController', () => {
       }
     });
     it('should return 500 if module throws', async () => {
-      getEventSpy = jest.spyOn(Competition, 'getEvent').mockImplementation(() => { throw new Error('fail'); });
+      jest.spyOn(Competition, 'getEvent').mockImplementation(() => { throw new Error('fail'); });
       const res = await request(app).get('/competition/event/1');
       expect(res.status).toBe(500);
       expect(res.text).toMatch(/Error getting event/);
