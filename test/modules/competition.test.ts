@@ -186,7 +186,7 @@ describe('Competition class', () => {
   });
 
   test('getHeat returns relay entries for relay event', () => {
-    const relays = Competition.getHeat(0, 1, 2, 1); // Use session number 1
+    const relays = Competition.getHeat(0, 1, 2, 2); // meetIndex=0, sessionNumber=1, eventNumber=2, heatNumber=2
     expect(relays).not.toBeNull();
     if (
       Array.isArray(relays)

@@ -28,9 +28,9 @@ export function uploadCompetition(req: Request, res: Response): void {
 
 export function getCompetitionSummary(req: Request, res: Response) {
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
-  const sessionIndex = req.query.session ? parseInt(req.query.session as string, 10) : 0;
+  const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   try {
-    const summary = Competition.getMeetSummary(meetIndex, sessionIndex);
+    const summary = Competition.getMeetSummary(meetIndex, sessionNumber);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(summary));
   } // eslint-disable-next-line @typescript-eslint/no-unused-vars
