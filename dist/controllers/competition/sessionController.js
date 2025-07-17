@@ -9,8 +9,7 @@ function getSessions(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
     try {
         const sessions = competition_1.default.getSessions(meetIndex);
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(sessions));
+        res.json(sessions);
     }
     catch (e) {
         console.error('[getSessions] Error getting sessions:', e);
