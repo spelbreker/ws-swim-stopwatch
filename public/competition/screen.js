@@ -34,9 +34,12 @@ function pad(number) {
 // ------------------------------------------------------------------
 // Competition data handling
 // ------------------------------------------------------------------
-function fetchCompetitionData(eventNum, heatNum) {
+function fetchCompetitionData(eventNum, heatNum, sessionNum = null) {
+    // Build session parameter
+    const sessionParam = sessionNum ? `?session=${sessionNum}` : '';
+
     // Fetch event data first
-    fetch(`/competition/event/${eventNum}`)
+    fetch(`/competition/event/${eventNum}${sessionParam}`)
         .then(response => response.json())
         .then(eventData => {
             const swimStyleElement = document.getElementById('swim-style');
@@ -45,7 +48,7 @@ function fetchCompetitionData(eventNum, heatNum) {
             }
 
             // Then fetch heat data
-            return fetch(`/competition/event/${eventNum}/heat/${heatNum}`);
+            return fetch(`/competition/event/${eventNum}/heat/${heatNum}${sessionParam}`);
         })
         .then(response => response.json())
         .then(heatData => {
@@ -241,10 +244,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /** change event and heat information */
-        if (message.type === 'event-heat') {
+        if (message.type === 'event-heat' || message.type === 'select-event') {
             document.getElementById('event-number').textContent = message.event;
             document.getElementById('heat-number').textContent = message.heat;
-            fetchCompetitionData(message.event, message.heat);
+            fetchCompetitionData(message.event, message.heat, message.session);
             return;
         }
 

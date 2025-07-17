@@ -62,11 +62,46 @@ class Competition {
             throw new Error('Invalid sessionIndex');
     }
     /**
+     * Returns all sessions for the first meet.
+     */
+    static getSessions(meetIndex = 0) {
+        const data = Competition.readCompetitionDataFromDisk();
+        if (!data.meets[meetIndex])
+            throw new Error('Invalid meetIndex');
+        return data.meets[meetIndex].sessions;
+    }
+    /**
+     * Helper to find session index by session number.
+     */
+    static findSessionIndexByNumber(data, meetIndex, sessionNumber) {
+        const sessions = data.meets[meetIndex]?.sessions;
+        if (!sessions)
+            throw new Error('Invalid meetIndex');
+        const sessionIndex = sessions.findIndex(session => session.number === sessionNumber);
+        if (sessionIndex === -1)
+            throw new Error(`Session with number ${sessionNumber} not found`);
+        return sessionIndex;
+    }
+    /**
+     * Updated helper to validate indices and handle session number parameter.
+     */
+    static assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber) {
+        if (!data.meets[meetIndex])
+            throw new Error('Invalid meetIndex');
+        if (sessionNumber !== undefined) {
+            return Competition.findSessionIndexByNumber(data, meetIndex, sessionNumber);
+        }
+        // Default to first session if no sessionNumber provided
+        if (!data.meets[meetIndex].sessions[0])
+            throw new Error('No sessions found');
+        return 0;
+    }
+    /**
      * Returns meet summary for given indices.
      */
-    static getMeetSummary(meetIndex, sessionIndex) {
+    static getMeetSummary(meetIndex, sessionNumber) {
         const data = Competition.readCompetitionDataFromDisk();
-        Competition.assertValidIndices(data, meetIndex, sessionIndex);
+        const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
         const meet = data.meets[meetIndex];
         const session = meet.sessions[sessionIndex];
         return {
@@ -82,26 +117,26 @@ class Competition {
     /**
      * Returns all events for a given meet/session.
      */
-    static getEvents(meetIndex, sessionIndex) {
+    static getEvents(meetIndex, sessionNumber) {
         const data = Competition.readCompetitionDataFromDisk();
-        Competition.assertValidIndices(data, meetIndex, sessionIndex);
+        const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
         return data.meets[meetIndex].sessions[sessionIndex].events;
     }
     /**
      * Returns a single event by event number.
      */
-    static getEvent(meetIndex, sessionIndex, eventNumber) {
+    static getEvent(meetIndex, sessionNumber, eventNumber) {
         const data = Competition.readCompetitionDataFromDisk();
-        Competition.assertValidIndices(data, meetIndex, sessionIndex);
+        const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
         return data.meets[meetIndex].sessions[sessionIndex].events
             .find((event) => event.number === eventNumber) || null;
     }
     /**
      * Returns heat data or relay entries for a given event/heat.
      */
-    static getHeat(meetIndex, sessionIndex, eventNumber, heatNumber) {
+    static getHeat(meetIndex, sessionNumber, eventNumber, heatNumber) {
         const data = Competition.readCompetitionDataFromDisk();
-        Competition.assertValidIndices(data, meetIndex, sessionIndex);
+        const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
         const { events } = data.meets[meetIndex].sessions[sessionIndex];
         const event = events.find((ev) => ev.number === eventNumber);
         if (!event)

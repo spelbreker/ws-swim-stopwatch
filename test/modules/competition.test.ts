@@ -23,6 +23,7 @@ const mockCompetitionData: CompetitionData = {
       sessions: [
         {
           date: '2025-06-01',
+          number: 1,
           events: [
             {
               number: 1,
@@ -48,7 +49,28 @@ const mockCompetitionData: CompetitionData = {
               heats: [
                 {
                   heatid: 'H2',
-                  number: 1,
+                  number: 2,
+                  order: 1,
+                  daytime: '10:30',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          date: '2025-06-02',
+          number: 2,
+          events: [
+            {
+              number: 3,
+              order: 1,
+              eventid: 'E3',
+              gender: Gender.M,
+              swimstyle: { relaycount: 1, stroke: Stroke.BACK, distance: 50 },
+              heats: [
+                {
+                  heatid: 'H3',
+                  number: 3,
                   order: 1,
                   daytime: '11:00',
                 },
@@ -126,34 +148,34 @@ describe('Competition class', () => {
   });
 
   test('getMeetSummary returns correct summary', () => {
-    const summary = Competition.getMeetSummary(0, 0);
+    const summary = Competition.getMeetSummary(0, 1); // Use session number 1
     expect(summary.meet).toBe('Test Meet');
     expect(summary.first_session_date).toBe('2025-06-01');
-    expect(summary.session_count).toBe(1);
-    expect(summary.event_count).toBe(2);
+    expect(summary.session_count).toBe(2);
+    expect(summary.event_count).toBe(3);
     expect(summary.club_count).toBe(1);
   });
 
   test('getEvents returns all events for session', () => {
-    const events = Competition.getEvents(0, 0);
+    const events = Competition.getEvents(0, 1); // Use session number 1
     expect(events).toHaveLength(2);
     expect(events[0].eventid).toBe('E1');
     expect(events[1].eventid).toBe('E2');
   });
 
   test('getEvent returns correct event by number', () => {
-    const event = Competition.getEvent(0, 0, 2);
+    const event = Competition.getEvent(0, 1, 2); // Use session number 1
     expect(event).not.toBeNull();
     expect(event?.eventid).toBe('E2');
   });
 
   test('getEvent returns null for missing event', () => {
-    const event = Competition.getEvent(0, 0, 99);
+    const event = Competition.getEvent(0, 1, 99); // Use session number 1
     expect(event).toBeNull();
   });
 
   test('getHeat returns athlete entries for individual event', () => {
-    const entries = Competition.getHeat(0, 0, 1, 1);
+    const entries = Competition.getHeat(0, 1, 1, 1); // Use session number 1
     expect(entries).not.toBeNull();
     if (Array.isArray(entries)) {
       expect(entries[0].athletes[0].firstname).toBe('John');
@@ -164,7 +186,7 @@ describe('Competition class', () => {
   });
 
   test('getHeat returns relay entries for relay event', () => {
-    const relays = Competition.getHeat(0, 0, 2, 1);
+    const relays = Competition.getHeat(0, 1, 2, 1); // Use session number 1
     expect(relays).not.toBeNull();
     if (
       Array.isArray(relays)
@@ -188,8 +210,104 @@ describe('Competition class', () => {
   });
 
   test('throws error for invalid indices', () => {
-    expect(() => Competition.getMeetSummary(1, 0)).toThrow();
-    expect(() => Competition.getMeetSummary(0, 2)).toThrow();
+    expect(() => Competition.getMeetSummary(1, 1)).toThrow(); // Invalid meet index
+    expect(() => Competition.getMeetSummary(0, 99)).toThrow(); // Invalid session number
+  });
+
+  // Session-based tests
+  test('getSessions returns all sessions for meet', () => {
+    const sessions = Competition.getSessions(0);
+    expect(sessions).toHaveLength(2);
+    expect(sessions[0].number).toBe(1);
+    expect(sessions[1].number).toBe(2);
+    expect(sessions[0].date).toBe('2025-06-01');
+    expect(sessions[1].date).toBe('2025-06-02');
+  });
+
+  test('getSessions throws error for invalid meet index', () => {
+    expect(() => Competition.getSessions(1)).toThrow('Invalid meetIndex');
+  });
+
+  test('getMeetSummary works with session number', () => {
+    const summary = Competition.getMeetSummary(0, 1);
+    expect(summary.meet).toBe('Test Meet');
+    expect(summary.first_session_date).toBe('2025-06-01');
+    expect(summary.session_count).toBe(2);
+    expect(summary.event_count).toBe(3); // 2 events in session 1 + 1 event in session 2
+    expect(summary.club_count).toBe(1);
+  });
+
+  test('getMeetSummary works with different session number', () => {
+    const summary = Competition.getMeetSummary(0, 2);
+    expect(summary.meet).toBe('Test Meet');
+    expect(summary.first_session_date).toBe('2025-06-02'); // Should use session 2's date
+    expect(summary.session_count).toBe(2);
+  });
+
+  test('getMeetSummary uses first session when no session number provided', () => {
+    const summary = Competition.getMeetSummary(0);
+    expect(summary.first_session_date).toBe('2025-06-01');
+  });
+
+  test('getEvents works with session number', () => {
+    const events = Competition.getEvents(0, 1);
+    expect(events).toHaveLength(2);
+    expect(events[0].eventid).toBe('E1');
+    expect(events[1].eventid).toBe('E2');
+  });
+
+  test('getEvents works with different session number', () => {
+    const events = Competition.getEvents(0, 2);
+    expect(events).toHaveLength(1);
+    expect(events[0].eventid).toBe('E3');
+  });
+
+  test('getEvents uses first session when no session number provided', () => {
+    const events = Competition.getEvents(0);
+    expect(events).toHaveLength(2);
+    expect(events[0].eventid).toBe('E1');
+  });
+
+  test('getEvent works with session number', () => {
+    const event = Competition.getEvent(0, 1, 2);
+    expect(event).not.toBeNull();
+    expect(event?.eventid).toBe('E2');
+  });
+
+  test('getEvent works with different session number', () => {
+    const event = Competition.getEvent(0, 2, 3);
+    expect(event).not.toBeNull();
+    expect(event?.eventid).toBe('E3');
+  });
+
+  test('getEvent returns null for event in wrong session', () => {
+    const event = Competition.getEvent(0, 2, 1); // Event 1 is in session 1, not session 2
+    expect(event).toBeNull();
+  });
+
+  test('getEvent uses first session when no session number provided', () => {
+    const event = Competition.getEvent(0, undefined, 1);
+    expect(event).not.toBeNull();
+    expect(event?.eventid).toBe('E1');
+  });
+
+  test('getHeat works with session number', () => {
+    const entries = Competition.getHeat(0, 1, 1, 1);
+    expect(entries).not.toBeNull();
+    if (Array.isArray(entries)) {
+      expect(entries[0].athletes[0].firstname).toBe('John');
+    }
+  });
+
+  test('getHeat uses first session when no session number provided', () => {
+    const entries = Competition.getHeat(0, undefined, 1, 1);
+    expect(entries).not.toBeNull();
+  });
+
+  test('throws error for invalid session number', () => {
+    expect(() => Competition.getEvents(0, 99)).toThrow('Session with number 99 not found');
+    expect(() => Competition.getEvent(0, 99, 1)).toThrow('Session with number 99 not found');
+    expect(() => Competition.getHeat(0, 99, 1, 1)).toThrow('Session with number 99 not found');
   });
 });
 

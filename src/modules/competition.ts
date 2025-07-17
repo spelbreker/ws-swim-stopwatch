@@ -40,9 +40,50 @@ class Competition {
   }
 
   /**
+   * Returns all sessions for the first meet.
+   */
+  public static getSessions(meetIndex: number = 0): CompetitionSession[] {
+    const data = Competition.readCompetitionDataFromDisk();
+    if (!data.meets[meetIndex]) throw new Error('Invalid meetIndex');
+    return data.meets[meetIndex].sessions;
+  }
+
+  /**
+   * Helper to find session index by session number.
+   */
+  private static findSessionIndexByNumber(data: CompetitionData, meetIndex: number, sessionNumber: number): number {
+    const sessions = data.meets[meetIndex]?.sessions;
+    if (!sessions) throw new Error('Invalid meetIndex');
+
+    const sessionIndex = sessions.findIndex(session => session.number === sessionNumber);
+    if (sessionIndex === -1) throw new Error(`Session with number ${sessionNumber} not found`);
+
+    return sessionIndex;
+  }
+
+  /**
+   * Updated helper to validate indices and handle session number parameter.
+   */
+  private static assertValidIndicesWithSessionNumber(
+    data: CompetitionData,
+    meetIndex: number,
+    sessionNumber?: number
+  ): number {
+    if (!data.meets[meetIndex]) throw new Error('Invalid meetIndex');
+
+    if (sessionNumber !== undefined) {
+      return Competition.findSessionIndexByNumber(data, meetIndex, sessionNumber);
+    }
+
+    // Default to first session if no sessionNumber provided
+    if (!data.meets[meetIndex].sessions[0]) throw new Error('No sessions found');
+    return 0;
+  }
+
+  /**
    * Returns meet summary for given indices.
    */
-  public static getMeetSummary(meetIndex: number, sessionIndex: number): {
+  public static getMeetSummary(meetIndex: number, sessionNumber?: number): {
     meet: string;
     first_session_date: string;
     session_count: number;
@@ -50,7 +91,7 @@ class Competition {
     club_count: number;
   } {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     const meet = data.meets[meetIndex];
     const session = meet.sessions[sessionIndex];
     return {
@@ -67,18 +108,18 @@ class Competition {
   /**
    * Returns all events for a given meet/session.
    */
-  public static getEvents(meetIndex: number, sessionIndex: number): CompetitionEvent[] {
+  public static getEvents(meetIndex: number, sessionNumber?: number): CompetitionEvent[] {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     return data.meets[meetIndex].sessions[sessionIndex].events;
   }
 
   /**
    * Returns a single event by event number.
    */
-  public static getEvent(meetIndex: number, sessionIndex: number, eventNumber: number): CompetitionEvent | null {
+  public static getEvent(meetIndex: number, sessionNumber: number | undefined, eventNumber: number): CompetitionEvent | null {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     return data.meets[meetIndex].sessions[sessionIndex].events
       .find((event: CompetitionEvent) => event.number === eventNumber) || null;
   }
@@ -86,9 +127,9 @@ class Competition {
   /**
    * Returns heat data or relay entries for a given event/heat.
    */
-  public static getHeat(meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
+  public static getHeat(meetIndex: number, sessionNumber: number | undefined, eventNumber: number, heatNumber: number) {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     const { events } = data.meets[meetIndex].sessions[sessionIndex];
     const event = events.find((ev: CompetitionEvent) => ev.number === eventNumber);
     if (!event) return null;
