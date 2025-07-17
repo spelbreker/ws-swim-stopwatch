@@ -8,9 +8,9 @@ exports.getEvent = getEvent;
 const competition_1 = __importDefault(require("../../../modules/competition"));
 function getEvents(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
-    const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
+    const sessionNumber = req.query.session ? parseInt(req.query.session, 10) : undefined;
     try {
-        const events = competition_1.default.getEvents(meetIndex, sessionIndex);
+        const events = competition_1.default.getEvents(meetIndex, sessionNumber);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(events));
     }
@@ -22,13 +22,13 @@ function getEvents(req, res) {
 function getEvent(req, res) {
     const eventNumber = parseInt(req.params.event, 10);
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
-    const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
+    const sessionNumber = req.query.session ? parseInt(req.query.session, 10) : undefined;
     if (!eventNumber) {
         res.status(404).send('Missing eventNumber');
         return;
     }
     try {
-        const event = competition_1.default.getEvent(meetIndex, sessionIndex, eventNumber);
+        const event = competition_1.default.getEvent(meetIndex, sessionNumber, eventNumber);
         if (!event) {
             res.status(404).send('Event not found');
             return;
@@ -42,7 +42,7 @@ function getEvent(req, res) {
             error: e,
             eventNumber,
             meetIndex,
-            sessionIndex,
+            sessionNumber,
             stack: e instanceof Error ? e.stack : undefined,
         });
         const errorMsg = e instanceof Error ? e.message : JSON.stringify(e);

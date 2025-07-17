@@ -54,6 +54,34 @@ describe('heatController', () => {
     }
   });
 
+  it('should handle session parameter', async () => {
+    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue([
+      {
+        lane: 3,
+        entrytime: '1:00.00',
+        club: 'Test Club',
+        athletes: [
+          {
+            athleteid: 1,
+            firstname: 'John',
+            lastname: 'Doe',
+            birthdate: '2000-01-01',
+          },
+        ],
+      },
+    ]);
+    const res = await request(app).get('/competition/event/1/heat/1?session=2');
+    expect(res.status).toBe(200);
+    expect(Competition.getHeat).toHaveBeenCalledWith(0, 2, 1, 1);
+  });
+
+  it('should use undefined session when session parameter is not provided', async () => {
+    getHeatSpy = jest.spyOn(Competition, 'getHeat').mockReturnValue([]);
+    const res = await request(app).get('/competition/event/1/heat/1');
+    expect(res.status).toBe(200);
+    expect(Competition.getHeat).toHaveBeenCalledWith(0, undefined, 1, 1);
+  });
+
   it('should return 500 if module throws', async () => {
     getHeatSpy = jest.spyOn(Competition, 'getHeat').mockImplementation(() => { throw new Error('fail'); });
     const res = await request(app).get('/competition/event/1/heat/1');

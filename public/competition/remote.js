@@ -4,6 +4,7 @@
 let startTime;
 let eventSelect;
 let heatSelect;
+let currentSession = null; // Current selected session number
 // Global variable for ping
 let pingStartTime;
 let serverTimeOffset = 0;
@@ -44,7 +45,8 @@ function fillSelectOptions(selectElement, maxValue) {
     // Overwrite: fetch event list and populate select with event numbers
     if (!selectElement) return;
     if (selectElement.id === 'event-select') {
-        fetch('/competition/event')
+        const sessionParam = currentSession ? `?session=${currentSession}` : '';
+        fetch(`/competition/event${sessionParam}`)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch event list');
                 return res.json();
@@ -145,7 +147,11 @@ function incrementHeat() {
 }
 
 function sendEventAndHeat(event, heat) {
-    window.socket.send(JSON.stringify({ type: 'event-heat', event: event, heat: heat }));
+    const message = { type: 'event-heat', event: event, heat: heat };
+    if (currentSession) {
+        message.session = currentSession;
+    }
+    window.socket.send(JSON.stringify(message));
 }
 
 // ------------------------------------------------------------------
@@ -154,7 +160,8 @@ function sendEventAndHeat(event, heat) {
 async function updateEventHeatInfoBar(eventNr, heatNr) {
     try {
         // Fetch event data
-        const eventRes = await fetch(`/competition/event/${eventNr}`);
+        const sessionParam = currentSession ? `?session=${currentSession}` : '';
+        const eventRes = await fetch(`/competition/event/${eventNr}${sessionParam}`);
         if (!eventRes.ok) throw new Error('Event fetch failed');
         const eventData = await eventRes.json();
         const maxHeatNr = eventData.heats.length; // last item
@@ -317,18 +324,18 @@ document.addEventListener('DOMContentLoaded', function () {
     window.socket.addEventListener('open', function () {
         fillSelectOptions(eventSelect, 25);
         fillSelectOptions(heatSelect, 25);
-        
+
         // Start initial fast sync sequence
         let pingCount = 0;
         const maxInitialPings = 5;
         const initialPingInterval = 500; // 500ms for initial sync
         const normalPingInterval = 5000; // 5 seconds for normal operation
-        
+
         // Initial rapid ping sequence
         const initialSync = setInterval(() => {
             sendPing();
             pingCount++;
-            
+
             if (pingCount >= maxInitialPings) {
                 clearInterval(initialSync);
                 // Switch to normal ping interval
@@ -336,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('[Remote] Switched to normal ping interval after initial sync');
             }
         }, initialPingInterval);
-        
+
         // Fetch and display initial event/heat info bar
         updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1);
     });
@@ -408,4 +415,102 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
     });
+
+    // Session functionality
+    const sessionMenuButton = document.getElementById('session-menu-button');
+    const sessionDialog = document.getElementById('session-dialog');
+    const sessionList = document.getElementById('session-list');
+    const closeSessionDialog = document.getElementById('close-session-dialog');
+    const sessionIndicator = document.getElementById('session-indicator');
+
+    // Load sessions and setup session selector
+    function loadSessions() {
+        fetch('/competition/sessions')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch sessions');
+                return res.json();
+            })
+            .then(sessions => {
+                sessionList.innerHTML = '';
+                sessions.forEach(session => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors';
+
+                    // Format the date and time
+                    const sessionTime = session.daytime ? ` ${session.daytime}` : '';
+
+                    listItem.innerHTML = `
+                        <div class="text-left">
+                            <div class="font-medium text-gray-900 dark:text-gray-100">Session ${session.number}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">${session.date}${sessionTime}</div>
+                        </div>
+                    `;
+                    listItem.addEventListener('click', () => selectSession(session.number));
+                    sessionList.appendChild(listItem);
+                });
+
+                // Set default session if none selected
+                if (!currentSession && sessions.length > 0) {
+                    currentSession = sessions[0].number;
+                    updateSessionIndicator();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading sessions:', error);
+                // Fallback: assume session 1
+                if (!currentSession) {
+                    currentSession = 1;
+                    updateSessionIndicator();
+                }
+            });
+    }
+
+    function selectSession(sessionNumber) {
+        currentSession = sessionNumber;
+        updateSessionIndicator();
+        sessionDialog.classList.add('hidden');
+
+        // Refresh event list for the new session
+        fillSelectOptions(eventSelect, 25);
+
+        // Wait for event list to be populated, then select first event and heat
+        setTimeout(() => {
+            const firstEvent = eventSelect.options[0]?.value || 1;
+            const firstHeat = 1;
+
+            // Update the select elements
+            eventSelect.value = firstEvent;
+            heatSelect.value = firstHeat;
+
+            // Send event-heat message to update screen
+            sendEventAndHeat(firstEvent, firstHeat);
+
+            // Update event/heat info bar
+            updateEventHeatInfoBar(firstEvent, firstHeat);
+        }, 100); // Small delay to ensure event list is populated
+    }
+
+    function updateSessionIndicator() {
+        if (sessionIndicator && currentSession) {
+            sessionIndicator.textContent = `Session ${currentSession}`;
+        }
+    }
+
+    // Event listeners for session dialog
+    sessionMenuButton.addEventListener('click', () => {
+        sessionDialog.classList.remove('hidden');
+    });
+
+    closeSessionDialog.addEventListener('click', () => {
+        sessionDialog.classList.add('hidden');
+    });
+
+    sessionDialog.addEventListener('click', (e) => {
+        if (e.target === sessionDialog) {
+            sessionDialog.classList.add('hidden');
+        }
+    });
+
+    // Load sessions on initialization
+    loadSessions();
 });

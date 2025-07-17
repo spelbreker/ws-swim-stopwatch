@@ -40,9 +40,66 @@ class Competition {
   }
 
   /**
-   * Returns meet summary for given indices.
+   * Returns all sessions for the specified meet.
+   * @param meetIndex - Index of the meet (defaults to 0 for first meet)
+   * @returns Array of competition sessions with session numbers, dates, times, and events
    */
-  public static getMeetSummary(meetIndex: number, sessionIndex: number): {
+  public static getSessions(meetIndex: number = 0): CompetitionSession[] {
+    const data = Competition.readCompetitionDataFromDisk();
+    if (!data.meets[meetIndex]) throw new Error('Invalid meetIndex');
+    return data.meets[meetIndex].sessions;
+  }
+
+  /**
+   * Helper to find session index by session number.
+   * @param data - Competition data object
+   * @param meetIndex - Index of the meet
+   * @param sessionNumber - Session number (1-based, not index)
+   * @returns Session index (0-based) for internal use
+   * @throws Error if meetIndex is invalid or session number not found
+   */
+  private static findSessionIndexByNumber(data: CompetitionData, meetIndex: number, sessionNumber: number): number {
+    const sessions = data.meets[meetIndex]?.sessions;
+    if (!sessions) throw new Error('Invalid meetIndex');
+
+    const sessionIndex = sessions.findIndex(session => session.number === sessionNumber);
+    if (sessionIndex === -1) throw new Error(`Session with number ${sessionNumber} not found`);
+
+    return sessionIndex;
+  }
+
+  /**
+   * Updated helper to validate indices and handle session number parameter.
+   * Converts session numbers to indices and provides fallback to first session.
+   * @param data - Competition data object
+   * @param meetIndex - Index of the meet
+   * @param sessionNumber - Optional session number (1-based). If undefined, uses first session
+   * @returns Session index (0-based) for internal use
+   * @throws Error if meetIndex is invalid, session number not found, or no sessions exist
+   */
+  private static assertValidIndicesWithSessionNumber(
+    data: CompetitionData,
+    meetIndex: number,
+    sessionNumber?: number
+  ): number {
+    if (!data.meets[meetIndex]) throw new Error('Invalid meetIndex');
+
+    if (sessionNumber !== undefined) {
+      return Competition.findSessionIndexByNumber(data, meetIndex, sessionNumber);
+    }
+
+    // Default to first session if no sessionNumber provided
+    if (!data.meets[meetIndex].sessions[0]) throw new Error('No sessions found');
+    return 0;
+  }
+
+  /**
+   * Returns meet summary for given meet and optional session.
+   * @param meetIndex - Index of the meet (defaults to 0)
+   * @param sessionNumber - Optional session number. If not provided, uses first session
+   * @returns Object containing meet name, session info, and counts
+   */
+  public static getMeetSummary(meetIndex: number, sessionNumber?: number): {
     meet: string;
     first_session_date: string;
     session_count: number;
@@ -50,7 +107,7 @@ class Competition {
     club_count: number;
   } {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     const meet = data.meets[meetIndex];
     const session = meet.sessions[sessionIndex];
     return {
@@ -65,30 +122,43 @@ class Competition {
   }
 
   /**
-   * Returns all events for a given meet/session.
+   * Returns all events for a given meet and session.
+   * @param meetIndex - Index of the meet (defaults to 0)
+   * @param sessionNumber - Optional session number. If not provided, uses first session
+   * @returns Array of competition events for the specified session
    */
-  public static getEvents(meetIndex: number, sessionIndex: number): CompetitionEvent[] {
+  public static getEvents(meetIndex: number, sessionNumber?: number): CompetitionEvent[] {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     return data.meets[meetIndex].sessions[sessionIndex].events;
   }
 
   /**
-   * Returns a single event by event number.
+   * Returns a single event by event number from a specific session.
+   * @param meetIndex - Index of the meet (defaults to 0)
+   * @param sessionNumber - Optional session number. If not provided, uses first session
+   * @param eventNumber - Event number to find (1-based)
+   * @returns Competition event object or null if not found
    */
-  public static getEvent(meetIndex: number, sessionIndex: number, eventNumber: number): CompetitionEvent | null {
+  public static getEvent(meetIndex: number, sessionNumber: number | undefined, eventNumber: number): CompetitionEvent | null {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     return data.meets[meetIndex].sessions[sessionIndex].events
       .find((event: CompetitionEvent) => event.number === eventNumber) || null;
   }
 
   /**
-   * Returns heat data or relay entries for a given event/heat.
+   * Returns heat data or relay entries for a given event and heat in a specific session.
+   * Automatically detects relay events and returns appropriate data structure.
+   * @param meetIndex - Index of the meet (defaults to 0)
+   * @param sessionNumber - Optional session number. If not provided, uses first session
+   * @param eventNumber - Event number (1-based)
+   * @param heatNumber - Heat number (1-based)
+   * @returns Array of athlete entries for individual events or relay entries for relay events, null if not found
    */
-  public static getHeat(meetIndex: number, sessionIndex: number, eventNumber: number, heatNumber: number) {
+  public static getHeat(meetIndex: number, sessionNumber: number | undefined, eventNumber: number, heatNumber: number) {
     const data = Competition.readCompetitionDataFromDisk();
-    Competition.assertValidIndices(data, meetIndex, sessionIndex);
+    const sessionIndex = Competition.assertValidIndicesWithSessionNumber(data, meetIndex, sessionNumber);
     const { events } = data.meets[meetIndex].sessions[sessionIndex];
     const event = events.find((ev: CompetitionEvent) => ev.number === eventNumber);
     if (!event) return null;
@@ -102,6 +172,10 @@ class Competition {
     return entries;
   }
 
+  /**
+   * Finds athletes that don't have any competition entries.
+   * @returns Array of athletes without entries, including club information
+   */
   public static findAthletesWithoutEntries() {
     const data = Competition.readCompetitionDataFromDisk();
     if (!data.meets[0]) return [];
@@ -119,6 +193,12 @@ class Competition {
       );
   }
 
+  /**
+   * Retrieves athlete entries for a specific heat, sorted by lane.
+   * @param data - Competition data object
+   * @param heatId - Heat identifier string
+   * @returns Array of athlete results sorted by lane number
+   */
   private static getAthletesByHeatId(data: CompetitionData, heatId: string) {
     const defaultMeet = data.meets[0];
     if (!defaultMeet) return [];
@@ -155,6 +235,12 @@ class Competition {
     return entries;
   }
 
+  /**
+   * Finds an athlete by their unique ID across all clubs.
+   * @param data - Competition data object
+   * @param athleteId - Unique athlete identifier
+   * @returns Athlete object or null if not found
+   */
   private static findAthleteById(data: CompetitionData, athleteId: number): CompetitionAthlete | null {
     const defaultMeet = data.meets[0];
     if (!defaultMeet) return null;
@@ -166,6 +252,13 @@ class Competition {
     return found || null;
   }
 
+  /**
+   * Extracts relay team information for a specific event and heat.
+   * @param data - Competition data object
+   * @param event - Event identifier string
+   * @param heat - Heat identifier string
+   * @returns Array of relay results with team members, sorted by lane
+   */
   private static extractRelay(data: CompetitionData, event: string, heat: string) {
     const defaultMeet = data.meets[0];
     if (!defaultMeet) return [];
@@ -201,7 +294,10 @@ class Competition {
   }
 
   /**
-   * readAndProcessCompetitionJSON
+   * Reads and processes a Lenex competition file, converting it to internal format.
+   * Validates the structure and writes the processed data to public/competition.json.
+   * @param filePath - Path to the Lenex file to process
+   * @param callback - Callback function with error and result parameters
    */
   public static readAndProcessCompetitionJSON(
     filePath: string,

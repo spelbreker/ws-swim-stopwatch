@@ -46,7 +46,7 @@ describe('eventController', () => {
       const res = await request(app).get('/competition/event');
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
-       
+
       const arr: unknown = res.body;
       if (
         Array.isArray(arr)
@@ -57,6 +57,29 @@ describe('eventController', () => {
       ) {
         expect((arr[0] as { number: number }).number).toBe(1);
       }
+    });
+
+    it('should handle session parameter', async () => {
+      getEventsSpy = jest.spyOn(Competition, 'getEvents').mockReturnValue([
+        {
+          number: 1,
+          order: 1,
+          eventid: 'E1',
+          gender: Gender.M,
+          swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
+          heats: [],
+        }
+      ]);
+      const res = await request(app).get('/competition/event?session=2');
+      expect(res.status).toBe(200);
+      expect(Competition.getEvents).toHaveBeenCalledWith(0, 2);
+    });
+
+    it('should use undefined session when session parameter is not provided', async () => {
+      getEventsSpy = jest.spyOn(Competition, 'getEvents').mockReturnValue([]);
+      const res = await request(app).get('/competition/event');
+      expect(res.status).toBe(200);
+      expect(Competition.getEvents).toHaveBeenCalledWith(0, undefined);
     });
   });
 
@@ -82,6 +105,35 @@ describe('eventController', () => {
         expect((res.body as { number: number }).number).toBe(1);
       }
     });
+
+    it('should handle session parameter', async () => {
+      getEventSpy = jest.spyOn(Competition, 'getEvent').mockReturnValue({
+        number: 1,
+        order: 1,
+        eventid: 'E1',
+        gender: Gender.M,
+        swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
+        heats: [],
+      });
+      const res = await request(app).get('/competition/event/1?session=2');
+      expect(res.status).toBe(200);
+      expect(Competition.getEvent).toHaveBeenCalledWith(0, 2, 1);
+    });
+
+    it('should use undefined session when session parameter is not provided', async () => {
+      getEventSpy = jest.spyOn(Competition, 'getEvent').mockReturnValue({
+        number: 1,
+        order: 1,
+        eventid: 'E1',
+        gender: Gender.M,
+        swimstyle: { relaycount: 1, stroke: Stroke.FREE, distance: 100 },
+        heats: [],
+      });
+      const res = await request(app).get('/competition/event/1');
+      expect(res.status).toBe(200);
+      expect(Competition.getEvent).toHaveBeenCalledWith(0, undefined, 1);
+    });
+
     it('should return 500 if module throws', async () => {
       getEventSpy = jest.spyOn(Competition, 'getEvent').mockImplementation(() => { throw new Error('fail'); });
       const res = await request(app).get('/competition/event/1');

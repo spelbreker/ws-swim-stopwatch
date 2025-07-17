@@ -51,6 +51,7 @@ export interface CompetitionMeet {
 // CompetitionSession with required fields
 export interface CompetitionSession {
   date: string;
+  number: number;
   events: CompetitionEvent[];
   original?: LenexSession;
 }

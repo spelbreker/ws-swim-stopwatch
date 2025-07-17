@@ -33,9 +33,9 @@ function uploadCompetition(req, res) {
 }
 function getCompetitionSummary(req, res) {
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
-    const sessionIndex = req.query.session ? parseInt(req.query.session, 10) : 0;
+    const sessionNumber = req.query.session ? parseInt(req.query.session, 10) : undefined;
     try {
-        const summary = competition_1.default.getMeetSummary(meetIndex, sessionIndex);
+        const summary = competition_1.default.getMeetSummary(meetIndex, sessionNumber);
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(summary));
     } // eslint-disable-next-line @typescript-eslint/no-unused-vars
