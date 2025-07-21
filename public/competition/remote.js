@@ -1,3 +1,5 @@
+import httpApiService from '/js/http-api-service.js';
+
 // ------------------------------------------------------------------
 // Global variables
 // ------------------------------------------------------------------
@@ -45,12 +47,7 @@ function fillSelectOptions(selectElement, maxValue) {
     // Overwrite: fetch event list and populate select with event numbers
     if (!selectElement) return;
     if (selectElement.id === 'event-select') {
-        const sessionParam = currentSession ? `?session=${currentSession}` : '';
-        fetch(`/competition/event${sessionParam}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch event list');
-                return res.json();
-            })
+        httpApiService.getEvents(currentSession)
             .then(events => {
                 selectElement.innerHTML = '';
                 events.forEach(event => {
@@ -160,10 +157,7 @@ function sendEventAndHeat(event, heat) {
 async function updateEventHeatInfoBar(eventNr, heatNr) {
     try {
         // Fetch event data
-        const sessionParam = currentSession ? `?session=${currentSession}` : '';
-        const eventRes = await fetch(`/competition/event/${eventNr}${sessionParam}`);
-        if (!eventRes.ok) throw new Error('Event fetch failed');
-        const eventData = await eventRes.json();
+        const eventData = await httpApiService.getEvent(eventNr, currentSession);
         const maxHeatNr = eventData.heats.length; // last item
 
         // Format swim style
@@ -182,7 +176,8 @@ async function updateEventHeatInfoBar(eventNr, heatNr) {
         // Update info bar
         const infoBar = document.getElementById('event-heat-info-bar');
         if (infoBar) infoBar.textContent = infoText;
-    } catch (err) {
+    } catch (error) {
+        console.error('Error updating event heat info bar:', error);
         const infoBar = document.getElementById('event-heat-info-bar');
         if (infoBar) infoBar.textContent = 'Onbekend event/serie';
     }
@@ -425,11 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load sessions and setup session selector
     function loadSessions() {
-        fetch('/competition/sessions')
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch sessions');
-                return res.json();
-            })
+        httpApiService.getSessions()
             .then(sessions => {
                 sessionList.innerHTML = '';
                 sessions.forEach(session => {

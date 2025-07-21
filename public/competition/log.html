@@ -63,16 +63,16 @@
         <p>&copy; Patrick Development 2025</p>
     </footer>
 
-    <script>
+    <script type="module">
+        import httpApiService from '/js/http-api-service.js';
+
         async function fetchLog() {
             const logContent = document.getElementById('log-content');
             try {
-                const res = await fetch('/logs/competition.log', { cache: 'no-store' });
-                if (!res.ok) throw new Error(`Could not load log file (status: ${res.status})`);
-                const text = await res.text();
+                const text = await httpApiService.getLogContent();
                 logContent.textContent = text.trim() || 'Log file is empty.';
-            } catch (e) {
-                logContent.textContent = `Error loading log: ${e.message}`;
+            } catch (error) {
+                logContent.textContent = `Error loading log: ${error.message}`;
             }
         }
         document.getElementById('refresh-btn').addEventListener('click', fetchLog);

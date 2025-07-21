@@ -1,3 +1,5 @@
+import httpApiService from '/js/http-api-service.js';
+
 // ------------------------------------------------------------------
 // Global variables
 // ------------------------------------------------------------------
@@ -35,12 +37,8 @@ function pad(number) {
 // Competition data handling
 // ------------------------------------------------------------------
 function fetchCompetitionData(eventNum, heatNum, sessionNum = null) {
-    // Build session parameter
-    const sessionParam = sessionNum ? `?session=${sessionNum}` : '';
-
     // Fetch event data first
-    fetch(`/competition/event/${eventNum}${sessionParam}`)
-        .then(response => response.json())
+    httpApiService.getEvent(eventNum, sessionNum)
         .then(eventData => {
             const swimStyleElement = document.getElementById('swim-style');
             if (swimStyleElement) {
@@ -48,15 +46,14 @@ function fetchCompetitionData(eventNum, heatNum, sessionNum = null) {
             }
 
             // Then fetch heat data
-            return fetch(`/competition/event/${eventNum}/heat/${heatNum}${sessionParam}`);
+            return httpApiService.getHeat(eventNum, heatNum, sessionNum);
         })
-        .then(response => response.json())
         .then(heatData => {
             updateLaneInformation(heatData);
         })
         .catch(error => {
+            console.error('Error fetching competition data:', error);
             clearLaneInformation();
-            console.warn('Error fetching competition data');
         });
 }
 
