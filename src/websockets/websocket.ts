@@ -1,11 +1,15 @@
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-import { Message } from './messageTypes';
+import { Message, DeviceInfo } from './messageTypes';
 import {
   logLap,
   logStart,
   logStop,
 } from './logger';
+
+// Store device information
+const devices = new Map<string, DeviceInfo>();
+const wsToMac = new Map<WebSocket, string>();
 
 function isMessage(obj: unknown): obj is Message {
   return (
@@ -81,6 +85,61 @@ function handlePing(msg: Record<string, unknown>, ws: WebSocket) {
   }
 }
 
+function handleDeviceRegister(msg: Record<string, unknown>, ws: WebSocket) {
+  const { ip, mac, role, lane } = msg;
+  if (
+    typeof ip === 'string'
+    && typeof mac === 'string'
+    && (role === 'starter' || role === 'lane')
+  ) {
+    const deviceInfo: DeviceInfo = {
+      mac,
+      ip,
+      role,
+      lane: typeof lane === 'number' ? lane : undefined,
+      connected: true,
+      lastSeen: Date.now(),
+    };
+    devices.set(mac, deviceInfo);
+    wsToMac.set(ws, mac);
+    console.log(`[WebSocket] Device registered: ${mac} (${role})`);
+  }
+}
+
+function handleDeviceUpdateRole(msg: Record<string, unknown>) {
+  const { mac, role } = msg;
+  if (
+    typeof mac === 'string'
+    && (role === 'starter' || role === 'lane')
+  ) {
+    const device = devices.get(mac);
+    if (device) {
+      device.role = role;
+      device.lastSeen = Date.now();
+      console.log(`[WebSocket] Device role updated: ${mac} -> ${role}`);
+    }
+  }
+}
+
+function handleDeviceUpdateLane(msg: Record<string, unknown>) {
+  const { mac, lane } = msg;
+  if (
+    typeof mac === 'string'
+    && typeof lane === 'number'
+  ) {
+    const device = devices.get(mac);
+    if (device) {
+      device.lane = lane;
+      device.lastSeen = Date.now();
+      console.log(`[WebSocket] Device lane updated: ${mac} -> ${lane}`);
+    }
+  }
+}
+
+export function getDevices(): DeviceInfo[] {
+  return Array.from(devices.values());
+}
+
 export function setupWebSocket(server: http.Server) {
   const wss = new WebSocketServer({ server });
   const clientLiveness = new Map<WebSocket, boolean>();
@@ -105,6 +164,17 @@ export function setupWebSocket(server: http.Server) {
         case 'ping':
           handlePing(msgObj, ws);
           return;
+        case 'device_register':
+          handleDeviceRegister(msgObj, ws);
+          return;
+        case 'device_update_role':
+          handleDeviceUpdateRole(msgObj);
+          broadcastAllClients(wss, msgObj);
+          return;
+        case 'device_update_lane':
+          handleDeviceUpdateLane(msgObj);
+          broadcastAllClients(wss, msgObj);
+          return;
         case 'start':
           handleStart(msgObj, wss);
           return;
@@ -123,6 +193,16 @@ export function setupWebSocket(server: http.Server) {
 
     ws.on('close', () => {
       clientLiveness.delete(ws);
+      // Mark device as disconnected
+      const mac = wsToMac.get(ws);
+      if (mac) {
+        const device = devices.get(mac);
+        if (device) {
+          device.connected = false;
+          device.lastSeen = Date.now();
+        }
+        wsToMac.delete(ws);
+      }
       console.log('WebSocket connection closed');
     });
   });
