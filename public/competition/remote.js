@@ -221,6 +221,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const controlElements = [eventSelect, heatSelect, incrementEventButton, incrementHeatButton];
 
+    function updateStartButtonUI(isRunning) {
+        if (isRunning) {
+            startButton.textContent = 'Stop stopwatch';
+            startButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+            startButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            disableControls(true, controlElements);
+        } else {
+            startButton.textContent = 'Start stopwatch';
+            startButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            startButton.classList.add('bg-green-600', 'hover:bg-green-700');
+            disableControls(false, controlElements);
+        }
+    }
+
     function startStopwatch(sendSocket = true, startTimeOverride = null) {
         if (stopwatchInterval) return; // Prevent multiple intervals
         if (startTimeOverride) {
@@ -235,12 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sendSocket) {
             window.socket.send(JSON.stringify({ type: 'start', timestamp: startTime, heat: heatSelect.value, event: eventSelect.value }));
         }
-        disableControls(true, controlElements);
-
-        // Update button appearance
-        startButton.textContent = 'Stop stopwatch';
-        startButton.classList.remove('bg-green-600', 'hover:bg-green-700');
-        startButton.classList.add('bg-red-600', 'hover:bg-red-700');
+        updateStartButtonUI(true);
     }
 
     function resetStopwatch(sendSocket = true) {
@@ -251,12 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sendSocket) {
             window.socket.send(JSON.stringify({ type: 'reset' }));
         }
-        disableControls(false, controlElements);
-
-        // Update button appearance
-        startButton.textContent = 'Start stopwatch';
-        startButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-        startButton.classList.add('bg-green-600', 'hover:bg-green-700');
+        updateStartButtonUI(false);
     }
 
     // Event listeners
@@ -365,6 +369,10 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i <= 9; i++) {
                 updateLaneInfo(i, '---:---:---');
             }
+            
+            // Update UI elements when receiving start from other device
+            updateStartButtonUI(true);
+            
             return;
         }
 
