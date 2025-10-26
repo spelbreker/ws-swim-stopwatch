@@ -9,8 +9,9 @@ app.get('/devices', getDevicesList);
 
 describe('devicesController', () => {
   describe('getDevicesList', () => {
-    let spy: jest.SpyInstance;
-    afterEach(() => { if (spy) spy.mockRestore(); });
+    let spy: jest.SpyInstance | undefined;
+    beforeEach(() => { spy = undefined; });
+    afterEach(() => { spy?.mockRestore(); });
 
     it('should return empty array when no devices registered', async () => {
       spy = jest.spyOn(websocket, 'getDevices').mockReturnValue([]);
