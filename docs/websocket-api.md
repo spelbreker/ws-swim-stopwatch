@@ -2,6 +2,17 @@
 
 This document describes all WebSocket message types exchanged between the frontend and backend in the ws-swim-stopwatch project. It covers message structure, direction, and usage examples.
 
+## Table of Contents
+
+- [Time Sync](#time-sync)
+- [Stopwatch Control](#stopwatch-control)
+- [Event and Heat Control](#event-and-heat-control)
+- [Device Management](#device-management)
+- [Time Synchronization Behavior](#time-synchronization-behavior)
+- [WebSocket State Diagram](#websocket-state-diagram-for-stopwatch)
+- [Device Registration Flow](#device-registration-flow)
+- [Notes](#notes)
+
 ## Message Types
 
 ## Time Sync
@@ -106,6 +117,90 @@ This document describes all WebSocket message types exchanged between the fronte
   ```
   - `server_timestamp`: Server's local timestamp when message was processed (added by server)
 
+## Device Management
+
+These messages are used to manage hardware devices (e.g., starter devices, lane timers) that connect via WebSocket from the [swimwatch-hardware](https://github.com/spelbreker/swimwatch-hardware) project.
+
+### `device_register`
+- **Direction:** Device → Server
+- **Description:** Sent by hardware devices upon connection to register their information with the server.
+- **Payload:**
+  ```json
+  { "type": "device_register", "mac": "00:11:22:33:44:55", "ip": "192.168.1.100", "role": "starter", "lane": 1 }
+  ```
+  - `mac`: MAC address of the device (required, string)
+  - `ip`: IP address of the device (required, string)
+  - `role`: Device role, either `"starter"` or `"lane"` (required)
+  - `lane`: Lane number (optional, number) - only relevant for lane devices
+
+**Note:** This message is not broadcast to other clients. The server stores device information internally and makes it available via the `/devices` REST API endpoint.
+
+### `device_update_role`
+- **Direction:** Client → Server (broadcast to all clients)
+- **Description:** Updates the role of a registered device.
+- **Payload (Outgoing):**
+  ```json
+  { "type": "device_update_role", "mac": "00:11:22:33:44:55", "role": "lane" }
+  ```
+  - `mac`: MAC address of the device to update (required, string)
+  - `role`: New role for the device, either `"starter"` or `"lane"` (required)
+
+**Behavior:** The server updates the device's role in memory and broadcasts the message to all connected clients, allowing real-time synchronization of device configurations.
+
+### `device_update_lane`
+- **Direction:** Client → Server (broadcast to all clients)
+- **Description:** Updates the lane number for a registered device.
+- **Payload (Outgoing):**
+  ```json
+  { "type": "device_update_lane", "mac": "00:11:22:33:44:55", "lane": 3 }
+  ```
+  - `mac`: MAC address of the device to update (required, string)
+  - `lane`: New lane number (required, number)
+
+**Behavior:** The server updates the device's lane number in memory and broadcasts the message to all connected clients.
+
+### Device Management REST API
+In addition to WebSocket messages, device information can be retrieved via REST:
+
+**GET /devices**
+- **Description:** Returns a list of all registered devices with their current status.
+- **Response:**
+  ```json
+  {
+    "devices": [
+      {
+        "mac": "00:11:22:33:44:55",
+        "ip": "192.168.1.100",
+        "role": "starter",
+        "lane": 1,
+        "connected": true,
+        "lastSeen": 1718035220000
+      },
+      {
+        "mac": "AA:BB:CC:DD:EE:FF",
+        "ip": "192.168.1.101",
+        "role": "lane",
+        "lane": 3,
+        "connected": false,
+        "lastSeen": 1718035200000
+      }
+    ]
+  }
+  ```
+
+**Device Fields:**
+- `mac`: Device MAC address
+- `ip`: Device IP address
+- `role`: Device role (`"starter"` or `"lane"`)
+- `lane`: Lane number (optional, only for lane devices)
+- `connected`: Current connection status (boolean)
+- `lastSeen`: Timestamp of last activity (ms since epoch)
+
+**Notes:**
+- Device state is stored in-memory and will reset when the server restarts
+- Devices are automatically marked as disconnected when their WebSocket connection closes
+- The `/devices` endpoint is used by the device management UI at `/devices.html`
+
 ## Time Synchronization Behavior
 
 ### Client Time Synchronization
@@ -206,6 +301,52 @@ sequenceDiagram
     
     Note over C1,C2: Both clients show identical times!
 ```
+
+## Device Registration Flow
+
+Below is a sequence diagram showing how hardware devices register and how configuration updates are synchronized across clients.
+
+```mermaid
+sequenceDiagram
+    participant D as Hardware Device
+    participant S as Server
+    participant UI as Device Manager UI
+    participant C as Other Clients
+    
+    Note over D,C: Device Registration
+    D->>S: WebSocket Connect
+    D->>S: device_register {mac, ip, role, lane}
+    Note over S: Store device info in memory<br/>Mark as connected
+    
+    Note over D,C: Configuration Update from UI
+    UI->>S: device_update_role {mac, role}
+    Note over S: Update device role<br/>Update lastSeen timestamp
+    S->>UI: Broadcast: device_update_role
+    S->>C: Broadcast: device_update_role
+    S->>D: Broadcast: device_update_role
+    
+    UI->>S: device_update_lane {mac, lane}
+    Note over S: Update device lane<br/>Update lastSeen timestamp
+    S->>UI: Broadcast: device_update_lane
+    S->>C: Broadcast: device_update_lane
+    S->>D: Broadcast: device_update_lane
+    
+    Note over D,C: Device List Retrieval
+    UI->>S: GET /devices (REST API)
+    S->>UI: {devices: [{mac, ip, role, lane, connected, lastSeen}]}
+    
+    Note over D,C: Device Disconnection
+    D->>S: WebSocket Close
+    Note over S: Mark device as disconnected<br/>Update lastSeen timestamp
+```
+
+**Device Management Workflow:**
+1. **Registration:** Hardware devices connect via WebSocket and send `device_register` with their metadata
+2. **Tracking:** Server maintains a Map of all devices with connection status and timestamps
+3. **Configuration:** Management UI can update device role and lane number via WebSocket messages
+4. **Synchronization:** Configuration changes are broadcast to all connected clients including the devices themselves
+5. **Monitoring:** The `/devices` REST endpoint provides current device list with connection status
+6. **Cleanup:** When a device disconnects, it's marked as disconnected but remains in the list with its last seen timestamp
 
 ---
 For implementation details, see `/src/websockets/messageTypes.ts` and `/src/websockets/websocket.ts`.
