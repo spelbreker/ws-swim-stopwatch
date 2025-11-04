@@ -9,6 +9,7 @@ import { getEvents, getEvent } from '../controllers/competition/event/eventContr
 import { getHeat } from '../controllers/competition/heat/heatController';
 import { getSessions } from '../controllers/competition/sessionController';
 import { getCompetitionLog } from '../controllers/competition/logController';
+import { getDevicesList } from '../controllers/devicesController';
 
 // Register all competition-related routes
 export function registerRoutes(app: Express, upload: multer.Multer) {
@@ -22,4 +23,7 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
 
   // Serve the log file securely for the log viewer
   app.get('/logs/competition.log', getCompetitionLog);
+
+  // Device management routes
+  app.get('/devices', getDevicesList);
 }

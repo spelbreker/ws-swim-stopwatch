@@ -1,3 +1,5 @@
+import type WebSocket from 'ws';
+
 // Type-safe WebSocket message definition for all frontend/backend communication
 export type Message =
   | { type: 'ping'; time: number }
@@ -14,4 +16,28 @@ export type Message =
   | { type: 'start-interval'; uid: string; interval: unknown }
   | { type: 'delete-interval'; uid: string }
   | { type: 'time_sync'; server_time: number }
+  | { type: 'device_register'; ip: string; mac: string; role: 'starter' | 'lane'; lane?: number }
+  | { type: 'device_update_role'; mac: string; role: 'starter' | 'lane' }
+  | { type: 'device_update_lane'; mac: string; lane: number }
   | { type: string; [key: string]: unknown };
+
+// Device information interface
+export interface DeviceInfo {
+  mac: string;
+  ip: string;
+  role: 'starter' | 'lane';
+  lane?: number;
+  connected: boolean;
+  lastSeen: number;
+  ws?: WebSocket;
+}
+
+// Device information for API responses (without WebSocket)
+export interface DeviceInfoResponse {
+  mac: string;
+  ip: string;
+  role: 'starter' | 'lane';
+  lane?: number;
+  connected: boolean;
+  lastSeen: number;
+}
