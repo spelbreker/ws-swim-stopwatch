@@ -39,7 +39,6 @@ const ws_1 = __importStar(require("ws"));
 const logger_1 = require("./logger");
 // Store device information
 const devices = new Map();
-const wsToMac = new Map();
 function isMessage(obj) {
     return (typeof obj === 'object'
         && obj !== null
@@ -100,7 +99,7 @@ function handlePing(msg, ws) {
         }));
     }
 }
-function handleDeviceRegister(msg, ws) {
+function handleDeviceRegister(msg, ws, wss) {
     const { ip, mac, role, lane } = msg;
     if (typeof ip === 'string'
         && typeof mac === 'string'
@@ -112,10 +111,12 @@ function handleDeviceRegister(msg, ws) {
             lane: typeof lane === 'number' ? lane : undefined,
             connected: true,
             lastSeen: Date.now(),
+            ws,
         };
         devices.set(mac, deviceInfo);
-        wsToMac.set(ws, mac);
         console.log(`[WebSocket] Device registered: ${mac} (${role})`);
+        // Broadcast device registration to all clients
+        broadcastAllClients(wss, msg);
     }
 }
 function handleDeviceUpdateRole(msg) {
@@ -143,7 +144,8 @@ function handleDeviceUpdateLane(msg) {
     }
 }
 function getDevices() {
-    return Array.from(devices.values());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return Array.from(devices.values()).map(({ ws, ...device }) => device);
 }
 function setupWebSocket(server) {
     const wss = new ws_1.WebSocketServer({ server });
@@ -169,7 +171,7 @@ function setupWebSocket(server) {
                     handlePing(msgObj, ws);
                     return;
                 case 'device_register':
-                    handleDeviceRegister(msgObj, ws);
+                    handleDeviceRegister(msgObj, ws, wss);
                     return;
                 case 'device_update_role':
                     handleDeviceUpdateRole(msgObj);
@@ -197,14 +199,14 @@ function setupWebSocket(server) {
         ws.on('close', () => {
             clientLiveness.delete(ws);
             // Mark device as disconnected
-            const mac = wsToMac.get(ws);
-            if (mac) {
-                const device = devices.get(mac);
-                if (device) {
+            for (const [mac, device] of devices.entries()) {
+                if (device.ws === ws) {
                     device.connected = false;
                     device.lastSeen = Date.now();
+                    device.ws = undefined;
+                    console.log(`[WebSocket] Device disconnected: ${mac}`);
+                    break;
                 }
-                wsToMac.delete(ws);
             }
             console.log('WebSocket connection closed');
         });

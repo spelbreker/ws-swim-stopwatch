@@ -1,6 +1,6 @@
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-import { Message, DeviceInfo } from './messageTypes';
+import { Message, DeviceInfo, DeviceInfoResponse } from './messageTypes';
 import {
   logLap,
   logStart,
@@ -9,7 +9,6 @@ import {
 
 // Store device information
 const devices = new Map<string, DeviceInfo>();
-const wsToMac = new Map<WebSocket, string>();
 
 function isMessage(obj: unknown): obj is Message {
   return (
@@ -85,7 +84,7 @@ function handlePing(msg: Record<string, unknown>, ws: WebSocket) {
   }
 }
 
-function handleDeviceRegister(msg: Record<string, unknown>, ws: WebSocket) {
+function handleDeviceRegister(msg: Record<string, unknown>, ws: WebSocket, wss: WebSocketServer) {
   const { ip, mac, role, lane } = msg;
   if (
     typeof ip === 'string'
@@ -99,10 +98,12 @@ function handleDeviceRegister(msg: Record<string, unknown>, ws: WebSocket) {
       lane: typeof lane === 'number' ? lane : undefined,
       connected: true,
       lastSeen: Date.now(),
+      ws,
     };
     devices.set(mac, deviceInfo);
-    wsToMac.set(ws, mac);
     console.log(`[WebSocket] Device registered: ${mac} (${role})`);
+    // Broadcast device registration to all clients
+    broadcastAllClients(wss, msg);
   }
 }
 
@@ -136,8 +137,9 @@ function handleDeviceUpdateLane(msg: Record<string, unknown>) {
   }
 }
 
-export function getDevices(): DeviceInfo[] {
-  return Array.from(devices.values());
+export function getDevices(): DeviceInfoResponse[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return Array.from(devices.values()).map(({ ws, ...device }) => device);
 }
 
 export function setupWebSocket(server: http.Server) {
@@ -165,7 +167,7 @@ export function setupWebSocket(server: http.Server) {
           handlePing(msgObj, ws);
           return;
         case 'device_register':
-          handleDeviceRegister(msgObj, ws);
+          handleDeviceRegister(msgObj, ws, wss);
           return;
         case 'device_update_role':
           handleDeviceUpdateRole(msgObj);
@@ -194,14 +196,14 @@ export function setupWebSocket(server: http.Server) {
     ws.on('close', () => {
       clientLiveness.delete(ws);
       // Mark device as disconnected
-      const mac = wsToMac.get(ws);
-      if (mac) {
-        const device = devices.get(mac);
-        if (device) {
+      for (const [mac, device] of devices.entries()) {
+        if (device.ws === ws) {
           device.connected = false;
           device.lastSeen = Date.now();
+          device.ws = undefined;
+          console.log(`[WebSocket] Device disconnected: ${mac}`);
+          break;
         }
-        wsToMac.delete(ws);
       }
       console.log('WebSocket connection closed');
     });

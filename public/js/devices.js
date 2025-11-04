@@ -14,6 +14,7 @@
     const emptyState = document.getElementById('emptyState');
     const editModal = document.getElementById('editModal');
     const editMac = document.getElementById('editMac');
+    const editMacDisplay = document.getElementById('editMacDisplay');
     const editRole = document.getElementById('editRole');
     const editLane = document.getElementById('editLane');
     const cancelEdit = document.getElementById('cancelEdit');
@@ -62,8 +63,8 @@
 
     // Handle WebSocket messages
     function handleWebSocketMessage(data) {
-        if (data.type === 'device_update_role' || data.type === 'device_update_lane') {
-            // Reload devices when updates occur
+        if (data.type === 'device_register' || data.type === 'device_update_role' || data.type === 'device_update_lane') {
+            // Reload devices when registration or updates occur
             loadDevices();
         }
     }
@@ -134,14 +135,26 @@
         }
     }
 
+    // Toggle lane field based on role
+    function updateLaneFieldState() {
+        const isStarter = editRole.value === 'starter';
+        editLane.disabled = isStarter;
+        if (isStarter) {
+            editLane.value = '';
+        }
+    }
+
     // Open edit modal for a device
     window.editDevice = function(mac) {
         const device = devices.find(d => d.mac === mac);
         if (!device) return;
 
         editMac.value = device.mac;
+        editMacDisplay.textContent = device.mac;
         editRole.value = device.role;
         editLane.value = device.lane !== undefined ? device.lane : '';
+
+        updateLaneFieldState();
 
         editModal.classList.remove('hidden');
         editModal.classList.add('flex');
@@ -157,7 +170,7 @@
     async function saveDeviceChanges() {
         const mac = editMac.value;
         const newRole = editRole.value;
-        const newLane = editLane.value ? parseInt(editLane.value, 10) : undefined;
+        const newLane = (newRole === 'lane' && editLane.value) ? parseInt(editLane.value, 10) : undefined;
 
         const device = devices.find(d => d.mac === mac);
         if (!device) return;
@@ -174,12 +187,24 @@
             }
         }
 
-        // Send lane update if changed
-        if (device.lane !== newLane) {
+        // Send lane update if changed (only for lane role)
+        if (newRole === 'lane' && device.lane !== newLane) {
             const laneMsg = {
                 type: 'device_update_lane',
                 mac: mac,
                 lane: newLane
+            };
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(laneMsg));
+            }
+        }
+
+        // Clear lane if role changed to starter
+        if (newRole === 'starter' && device.lane !== undefined) {
+            const laneMsg = {
+                type: 'device_update_lane',
+                mac: mac,
+                lane: undefined
             };
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify(laneMsg));
@@ -193,6 +218,7 @@
     }
 
     // Event listeners
+    editRole.addEventListener('change', updateLaneFieldState);
     cancelEdit.addEventListener('click', closeEditModal);
     saveEdit.addEventListener('click', saveDeviceChanges);
 
