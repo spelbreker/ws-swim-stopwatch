@@ -153,6 +153,24 @@
                 }
             }
 
+            /* LED Screen specific adjustments (1024x500 and similar aspect ratios) */
+            @media (min-width: 1024px) and (max-height: 600px) {
+                :root {
+                    --topbar-height: clamp(40px, 8vh, 60px);
+                    --bottombar-height: clamp(30px, 6vh, 50px);
+                    --lane-min-height: clamp(35px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 45px);
+                    --font-size-content: clamp(12px, 2.8vmin, 36px);
+                }
+
+                .lane-content {
+                    padding: 0.25rem 0.5rem;
+                }
+
+                .lane {
+                    min-height: var(--lane-min-height);
+                }
+            }
+
             /* Tablet Layout */
             @media (min-width: 641px) and (max-width: 1024px) {
                 .lane-content {
