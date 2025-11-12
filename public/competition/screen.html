@@ -147,15 +147,15 @@
             @media (max-height: 500px) and (orientation: landscape) {
                 :root {
                     --lane-min-height: clamp(35px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 80px);
-                    --font-size-content: clamp(10px, 2.5vmin, 32px);
-                }
-
-                .lanes-container {
-                    padding-bottom: var(--bottombar-height);
+                    --font-size-content: clamp(18px, 2.5vmin, 32px);
                 }
 
                 .lane-content {
                     padding: 0.25rem 0.5rem;
+                }
+
+                .lanes-container {
+                    margin-bottom: var(--bottombar-height);
                 }
             }
 
@@ -195,7 +195,7 @@
             @media (max-width: 1024px) {
                 .lane-number {
                     min-width: 44px;
-                    min-height: 44px;
+                    min-height: 38px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
