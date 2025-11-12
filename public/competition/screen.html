@@ -2,7 +2,9 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <title>Screen</title>
         <link href="/css/output.css" rel="stylesheet"
         />
@@ -18,6 +20,17 @@
                 /* slate-100 */
                 --color-table-border: #334155;
                 /* slate-700 */
+                
+                /* Responsive sizing variables */
+                --topbar-height: clamp(50px, 10vh, 100px);
+                --bottombar-height: clamp(35px, 8vh, 70px);
+                --lanes-total-height: clamp(370px, 82vh, 820px);
+                --lane-min-height: calc(var(--lanes-total-height) / 10);
+                --font-size-lane-number: clamp(16px, 4vmin, 48px);
+                --font-size-content: clamp(12px, 3vmin, 40px);
+                --font-size-topbar: clamp(14px, 3vmin, 28px);
+                --font-size-stopwatch: clamp(20px, 5vmin, 50px);
+                --gap-size: clamp(4px, 1vw, 12px);
             }
 
             @media (prefers-color-scheme: light) {
@@ -37,122 +50,266 @@
             body {
                 background-color: var(--color-bg);
                 color: var(--color-text);
+                margin: 0;
+                padding: 0;
+                overflow-x: hidden;
             }
 
             .highlight {
                 background-color: var(--color-highlight);
-                /* Light green */
                 transition: background-color 2s ease;
             }
 
             .top-bar {
                 background-color: var(--color-topbar) !important;
                 color: var(--color-text) !important;
-                height: 10vh;
-            }
-
-            tr {
-                height: calc(82vh / 10);
-                font-size: 5vh;
+                height: var(--topbar-height);
+                font-size: var(--font-size-topbar);
             }
 
             .bottom-bar {
                 background-color: var(--color-bottom-bar) !important;
                 color: var(--color-text) !important;
-                height: 8vh;
-                font-size: 3vh;
+                height: var(--bottombar-height);
+                font-size: var(--font-size-topbar);
+            }
+
+            .lanes-container {
+                height: var(--lanes-total-height);
+                overflow-y: auto;
+                box-sizing: border-box;
+            }
+
+            .lane {
+                min-height: var(--lane-min-height);
+                border-bottom: 1px solid var(--color-table-border);
+                font-size: var(--font-size-content);
+                display: flex;
+                align-items: center;
+            }
+
+            .lane-number {
+                font-size: var(--font-size-lane-number);
+                font-weight: bold;
+                min-width: 44px;
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .lane-content {
+                flex: 1;
+                display: grid;
+                grid-template-columns: 2fr 2fr 1.5fr 0.5fr;
+                gap: var(--gap-size);
+                align-items: center;
+                padding: 0.5rem;
+            }
+
+            .stopwatch {
+                font-size: var(--font-size-stopwatch);
+            }
+
+            .athlete, .club, .split-time, .arrival-order {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* Mobile Portrait Layout */
+            @media (max-width: 640px) and (orientation: portrait) {
+                .lane {
+                    flex-direction: row;
+                }
+
+                .lane-content {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                    padding: 0.5rem;
+                }
+
+                .lane-content > div {
+                    white-space: normal;
+                }
+
+                .split-time, .arrival-order {
+                    display: inline-block;
+                    white-space: nowrap;
+                }
+
+                .lane-number {
+                    writing-mode: horizontal-tb;
+                    padding: 0 0.5rem;
+                }
+            }
+
+            /* Mobile Landscape Layout */
+            @media (max-height: 500px) and (orientation: landscape) {
+                :root {
+                    --lane-min-height: clamp(35px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 80px);
+                    --font-size-content: clamp(18px, 2.5vmin, 32px);
+                }
+
+                .lane-content {
+                    padding: 0.25rem 0.5rem;
+                }
+
+                .lanes-container {
+                    margin-bottom: var(--bottombar-height);
+                }
+            }
+
+            /* LED Screen specific adjustments (1024x500 and similar aspect ratios) */
+            @media (min-width: 1024px) and (max-height: 600px) {
+                :root {
+                    --topbar-height: clamp(40px, 8vh, 60px);
+                    --bottombar-height: clamp(30px, 6vh, 50px);
+                    --lane-min-height: clamp(35px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 45px);
+                    --font-size-content: clamp(12px, 2.8vmin, 36px);
+                }
+
+                .lane-content {
+                    padding: 0.25rem 0.5rem;
+                }
+
+                .lane {
+                    min-height: var(--lane-min-height);
+                }
+            }
+
+            /* Tablet Layout */
+            @media (min-width: 641px) and (max-width: 1024px) {
+                .lane-content {
+                    grid-template-columns: 2fr 2fr 1.5fr 0.5fr;
+                }
+            }
+
+            /* LED/Desktop Layout */
+            @media (min-width: 1025px) {
+                .lane-content {
+                    grid-template-columns: 2fr 2fr 1.5fr 0.5fr;
+                }
+            }
+
+            /* Touch targets */
+            @media (max-width: 1024px) {
+                .lane-number {
+                    min-width: 44px;
+                    min-height: 38px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
             }
         </style>
     </head>
 
     <body>
-        <div class="top-bar flex justify-between items-center bg-blue-600 text-white py-1 px-4 text-2xl">
+        <div class="top-bar flex justify-between items-center px-4">
             <div>
                 <span id="event-number">1</span> -
                 <span id="swim-style"></span> | serie
                 <span id="heat-number">1</span>
             </div>
 
-            <span class="text-3xl" id="stopwatch">00:00:00</span>
+            <span class="stopwatch" id="stopwatch">00:00:00</span>
         </div>
-        <table class="w-full text-2xl">
-            <tbody>
-                <tr class="lane border-b border-gray-300" id="lane-0">
-                    <th>0</th>
-                    <td class="athlete w-2/5"></td>
-                    <td class="club w-2/5"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-1">
-                    <th>1</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-2">
-                    <th>2</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-3">
-                    <th>3</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-4">
-                    <th>4</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-5">
-                    <th>5</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-6">
-                    <th>6</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-7">
-                    <th>7</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-8">
-                    <th>8</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-                <tr class="lane border-b border-gray-300" id="lane-9">
-                    <th>9</th>
-                    <td class="athlete"></td>
-                    <td class="club"></td>
-                    <td class="split-time">---:---:---</td>
-                    <td class="arrival-order px-1 w-12"></td>
-                </tr>
-            </tbody>
-        </table>
-        <div
-            class="bottom-bar bg-blue-600 text-white py-1 px-2 fixed bottom-0 w-full text-center"
-        >
-            <div class="bottom-bar-text text-white text-xl font-bold">
+
+        <div class="lanes-container">
+            <div class="lane" id="lane-0">
+                <div class="lane-number">0</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-1">
+                <div class="lane-number">1</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-2">
+                <div class="lane-number">2</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-3">
+                <div class="lane-number">3</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-4">
+                <div class="lane-number">4</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-5">
+                <div class="lane-number">5</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-6">
+                <div class="lane-number">6</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-7">
+                <div class="lane-number">7</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-8">
+                <div class="lane-number">8</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+            <div class="lane" id="lane-9">
+                <div class="lane-number">9</div>
+                <div class="lane-content">
+                    <div class="athlete"></div>
+                    <div class="club"></div>
+                    <div class="split-time">---:---:---</div>
+                    <div class="arrival-order"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-bar flex items-center justify-center px-2 fixed bottom-0 w-full">
+            <div class="bottom-bar-text font-bold">
                 Dit zijn geen officele tijden
             </div>
         </div>
