@@ -23,8 +23,9 @@
                 
                 /* Responsive sizing variables */
                 --topbar-height: clamp(50px, 10vh, 100px);
-                --bottombar-height: clamp(35px, 7vh, 70px);
-                --lane-min-height: clamp(40px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 100px);
+                --bottombar-height: clamp(35px, 8vh, 70px);
+                --lanes-total-height: clamp(370px, 82vh, 820px);
+                --lane-min-height: calc(var(--lanes-total-height) / 10);
                 --font-size-lane-number: clamp(16px, 4vmin, 48px);
                 --font-size-content: clamp(12px, 3vmin, 40px);
                 --font-size-topbar: clamp(14px, 3vmin, 28px);
@@ -74,8 +75,9 @@
             }
 
             .lanes-container {
-                height: calc(100vh - var(--topbar-height) - var(--bottombar-height));
+                height: var(--lanes-total-height);
                 overflow-y: auto;
+                box-sizing: border-box;
             }
 
             .lane {
@@ -146,6 +148,10 @@
                 :root {
                     --lane-min-height: clamp(35px, calc((100vh - var(--topbar-height) - var(--bottombar-height)) / 10), 80px);
                     --font-size-content: clamp(10px, 2.5vmin, 32px);
+                }
+
+                .lanes-container {
+                    padding-bottom: var(--bottombar-height);
                 }
 
                 .lane-content {
