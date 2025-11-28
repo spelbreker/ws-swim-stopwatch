@@ -10,6 +10,7 @@ This project is a web server with WebSocket support for stopwatch synchronizatio
 - [Usage](#usage)
 - [Docker Setup](#docker-setup)
 - [Using GitHub Packages](#using-github-packages)
+- [External Access (Cloudflare Tunnel)](#external-access-cloudflare-tunnel)
 - [Project Structure](#project-structure)
 - [License](#license)
 
@@ -91,6 +92,16 @@ To use the Docker image published to GitHub Packages, follow these steps:
     ```
 
 4. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/5).
+
+## External Access (Cloudflare Tunnel)
+
+To expose the swim stopwatch to the internet (e.g., for viewing `/competition/screen.html` on mobile devices at a swim meet), you can use Cloudflare Tunnel. This is especially useful when:
+
+- Running on a Raspberry Pi in a restricted network
+- Port forwarding is not available
+- You need external viewers to see real-time race data
+
+See the [Cloudflare Tunnel Deployment Guide](docs/cloudflare-tunnel.md) for detailed setup instructions.
 
 ## Project Structure
 
