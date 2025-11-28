@@ -118,7 +118,7 @@ ingress:
     service: http://localhost:8080
   
   - hostname: screen.yourdomain.com
-    path: ^/(css|image|js)/.*$
+    path: ^/(css|images?|js)/.*$
     service: http://localhost:8080
   
   # WebSocket and API endpoints
@@ -253,8 +253,14 @@ ngrok http 8080
 If you have access to a VPS:
 
 ```bash
-ssh -R 80:localhost:8080 user@your-vps.com
+# Use a non-privileged port (recommended)
+ssh -R 8080:localhost:8080 user@your-vps.com
+
+# Or let SSH choose an available port
+ssh -R 0:localhost:8080 user@your-vps.com
 ```
+
+> **Note:** Using port 80 requires root privileges and may conflict with existing web servers.
 
 ## Complete Setup Checklist
 
