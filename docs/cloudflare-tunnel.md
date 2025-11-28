@@ -119,12 +119,17 @@ curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cl
 # For older Raspberry Pi (ARM32/ARMv7), use:
 # curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-armhf.deb -o cloudflared.deb
 
+# Optional: Verify the download (check SHA256 against release page)
+# sha256sum cloudflared.deb
+
 # Install the package
 sudo dpkg -i cloudflared.deb
 
 # Verify installation
 cloudflared --version
 ```
+
+> **Security Note:** For production deployments, verify the downloaded binary's SHA256 checksum against the [official release page](https://github.com/cloudflare/cloudflared/releases) to ensure authenticity.
 
 ### 2. Authenticate with Cloudflare
 
@@ -166,7 +171,7 @@ Add the following configuration:
 
 ```yaml
 tunnel: swim-stopwatch
-credentials-file: /home/pi/.cloudflared/<TUNNEL-UUID>.json
+credentials-file: ~/.cloudflared/<TUNNEL-UUID>.json
 
 ingress:
   # Allow all paths for simplicity (recommended for single-hostname setups)
@@ -183,7 +188,7 @@ ingress:
 Replace:
 - `<TUNNEL-UUID>` with your actual tunnel UUID (shown when you ran `cloudflared tunnel create`)
 - `screen.yourdomain.com` with your actual subdomain
-- `/home/pi/` with your actual home directory (check with `echo $HOME`)
+- `~/.cloudflared/` with your actual cloudflared config directory (usually `~/.cloudflared/` or `/home/<username>/.cloudflared/`)
 
 ### Path-Restricted Configuration (Optional)
 
@@ -191,7 +196,7 @@ If you want to expose only the screen view and block access to the remote contro
 
 ```yaml
 tunnel: swim-stopwatch
-credentials-file: /home/pi/.cloudflared/<TUNNEL-UUID>.json
+credentials-file: ~/.cloudflared/<TUNNEL-UUID>.json
 
 ingress:
   # Competition screen and required assets
