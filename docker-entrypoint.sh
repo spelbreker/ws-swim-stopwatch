@@ -6,6 +6,15 @@ cleanup() {
     if [ -n "$TUNNEL_PID" ]; then
         echo "Stopping Cloudflare Tunnel (entrypoint)..."
         kill "$TUNNEL_PID" 2>/dev/null || true
+        # Wait up to 10 seconds for graceful shutdown
+        for i in $(seq 1 10); do
+            if ! kill -0 "$TUNNEL_PID" 2>/dev/null; then
+                break
+            fi
+            sleep 1
+        done
+        # Force kill if still running
+        kill -9 "$TUNNEL_PID" 2>/dev/null || true
     fi
     exit 0
 }

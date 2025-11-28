@@ -123,12 +123,53 @@
         </div>
     </div>
 
+    <!-- Toast notification container -->
+    <div id="toast" class="fixed bottom-4 right-4 transform transition-all duration-300 translate-y-full opacity-0 z-50">
+        <div id="toastContent" class="px-6 py-4 rounded-lg shadow-lg max-w-sm"></div>
+    </div>
+
     <footer class="bg-gray-800 text-white p-4 text-center mt-auto">
         <p>&copy; Patrick Development 2025</p>
     </footer>
 
     <script>
         let refreshInterval;
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const content = document.getElementById('toastContent');
+            
+            const colors = {
+                success: 'bg-green-600 text-white',
+                error: 'bg-red-600 text-white',
+                info: 'bg-blue-600 text-white',
+                warning: 'bg-yellow-500 text-black'
+            };
+            
+            content.className = `px-6 py-4 rounded-lg shadow-lg max-w-sm ${colors[type] || colors.info}`;
+            content.textContent = message;
+            
+            // Show toast
+            toast.classList.remove('translate-y-full', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-full', 'opacity-0');
+            }, 4000);
+        }
+
+        // Stop polling when page is hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(refreshInterval);
+            } else {
+                fetchStatus();
+                refreshInterval = setInterval(fetchStatus, 5000);
+            }
+        });
 
         async function fetchStatus() {
             try {
@@ -196,12 +237,14 @@
                     body: JSON.stringify({ token: token || undefined }),
                 });
                 const result = await response.json();
-                if (!result.success) {
-                    alert('Failed to start tunnel: ' + result.error);
+                if (result.success) {
+                    showToast('Tunnel started successfully', 'success');
+                } else {
+                    showToast('Failed to start tunnel: ' + result.error, 'error');
                 }
                 fetchStatus();
             } catch (error) {
-                alert('Failed to start tunnel: ' + error.message);
+                showToast('Failed to start tunnel: ' + error.message, 'error');
             }
         }
 
@@ -211,12 +254,14 @@
                     method: 'POST',
                 });
                 const result = await response.json();
-                if (!result.success) {
-                    alert('Failed to stop tunnel: ' + result.error);
+                if (result.success) {
+                    showToast('Tunnel stopped', 'success');
+                } else {
+                    showToast('Failed to stop tunnel: ' + result.error, 'error');
                 }
                 fetchStatus();
             } catch (error) {
-                alert('Failed to stop tunnel: ' + error.message);
+                showToast('Failed to stop tunnel: ' + error.message, 'error');
             }
         }
 
@@ -226,7 +271,7 @@
             const autoStart = document.getElementById('autoStart').checked;
 
             if (!token) {
-                alert('Please enter a tunnel token');
+                showToast('Please enter a tunnel token', 'warning');
                 return;
             }
 
@@ -238,14 +283,14 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('Configuration saved successfully');
+                    showToast('Configuration saved successfully', 'success');
                     document.getElementById('token').value = '';
                     fetchStatus();
                 } else {
-                    alert('Failed to save configuration: ' + result.error);
+                    showToast('Failed to save configuration: ' + result.error, 'error');
                 }
             } catch (error) {
-                alert('Failed to save configuration: ' + error.message);
+                showToast('Failed to save configuration: ' + error.message, 'error');
             }
         }
 
@@ -260,13 +305,13 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('Configuration deleted');
+                    showToast('Configuration deleted', 'success');
                     fetchStatus();
                 } else {
-                    alert('Failed to delete configuration: ' + result.error);
+                    showToast('Failed to delete configuration: ' + result.error, 'error');
                 }
             } catch (error) {
-                alert('Failed to delete configuration: ' + error.message);
+                showToast('Failed to delete configuration: ' + error.message, 'error');
             }
         }
 
