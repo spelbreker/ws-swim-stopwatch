@@ -13,7 +13,7 @@ services:
       # - TUNNEL_TOKEN=your-tunnel-token-here
     restart: unless-stopped
 
-  # Alternative: Development mode with live reload
+  # Alternative: Development mode with live reload (no tunnel support)
   node-server-dev:
     image: node:22
     working_dir: /app
@@ -22,5 +22,7 @@ services:
     command: /bin/sh -c "npm install && npm start"
     ports:
       - "8080:8080"
+    environment:
+      - NODE_ENV=development
     profiles:
       - dev

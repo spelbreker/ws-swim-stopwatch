@@ -188,7 +188,8 @@ ingress:
 Replace:
 - `<TUNNEL-UUID>` with your actual tunnel UUID (shown when you ran `cloudflared tunnel create`)
 - `screen.yourdomain.com` with your actual subdomain
-- `~/.cloudflared/` with your actual cloudflared config directory (usually `~/.cloudflared/` or `/home/<username>/.cloudflared/`)
+
+> **Note:** The credentials file is typically stored in `~/.cloudflared/` (your home directory). If you used a different user or location during `cloudflared tunnel login`, adjust the path accordingly.
 
 ### Path-Restricted Configuration (Optional)
 

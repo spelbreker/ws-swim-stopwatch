@@ -8,7 +8,7 @@ RUN apk add --no-cache curl && \
     case "$ARCH" in \
         x86_64) ARCH_NAME="amd64" ;; \
         aarch64) ARCH_NAME="arm64" ;; \
-        armv7l) ARCH_NAME="arm" ;; \
+        armv7l) ARCH_NAME="armhf" ;; \
         *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
     esac && \
     curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH_NAME}" -o /usr/local/bin/cloudflared && \
