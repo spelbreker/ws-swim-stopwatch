@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tunnel Configuration - SwimWatch</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link href="/css/output.css" rel="stylesheet">
+</head>
+
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased">
+    <div class="relative flex min-h-screen flex-col justify-center overflow-hidden py-6 sm:py-12">
+        <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-8 text-center">
+                <a href="/" class="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-cyan-500 mb-4">
+                    <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Back to Dashboard
+                </a>
+                <div class="flex items-center justify-center mb-4">
+                    <svg class="h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                    </svg>
+                    <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white ml-3">Cloudflare Tunnel</h1>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">Configure external access to your SwimWatch server.</p>
+            </header>
+
+            <!-- Status Card -->
+            <div id="statusCard"
+                class="mb-6 p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Tunnel Status</h2>
+                    <span id="statusBadge" class="px-3 py-1 rounded-full text-sm font-medium">Loading...</span>
+                </div>
+                <div id="statusDetails" class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <!-- Status details will be populated by JavaScript -->
+                </div>
+                <div id="errorMessage" class="mt-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hidden">
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="mb-6 flex gap-4">
+                <button id="startBtn" onclick="startTunnel()"
+                    class="flex-1 py-3 px-4 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="flex items-center justify-center">
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                        </svg>
+                        Start Tunnel
+                    </span>
+                </button>
+                <button id="stopBtn" onclick="stopTunnel()"
+                    class="flex-1 py-3 px-4 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="flex items-center justify-center">
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
+                        </svg>
+                        Stop Tunnel
+                    </span>
+                </button>
+            </div>
+
+            <!-- Configuration Form -->
+            <div class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Configuration</h2>
+                <form id="configForm" onsubmit="saveConfig(event)" class="space-y-4">
+                    <div>
+                        <label for="token" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Tunnel Token
+                        </label>
+                        <input type="password" id="token" name="token"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                            placeholder="eyJhIjoiYWJjZDEyMzQ...">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Get your token from the Cloudflare Zero Trust Dashboard → Networks → Tunnels
+                        </p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="autoStart" name="autoStart"
+                            class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
+                        <label for="autoStart" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Auto-start tunnel when server starts
+                        </label>
+                    </div>
+                    <div class="flex gap-4 pt-2">
+                        <button type="submit"
+                            class="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-cyan-600 hover:bg-cyan-700 transition-colors">
+                            Save Configuration
+                        </button>
+                        <button type="button" onclick="deleteConfig()"
+                            class="py-2 px-4 rounded-lg font-semibold text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                            Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Help Section -->
+            <div class="mt-6 p-6 rounded-lg bg-sky-50/50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">How to get a Tunnel Token</h3>
+                <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li>Go to <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener"
+                            class="text-cyan-600 dark:text-cyan-400 hover:underline">Cloudflare Zero Trust Dashboard</a></li>
+                    <li>Navigate to <strong>Networks</strong> → <strong>Tunnels</strong></li>
+                    <li>Click <strong>Create a tunnel</strong> and choose <strong>Cloudflared</strong></li>
+                    <li>Name your tunnel (e.g., "swim-stopwatch")</li>
+                    <li>Copy the tunnel token (starts with <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">eyJ...</code>)</li>
+                    <li>Configure your public hostname to point to <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">http://localhost:8080</code></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white p-4 text-center mt-auto">
+        <p>&copy; Patrick Development 2025</p>
+    </footer>
+
+    <script>
+        let refreshInterval;
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/tunnel/status');
+                const status = await response.json();
+                updateUI(status);
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+                updateUI({ running: false, error: 'Failed to connect to server' });
+            }
+        }
+
+        function updateUI(status) {
+            const statusBadge = document.getElementById('statusBadge');
+            const statusDetails = document.getElementById('statusDetails');
+            const errorMessage = document.getElementById('errorMessage');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const autoStartCheckbox = document.getElementById('autoStart');
+
+            // Update badge
+            if (status.running) {
+                statusBadge.textContent = 'Running';
+                statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400';
+            } else {
+                statusBadge.textContent = 'Stopped';
+                statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400';
+            }
+
+            // Update details
+            let detailsHtml = '';
+            if (status.pid) {
+                detailsHtml += `<p><strong>Process ID:</strong> ${status.pid}</p>`;
+            }
+            if (status.token) {
+                detailsHtml += `<p><strong>Token:</strong> ${status.token}</p>`;
+            } else {
+                detailsHtml += `<p><strong>Token:</strong> <span class="text-yellow-600 dark:text-yellow-400">Not configured</span></p>`;
+            }
+            detailsHtml += `<p><strong>Auto-start:</strong> ${status.autoStart ? 'Enabled' : 'Disabled'}</p>`;
+            statusDetails.innerHTML = detailsHtml;
+
+            // Update error message
+            if (status.error) {
+                errorMessage.textContent = status.error;
+                errorMessage.classList.remove('hidden');
+            } else {
+                errorMessage.classList.add('hidden');
+            }
+
+            // Update buttons
+            startBtn.disabled = status.running;
+            stopBtn.disabled = !status.running;
+
+            // Update checkbox
+            autoStartCheckbox.checked = status.autoStart;
+        }
+
+        async function startTunnel() {
+            const token = document.getElementById('token').value;
+            try {
+                const response = await fetch('/tunnel/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token || undefined }),
+                });
+                const result = await response.json();
+                if (!result.success) {
+                    alert('Failed to start tunnel: ' + result.error);
+                }
+                fetchStatus();
+            } catch (error) {
+                alert('Failed to start tunnel: ' + error.message);
+            }
+        }
+
+        async function stopTunnel() {
+            try {
+                const response = await fetch('/tunnel/stop', {
+                    method: 'POST',
+                });
+                const result = await response.json();
+                if (!result.success) {
+                    alert('Failed to stop tunnel: ' + result.error);
+                }
+                fetchStatus();
+            } catch (error) {
+                alert('Failed to stop tunnel: ' + error.message);
+            }
+        }
+
+        async function saveConfig(event) {
+            event.preventDefault();
+            const token = document.getElementById('token').value;
+            const autoStart = document.getElementById('autoStart').checked;
+
+            if (!token) {
+                alert('Please enter a tunnel token');
+                return;
+            }
+
+            try {
+                const response = await fetch('/tunnel/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, autoStart }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Configuration saved successfully');
+                    document.getElementById('token').value = '';
+                    fetchStatus();
+                } else {
+                    alert('Failed to save configuration: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to save configuration: ' + error.message);
+            }
+        }
+
+        async function deleteConfig() {
+            if (!confirm('Are you sure you want to delete the tunnel configuration?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/tunnel/config', {
+                    method: 'DELETE',
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Configuration deleted');
+                    fetchStatus();
+                } else {
+                    alert('Failed to delete configuration: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to delete configuration: ' + error.message);
+            }
+        }
+
+        // Initial fetch and start polling
+        fetchStatus();
+        refreshInterval = setInterval(fetchStatus, 5000);
+    </script>
+</body>
+
+</html>

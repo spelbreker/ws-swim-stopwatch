@@ -3,6 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import { registerRoutes } from './routes/routes';
 import { setupWebSocket } from './websockets/websocket';
+import { initTunnel } from './modules/tunnel';
 
 const app = express();
 const server = http.createServer(app);
@@ -18,4 +19,7 @@ setupWebSocket(server);
 
 server.listen(8080, () => {
   console.log('Server is listening on port 8080');
+  
+  // Initialize tunnel if auto-start is enabled
+  initTunnel();
 });
