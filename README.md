@@ -72,6 +72,19 @@ To run the project using Docker, follow these steps:
 
 3. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/4).
 
+### Docker with Cloudflare Tunnel
+
+The Docker image includes cloudflared, allowing you to expose the server to the internet without port forwarding:
+
+```sh
+docker run -d \
+  --name swim-stopwatch \
+  -e TUNNEL_TOKEN=your-tunnel-token \
+  ghcr.io/spelbreker/ws-swim-stopwatch:latest
+```
+
+See the [Cloudflare Tunnel Deployment Guide](docs/cloudflare-tunnel.md) for detailed setup instructions.
+
 ## Using GitHub Packages
 
 To use the Docker image published to GitHub Packages, follow these steps:

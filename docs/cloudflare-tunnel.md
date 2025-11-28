@@ -16,16 +16,98 @@ Cloudflare Tunnel creates a secure outbound connection from your server to Cloud
 - WebSockets work out-of-the-box
 - You can restrict access to specific paths
 
+## Deployment Options
+
+There are two ways to run the Cloudflare Tunnel:
+
+1. **Docker (Recommended)** - Tunnel runs inside the container, OS-independent
+2. **Native Installation** - Tunnel runs on the host OS (Raspberry Pi)
+
 ## Prerequisites
 
 - A Cloudflare account (free tier works)
 - A domain managed by Cloudflare DNS
-- Raspberry Pi (or other Linux server) with internet access
-- The ws-swim-stopwatch server running locally on port 8080
+- Docker installed (for containerized setup) OR Raspberry Pi/Linux server (for native setup)
 
-## Installation
+---
 
-### 1. Install cloudflared on Raspberry Pi
+## Option A: Docker Deployment (Recommended)
+
+The Docker image includes cloudflared, making it easy to run the tunnel without installing anything on the host OS.
+
+### 1. Create a Tunnel in Cloudflare Dashboard
+
+1. Go to [Cloudflare Zero Trust Dashboard](https://one.dash.cloudflare.com/)
+2. Navigate to **Networks** → **Tunnels**
+3. Click **Create a tunnel**
+4. Choose **Cloudflared** connector
+5. Name your tunnel (e.g., `swim-stopwatch`)
+6. Copy the tunnel token (starts with `eyJ...`)
+
+### 2. Configure DNS
+
+In the tunnel configuration, add a public hostname:
+- **Subdomain**: `screen` (or your choice)
+- **Domain**: Select your domain
+- **Service**: `http://localhost:8080`
+
+### 3. Run with Docker
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/spelbreker/ws-swim-stopwatch:latest
+
+# Run with tunnel enabled
+docker run -d \
+  --name swim-stopwatch \
+  -e TUNNEL_TOKEN=eyJhIjoiYWJjZDEyMzQ... \
+  -v $(pwd)/uploads:/app/uploads \
+  ghcr.io/spelbreker/ws-swim-stopwatch:latest
+```
+
+### 4. Run with Docker Compose
+
+Edit `docker-compose.yml` and uncomment the `TUNNEL_TOKEN` line:
+
+```yaml
+services:
+  node-server:
+    build: .
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiYWJjZDEyMzQ...
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+```
+
+Then start:
+
+```bash
+docker-compose up -d
+```
+
+### Verify the Tunnel
+
+Check if the tunnel is connected:
+
+```bash
+# View container logs
+docker logs swim-stopwatch
+
+# You should see:
+# Starting Cloudflare Tunnel...
+# Cloudflare Tunnel started with PID ...
+```
+
+Visit `https://screen.yourdomain.com/competition/screen.html` to verify it works.
+
+---
+
+## Option B: Native Installation (Raspberry Pi)
+
+If you prefer to run cloudflared directly on the host OS instead of in Docker.
+
+### 1. Install cloudflared
 
 ```bash
 # Update package list
@@ -195,7 +277,23 @@ In Cloudflare Dashboard → Security → WAF:
 
 ## Troubleshooting
 
-### Connection Issues
+### Docker Tunnel Issues
+
+```bash
+# Check container logs
+docker logs swim-stopwatch
+
+# Verify tunnel token is set
+docker exec swim-stopwatch printenv TUNNEL_TOKEN
+
+# Test if server is responding inside container
+docker exec swim-stopwatch curl -s http://localhost:8080/competition/screen.html | head
+
+# Restart container
+docker restart swim-stopwatch
+```
+
+### Native Installation - Connection Issues
 
 ```bash
 # Check tunnel status
@@ -210,11 +308,12 @@ dig screen.yourdomain.com
 
 ### WebSocket Not Connecting
 
-1. Verify the `/ws` path is in your ingress rules
+1. Verify the `/ws` path is accessible through the tunnel
 2. Check browser console for connection errors
 3. Ensure the local server is running and accessible
+4. For Docker: check that port 8080 is exposed correctly
 
-### Service Won't Start
+### Service Won't Start (Native Installation)
 
 ```bash
 # Check configuration syntax
@@ -264,6 +363,17 @@ ssh -R 0:localhost:8080 user@your-vps.com
 
 ## Complete Setup Checklist
 
+### Docker Setup
+- [ ] Cloudflare account created
+- [ ] Tunnel created in Zero Trust Dashboard
+- [ ] Tunnel token copied
+- [ ] DNS hostname configured in tunnel settings
+- [ ] Docker container started with `TUNNEL_TOKEN` environment variable
+- [ ] Tunnel connection verified in logs
+- [ ] WebSocket connection verified
+- [ ] (Optional) Cloudflare Access configured for sensitive paths
+
+### Native Installation Setup
 - [ ] Cloudflared installed on Raspberry Pi
 - [ ] Authenticated with Cloudflare account
 - [ ] Tunnel created and UUID noted

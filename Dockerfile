@@ -1,6 +1,13 @@
 # Use the official Node.js image as the base image
 FROM node:22-alpine
 
+# Install cloudflared for Cloudflare Tunnel support
+# Using the official cloudflared binary for Alpine Linux
+RUN apk add --no-cache curl && \
+    curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && \
+    chmod +x /usr/local/bin/cloudflared && \
+    apk del curl
+
 # Set the working directory
 WORKDIR /app
 
@@ -16,8 +23,15 @@ COPY . .
 # build the application
 RUN npm run build
 
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose the port the server will run on
 EXPOSE 8080
 
-# Start the server
+# Use entrypoint script to handle both modes
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Default command (can be overridden)
 CMD ["npm", "start"]
