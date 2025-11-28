@@ -34,8 +34,8 @@ sudo apt-get update
 # Download cloudflared for ARM64 (Raspberry Pi 4/5)
 curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
 
-# For older Raspberry Pi (ARM32), use:
-# curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm.deb -o cloudflared.deb
+# For older Raspberry Pi (ARM32/ARMv7), use:
+# curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-armhf.deb -o cloudflared.deb
 
 # Install the package
 sudo dpkg -i cloudflared.deb
@@ -87,63 +87,50 @@ tunnel: swim-stopwatch
 credentials-file: /home/pi/.cloudflared/<TUNNEL-UUID>.json
 
 ingress:
-  # Competition screen - public access
+  # Allow all paths for simplicity (recommended for single-hostname setups)
+  # The screen, assets, WebSocket, and API are all served from the same hostname
   - hostname: screen.yourdomain.com
-    path: /competition/screen.html
     service: http://localhost:8080
   
-  # Competition screen JavaScript
-  - hostname: screen.yourdomain.com
-    path: /competition/screen.js
-    service: http://localhost:8080
-  
-  # Static assets (CSS, images)
-  - hostname: screen.yourdomain.com
-    path: /css/*
-    service: http://localhost:8080
-  
-  - hostname: screen.yourdomain.com
-    path: /image/*
-    service: http://localhost:8080
-  
-  - hostname: screen.yourdomain.com
-    path: /js/*
-    service: http://localhost:8080
-  
-  # WebSocket endpoint - required for real-time updates
-  - hostname: screen.yourdomain.com
-    path: /ws
-    service: http://localhost:8080
-  
-  # API endpoints for competition data
-  - hostname: screen.yourdomain.com
-    path: /api/*
-    service: http://localhost:8080
-  
-  # Catch-all: reject everything else
+  # Catch-all: reject requests to any other hostname
   - service: http_status:404
 ```
 
+> **Note:** This configuration exposes all paths under the hostname. If you want to restrict access to only specific paths (e.g., only `/competition/screen.html`), see the "Path-Restricted Configuration" section below.
+
 Replace:
-- `<TUNNEL-UUID>` with your actual tunnel UUID
+- `<TUNNEL-UUID>` with your actual tunnel UUID (shown when you ran `cloudflared tunnel create`)
 - `screen.yourdomain.com` with your actual subdomain
-- `/home/pi/.cloudflared/` with the correct path to your credentials file
+- `/home/pi/` with your actual home directory (check with `echo $HOME`)
 
-### Alternative: Expose All Paths
+### Path-Restricted Configuration (Optional)
 
-If you want to expose the entire application (including remote control):
+If you want to expose only the screen view and block access to the remote control interface:
 
 ```yaml
 tunnel: swim-stopwatch
 credentials-file: /home/pi/.cloudflared/<TUNNEL-UUID>.json
 
 ingress:
+  # Competition screen and required assets
   - hostname: screen.yourdomain.com
+    path: ^/competition/screen\.(html|js)$
     service: http://localhost:8080
+  
+  - hostname: screen.yourdomain.com
+    path: ^/(css|image|js)/.*$
+    service: http://localhost:8080
+  
+  # WebSocket and API endpoints
+  - hostname: screen.yourdomain.com
+    path: ^/(ws|api)/.*$
+    service: http://localhost:8080
+  
+  # Reject everything else
   - service: http_status:404
 ```
 
-> **Warning:** This exposes the remote control interface too. Consider using Cloudflare Access to protect sensitive paths.
+> **Note:** Path patterns use regular expressions when starting with `^`.
 
 ## Running the Tunnel
 
