@@ -24,7 +24,6 @@
 	"waitFor": "onCreateCommand",
 	"updateContentCommand": "npm install",
 	// Install cloudflared for Cloudflare Tunnel testing
-	"postCreateCommand": "curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o /tmp/cloudflared.deb && sudo dpkg -i /tmp/cloudflared.deb && rm /tmp/cloudflared.deb",
 	"postAttachCommand": {
 		"server": "npm start",
 		"css": "npm run watch:css"
