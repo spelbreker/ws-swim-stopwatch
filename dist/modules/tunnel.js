@@ -14,6 +14,7 @@ exports.initTunnel = initTunnel;
 const child_process_1 = require("child_process");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const cloudflared_1 = require("cloudflared");
 const CONFIG_DIR = process.env.CONFIG_DIR || './config';
 const CONFIG_FILE = path_1.default.join(CONFIG_DIR, 'tunnel.json');
 let tunnelProcess = null;
@@ -81,7 +82,8 @@ function startTunnel(token) {
     }
     lastError = null;
     try {
-        tunnelProcess = (0, child_process_1.spawn)('cloudflared', [
+        // Use the cloudflared binary from the npm package
+        tunnelProcess = (0, child_process_1.spawn)(cloudflared_1.bin, [
             'tunnel',
             '--no-autoupdate',
             'run',

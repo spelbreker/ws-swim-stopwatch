@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { bin } from 'cloudflared';
 
 const CONFIG_DIR = process.env.CONFIG_DIR || './config';
 const CONFIG_FILE = path.join(CONFIG_DIR, 'tunnel.json');
@@ -90,7 +91,8 @@ export function startTunnel(token?: string): { success: boolean; error?: string 
   lastError = null;
 
   try {
-    tunnelProcess = spawn('cloudflared', [
+    // Use the cloudflared binary from the npm package
+    tunnelProcess = spawn(bin, [
       'tunnel',
       '--no-autoupdate',
       'run',

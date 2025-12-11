@@ -20,8 +20,15 @@ import {
 
 // Register all competition-related routes
 export function registerRoutes(app: Express, upload: multer.Multer) {
-  // JSON body parser for tunnel routes
+  // JSON body parser for tunnel routes - must be registered BEFORE routes
   app.use('/tunnel', json());
+
+  // Tunnel management routes (defined after middleware)
+  app.get('/tunnel/status', getTunnelStatus);
+  app.post('/tunnel/start', postTunnelStart);
+  app.post('/tunnel/stop', postTunnelStop);
+  app.post('/tunnel/config', postTunnelConfig);
+  app.delete('/tunnel/config', deleteTunnelConfig);
 
   app.post('/competition/upload', upload.single('lenexFile'), uploadCompetition);
   app.get('/competition/summary', getCompetitionSummary);
@@ -36,11 +43,4 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
 
   // Device management routes
   app.get('/devices', getDevicesList);
-
-  // Tunnel management routes
-  app.get('/tunnel/status', getTunnelStatus);
-  app.post('/tunnel/start', postTunnelStart);
-  app.post('/tunnel/stop', postTunnelStop);
-  app.post('/tunnel/config', postTunnelConfig);
-  app.delete('/tunnel/config', deleteTunnelConfig);
 }
