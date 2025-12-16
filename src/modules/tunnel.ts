@@ -132,6 +132,8 @@ export function startTunnel(token?: string): { success: boolean; error?: string 
     });
 
     tunnelProcess.on('close', (code: number | null, _signal: NodeJS.Signals | null) => {
+      // mark _signal as used to satisfy eslint
+      void _signal;
       console.log(`[Tunnel] Process exited with code ${code}`);
       if (code !== 0 && code !== null) {
         lastError = `Tunnel exited with code ${code}`;

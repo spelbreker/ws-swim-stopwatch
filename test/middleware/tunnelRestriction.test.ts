@@ -11,7 +11,7 @@ describe('tunnelRestrictionMiddleware', () => {
       ip: '127.0.0.1',
       socket: {
         remoteAddress: '127.0.0.1',
-      } as any,
+      } as unknown as import('net').Socket,
       headers: cfConnectingIp ? { 'cf-connecting-ip': cfConnectingIp } : {},
       path,
     };
@@ -298,8 +298,8 @@ describe('tunnelRestrictionMiddleware', () => {
     it('should handle missing headers gracefully', () => {
       mockRequest = {
         ip: '127.0.0.1',
-        socket: { remoteAddress: '127.0.0.1' } as any,
-        headers: undefined as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown as import('net').Socket,
+        headers: undefined,
         path: '/competition/screen.html',
       };
 
@@ -315,7 +315,7 @@ describe('tunnelRestrictionMiddleware', () => {
     it('should handle missing IP addresses', () => {
       mockRequest = {
         ip: undefined,
-        socket: { remoteAddress: undefined } as any,
+        socket: { remoteAddress: undefined } as unknown as import('net').Socket,
         headers: {},
         path: '/index.html',
       };

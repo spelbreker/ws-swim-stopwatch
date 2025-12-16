@@ -29,8 +29,7 @@ export function tunnelRestrictionMiddleware(
   res: Response,
   next: NextFunction
 ): void {
-  // Get the client IP (kept for potential future logging/use)
-  const clientIP = req.ip || req.socket.remoteAddress || '';
+  // Local IP available if needed for future logging
   
   // Check if request is from Cloudflare tunnel
   // Multiple ways to detect Cloudflare tunnel traffic:
