@@ -116,6 +116,11 @@ To expose the swim stopwatch to the internet (e.g., for viewing `/competition/sc
 
 See the [Cloudflare Tunnel Deployment Guide](docs/cloudflare-tunnel.md) for detailed setup instructions.
 
+Security behavior when accessed via Cloudflare Tunnel:
+- Redirects `/` and `/index.html` to `/competition/screen.html`.
+- Only serves the competition screen and essential assets/APIs.
+- Blocks admin pages (remote, upload, dashboard), training, and logs.
+
 ## Project Structure
 
 The project uses a modern, modular folder structure for clarity and maintainability:

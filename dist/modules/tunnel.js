@@ -18,6 +18,8 @@ const cloudflared_1 = require("cloudflared");
 const CONFIG_DIR = process.env.CONFIG_DIR || './config';
 const CONFIG_FILE = path_1.default.join(CONFIG_DIR, 'tunnel.json');
 let tunnelProcess = null;
+let tunnelUrl = null;
+let connectionInfo = null;
 let lastError = null;
 /**
  * Load tunnel configuration from file
@@ -60,6 +62,8 @@ function getStatus() {
         pid: tunnelProcess?.pid ?? null,
         token: config?.token ? '***' + config.token.slice(-8) : null,
         autoStart: config?.autoStart ?? false,
+        url: tunnelUrl,
+        connectionInfo,
         error: lastError,
     };
 }
@@ -81,6 +85,8 @@ function startTunnel(token) {
         saveConfig({ token, autoStart: config?.autoStart ?? false });
     }
     lastError = null;
+    tunnelUrl = null;
+    connectionInfo = null;
     try {
         // Use the cloudflared binary from the npm package
         tunnelProcess = (0, child_process_1.spawn)(cloudflared_1.bin, [
@@ -94,17 +100,18 @@ function startTunnel(token) {
             detached: false,
         });
         tunnelProcess.stdout?.on('data', (data) => {
-            console.log(`[Tunnel] ${data.toString().trim()}`);
+            const msg = data.toString();
+            console.log(`[Tunnel] ${msg.trim()}`);
+            // Optionally parse URL from stdout if present in future
         });
         tunnelProcess.stderr?.on('data', (data) => {
             const message = data.toString().trim();
             console.error(`[Tunnel] ${message}`);
-            // Capture connection errors
             if (message.includes('error') || message.includes('failed')) {
                 lastError = message;
             }
         });
-        tunnelProcess.on('close', (code) => {
+        tunnelProcess.on('close', (code, _signal) => {
             console.log(`[Tunnel] Process exited with code ${code}`);
             if (code !== 0 && code !== null) {
                 lastError = `Tunnel exited with code ${code}`;

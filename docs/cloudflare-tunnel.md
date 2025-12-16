@@ -14,7 +14,37 @@ Cloudflare Tunnel creates a secure outbound connection from your server to Cloud
 - No inbound ports need to be opened
 - Traffic flows securely over HTTPS
 - WebSockets work out-of-the-box
-- You can restrict access to specific paths
+- **Automatic route restriction**: Only the competition screen is accessible via the tunnel
+- **Root redirect**: Requests to `/` or `/index.html` via the tunnel are redirected to `/competition/screen.html`
+
+## Security Features
+
+This application includes built-in middleware that restricts tunnel access to specific routes only:
+
+**Accessible via Cloudflare Tunnel (public):**
+- `/competition/screen.html` - Competition screen view
+- `/competition/screen.js` - Screen JavaScript
+- `/css/*` - Stylesheets
+- `/image/*` - Images
+- `/js/main.js` - Main JavaScript
+- `/js/timeSync.js` - Time synchronization
+- `/competition/event/*` - Event data API
+- `/competition/summary` - Competition summary API
+- `/devices` - Device list API
+ - `/favicon.ico` - Site icon
+
+**Only accessible locally (blocked via tunnel):**
+- `/competition/remote.html` - Remote control interface
+- `/competition/upload.html` - File upload interface
+- `/index.html` - Dashboard
+- `/training/*` - Training mode
+- All other administrative routes
+
+This restriction happens at the application level (middleware), so no Cloudflare path rules are needed.
+
+### Configuration
+
+No external configuration file is required. Allowed routes and the root redirect are enforced in code by the tunnel restriction middleware. To change what’s exposed, update `src/middleware/tunnelRestriction.ts` and rebuild.
 
 ## Deployment Options
 
@@ -50,6 +80,8 @@ In the tunnel configuration, add a public hostname:
 - **Subdomain**: `screen` (or your choice)
 - **Domain**: Select your domain
 - **Service**: `http://localhost:8080`
+
+**Note:** You don't need to configure path restrictions in Cloudflare - the application automatically restricts access to only the competition screen when requests come via Cloudflare.
 
 ### 3. Run with Docker
 
@@ -174,8 +206,8 @@ tunnel: swim-stopwatch
 credentials-file: ~/.cloudflared/<TUNNEL-UUID>.json
 
 ingress:
-  # Allow all paths for simplicity (recommended for single-hostname setups)
-  # The screen, assets, WebSocket, and API are all served from the same hostname
+  # Allow all traffic to be forwarded to the application
+  # The application itself handles route restrictions via middleware
   - hostname: screen.yourdomain.com
     service: http://localhost:8080
   
@@ -183,7 +215,7 @@ ingress:
   - service: http_status:404
 ```
 
-> **Note:** This configuration exposes all paths under the hostname. If you want to restrict access to only specific paths (e.g., only `/competition/screen.html`), see the "Path-Restricted Configuration" section below.
+> **Note:** The application automatically restricts access via the tunnel to only the competition screen and related assets. Administrative interfaces (remote control, upload, dashboard) are automatically blocked when accessed via Cloudflare.
 
 Replace:
 - `<TUNNEL-UUID>` with your actual tunnel UUID (shown when you ran `cloudflared tunnel create`)
@@ -191,34 +223,7 @@ Replace:
 
 > **Note:** The credentials file is typically stored in `~/.cloudflared/` (your home directory). If you used a different user or location during `cloudflared tunnel login`, adjust the path accordingly.
 
-### Path-Restricted Configuration (Optional)
 
-If you want to expose only the screen view and block access to the remote control interface:
-
-```yaml
-tunnel: swim-stopwatch
-credentials-file: ~/.cloudflared/<TUNNEL-UUID>.json
-
-ingress:
-  # Competition screen and required assets
-  - hostname: screen.yourdomain.com
-    path: ^/competition/screen\.(html|js)$
-    service: http://localhost:8080
-  
-  - hostname: screen.yourdomain.com
-    path: ^/(css|images?|js)/.*$
-    service: http://localhost:8080
-  
-  # WebSocket and API endpoints
-  - hostname: screen.yourdomain.com
-    path: ^/(ws|api)/.*$
-    service: http://localhost:8080
-  
-  # Reject everything else
-  - service: http_status:404
-```
-
-> **Note:** Path patterns use regular expressions when starting with `^`.
 
 ## Running the Tunnel
 
@@ -265,21 +270,34 @@ The existing JavaScript in `screen.js` should work correctly as it constructs th
 
 ## Security Recommendations
 
-### Protect Sensitive Paths with Cloudflare Access
+### Built-in Route Protection
 
-To protect the remote control interface while keeping the screen public:
+The application includes automatic middleware that:
+- Detects requests coming from Cloudflare (via `cf-connecting-ip` header)
+- Allows only competition screen and related assets via the tunnel
+- Blocks all administrative interfaces (remote control, upload, dashboard)
+- Returns 403 Forbidden for blocked routes
 
-1. Go to Cloudflare Dashboard → Zero Trust → Access → Applications
-2. Create a new application
-3. Set the application domain to `screen.yourdomain.com`
-4. Add a path rule for `/competition/remote.html` and `/training/*`
-5. Configure authentication (email, SSO, etc.)
+No additional Cloudflare configuration is needed for basic security.
 
-### Limit Access by IP/Country
+### Additional Security Layers (Optional)
+
+#### Rate Limiting
+
+In Cloudflare Dashboard → Security → Rate Limiting:
+- Add rules to prevent abuse (e.g., max 100 requests per minute)
+
+#### Limit Access by IP/Country
 
 In Cloudflare Dashboard → Security → WAF:
 - Create firewall rules to restrict access by country or IP range
 - Block known bad actors
+
+#### DDoS Protection
+
+Cloudflare automatically provides DDoS protection, but you can:
+- Enable "Under Attack Mode" if needed
+- Configure additional WAF rules
 
 ## Troubleshooting
 

@@ -11,15 +11,25 @@ interface TunnelConfig {
   autoStart: boolean;
 }
 
+interface ConnectionInfo {
+  id: string;
+  ip: string;
+  location: string;
+}
+
 interface TunnelStatus {
   running: boolean;
   pid: number | null;
   token: string | null;
   autoStart: boolean;
+  url?: string | null;
+  connectionInfo?: ConnectionInfo | null;
   error: string | null;
 }
 
 let tunnelProcess: ChildProcess | null = null;
+let tunnelUrl: string | null = null;
+let connectionInfo: ConnectionInfo | null = null;
 let lastError: string | null = null;
 
 /**
@@ -63,6 +73,8 @@ export function getStatus(): TunnelStatus {
     pid: tunnelProcess?.pid ?? null,
     token: config?.token ? '***' + config.token.slice(-8) : null,
     autoStart: config?.autoStart ?? false,
+    url: tunnelUrl,
+    connectionInfo,
     error: lastError,
   };
 }
@@ -89,6 +101,8 @@ export function startTunnel(token?: string): { success: boolean; error?: string 
   }
 
   lastError = null;
+  tunnelUrl = null;
+  connectionInfo = null;
 
   try {
     // Use the cloudflared binary from the npm package
@@ -104,19 +118,20 @@ export function startTunnel(token?: string): { success: boolean; error?: string 
     });
 
     tunnelProcess.stdout?.on('data', (data) => {
-      console.log(`[Tunnel] ${data.toString().trim()}`);
+      const msg = data.toString();
+      console.log(`[Tunnel] ${msg.trim()}`);
+      // Optionally parse URL from stdout if present in future
     });
 
     tunnelProcess.stderr?.on('data', (data) => {
       const message = data.toString().trim();
       console.error(`[Tunnel] ${message}`);
-      // Capture connection errors
       if (message.includes('error') || message.includes('failed')) {
         lastError = message;
       }
     });
 
-    tunnelProcess.on('close', (code) => {
+    tunnelProcess.on('close', (code: number | null, _signal: NodeJS.Signals | null) => {
       console.log(`[Tunnel] Process exited with code ${code}`);
       if (code !== 0 && code !== null) {
         lastError = `Tunnel exited with code ${code}`;
