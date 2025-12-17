@@ -1,9 +1,28 @@
 services:
   node-server:
+    build: .
+    ports:
+      - "8080:8080"
     volumes:
-      - .:/app
+      - ./uploads:/app/uploads
+      - ./public/competition.json:/app/public/competition.json
+    environment:
+      - NODE_ENV=production
+      # Uncomment and set TUNNEL_TOKEN to enable Cloudflare Tunnel
+      # Get your token from: cloudflared tunnel token <tunnel-name>
+      # - TUNNEL_TOKEN=your-tunnel-token-here
+    restart: unless-stopped
+
+  # Alternative: Development mode with live reload (no tunnel support)
+  node-server-dev:
     image: node:22
     working_dir: /app
+    volumes:
+      - .:/app
     command: /bin/sh -c "npm install && npm start"
     ports:
       - "8080:8080"
+    environment:
+      - NODE_ENV=development
+    profiles:
+      - dev

@@ -16,8 +16,15 @@ COPY . .
 # build the application
 RUN npm run build
 
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose the port the server will run on
 EXPOSE 8080
 
-# Start the server
+# Use entrypoint script to handle both modes
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Default command (can be overridden)
 CMD ["npm", "start"]
