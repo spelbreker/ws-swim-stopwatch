@@ -23,7 +23,7 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"waitFor": "onCreateCommand",
 	"updateContentCommand": "npm install",
-	// Install cloudflared for Cloudflare Tunnel testing
+	"postCreateCommand": "",
 	"postAttachCommand": {
 		"server": "npm start",
 		"css": "npm run watch:css"
