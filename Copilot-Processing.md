@@ -21,9 +21,30 @@ Error response from daemon: no matching manifest for linux/arm64/v8 in the manif
 - Likely has GitHub Actions workflow in `.github/workflows/`
 
 ## Plan (To be updated)
-- [ ] Explore GitHub Actions workflows
-- [ ] Check current Docker build configuration
-- [ ] Identify where to add multi-platform build support
-- [ ] Add ARM64 (and other relevant platforms) to build
-- [ ] Ensure `:latest` tag is applied
-- [ ] Test and validate changes
+- [x] Explore GitHub Actions workflows
+- [x] Check current Docker build configuration
+- [x] Identify where to add multi-platform build support
+- [x] Add ARM64 (and other relevant platforms) to build
+- [x] Ensure `:latest` tag is applied
+- [x] Test and validate changes
+
+## Changes Made
+
+### docker-publish.yml Modifications
+Added two key improvements to the Docker build workflow:
+
+1. **Multi-Platform Build Support:**
+   - Added `platforms: linux/amd64,linux/arm64` to the build-push-action
+   - This enables the Docker image to run on both AMD64 (standard x86_64) and ARM64 (Raspberry Pi) architectures
+   - Docker Buildx (already configured in the workflow) handles the multi-architecture builds
+
+2. **Latest Tag:**
+   - Added `ghcr.io/spelbreker/ws-swim-stopwatch:latest` to the tags list
+   - Every versioned release (v*.*.*) will now also update the `:latest` tag
+   - This provides a convenient way to pull the most recent stable version
+
+### Technical Details
+- The workflow triggers on git tags matching pattern `v*.*.*`
+- Each build now produces images for both architectures in a single manifest
+- Docker will automatically pull the correct architecture when using `docker pull`
+- The `:latest` tag ensures users can always get the newest version without specifying a version number
