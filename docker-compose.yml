@@ -5,6 +5,8 @@ services:
       - "8080:8080"
     volumes:
       - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./config:/app/config
       - ./public/competition.json:/app/public/competition.json
     environment:
       - NODE_ENV=production
