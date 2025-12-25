@@ -48,3 +48,37 @@ Added two key improvements to the Docker build workflow:
 - Each build now produces images for both architectures in a single manifest
 - Docker will automatically pull the correct architecture when using `docker pull`
 - The `:latest` tag ensures users can always get the newest version without specifying a version number
+
+## Verification
+
+### Code Review
+✅ Code review passed with no issues
+
+### Security Scan
+✅ CodeQL security scan passed with 0 alerts
+
+### YAML Validation
+✅ Workflow YAML syntax validated successfully
+
+## How to Test
+After merging this PR, create a new version tag (e.g., `v1.3.1`):
+```bash
+git tag v1.3.1
+git push origin v1.3.1
+```
+
+The workflow will automatically:
+1. Build images for both linux/amd64 and linux/arm64
+2. Push them with three tags: the SHA, the version tag, and `:latest`
+
+On Raspberry Pi, users can now pull:
+```bash
+docker pull ghcr.io/spelbreker/ws-swim-stopwatch:v1.3.1
+# or
+docker pull ghcr.io/spelbreker/ws-swim-stopwatch:latest
+```
+
+## Solution Summary
+The problem was that the Docker build workflow only built for the default platform (linux/amd64). By adding the `platforms` parameter with both `linux/amd64` and `linux/arm64`, Docker Buildx will create a multi-architecture manifest that allows Docker to automatically select the correct image for the user's platform.
+
+The `:latest` tag addition ensures that users who want to always use the most recent version don't need to track version numbers.
