@@ -32,6 +32,8 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/spelbreker/ws-swim-stopwatch:${{ github.sha }}
             ghcr.io/spelbreker/ws-swim-stopwatch:${{ github.ref_name }}
+            ghcr.io/spelbreker/ws-swim-stopwatch:latest
