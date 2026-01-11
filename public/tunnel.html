@@ -88,14 +88,14 @@
                         </p>
                     </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="autoStart" name="autoStart" onchange="updateSetting('autoStart')"
+                        <input type="checkbox" id="autoStart" name="autoStart" onchange="updateSetting(this.name)"
                             class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
                         <label for="autoStart" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             Auto-start tunnel when server starts
                         </label>
                     </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="allowAllRoutes" name="allowAllRoutes" onchange="updateSetting('allowAllRoutes')"
+                        <input type="checkbox" id="allowAllRoutes" name="allowAllRoutes" onchange="updateSetting(this.name)"
                             class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
                         <label for="allowAllRoutes" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             Allow access to all routes via tunnel (temporarily disable restrictions)
