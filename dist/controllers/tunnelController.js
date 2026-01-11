@@ -61,12 +61,36 @@ function postTunnelStop(_req, res) {
  */
 function postTunnelConfig(req, res) {
     try {
-        const { token, autoStart } = req.body || {};
-        if (!token || typeof token !== 'string') {
-            res.status(400).json({ error: 'Token is required' });
+        const { token, autoStart, allowAllRoutes } = req.body || {};
+        // If no token provided, try partial update (only for existing config)
+        if (!token) {
+            // Build partial update object from provided fields
+            const updates = {};
+            if (typeof autoStart === 'boolean') {
+                updates.autoStart = autoStart;
+            }
+            if (typeof allowAllRoutes === 'boolean') {
+                updates.allowAllRoutes = allowAllRoutes;
+            }
+            if (Object.keys(updates).length === 0) {
+                res.status(400).json({ error: 'No valid configuration fields provided' });
+                return;
+            }
+            const result = (0, tunnel_1.updatePartialConfig)(updates);
+            if (result.success) {
+                res.json({ success: true, message: 'Configuration updated' });
+            }
+            else {
+                res.status(400).json({ success: false, error: result.error });
+            }
             return;
         }
-        const result = (0, tunnel_1.updateConfig)(token, autoStart === true);
+        // Full config update with token
+        if (typeof token !== 'string') {
+            res.status(400).json({ error: 'Token must be a string' });
+            return;
+        }
+        const result = (0, tunnel_1.updateConfig)(token, autoStart === true, allowAllRoutes === true);
         if (result.success) {
             res.json({ success: true, message: 'Configuration saved' });
         }

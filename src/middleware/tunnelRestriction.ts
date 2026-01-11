@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { loadConfig } from '../modules/tunnel';
 
 /**
  * Default allowed routes when accessing via Cloudflare tunnel
@@ -53,8 +54,18 @@ export function tunnelRestrictionMiddleware(
     return;
   }
 
-  // For Cloudflare tunnel root access, redirect to competition screen
+  // Get the requested path
   const requestedPath = req.path;
+
+  // Check if tunnel restriction is disabled (allowAllRoutes = true)
+  const config = loadConfig();
+  if (config?.allowAllRoutes === true) {
+    console.log(`[Tunnel] Route restrictions disabled - allowing access to: ${requestedPath}`);
+    next();
+    return;
+  }
+
+  // For Cloudflare tunnel root access, redirect to competition screen
   if (requestedPath === '/' || requestedPath === '/index.html') {
     console.log(`[Tunnel] Redirecting Cloudflare request from ${requestedPath} to /competition/screen.html`);
     res.redirect('/competition/screen.html');
