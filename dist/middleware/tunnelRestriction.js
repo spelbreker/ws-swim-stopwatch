@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tunnelRestrictionMiddleware = tunnelRestrictionMiddleware;
+const tunnel_1 = require("../modules/tunnel");
 /**
  * Default allowed routes when accessing via Cloudflare tunnel
  * These routes are accessible from external/public access
@@ -25,8 +26,7 @@ const ALLOWED_TUNNEL_ROUTES = [
  * Local access (localhost, 127.0.0.1, private IPs) is always allowed
  */
 function tunnelRestrictionMiddleware(req, res, next) {
-    // Get the client IP (kept for potential future logging/use)
-    const clientIP = req.ip || req.socket.remoteAddress || '';
+    // Local IP available if needed for future logging
     // Check if request is from Cloudflare tunnel
     // Multiple ways to detect Cloudflare tunnel traffic:
     // 1. cf-connecting-ip header (set by Cloudflare)
@@ -45,8 +45,16 @@ function tunnelRestrictionMiddleware(req, res, next) {
         next();
         return;
     }
-    // For Cloudflare tunnel root access, redirect to competition screen
+    // Get the requested path
     const requestedPath = req.path;
+    // Check if tunnel restriction is disabled (allowAllRoutes = true)
+    const config = (0, tunnel_1.loadConfig)();
+    if (config?.allowAllRoutes === true) {
+        console.log(`[Tunnel] Route restrictions disabled - allowing access to: ${requestedPath}`);
+        next();
+        return;
+    }
+    // For Cloudflare tunnel root access, redirect to competition screen
     if (requestedPath === '/' || requestedPath === '/index.html') {
         console.log(`[Tunnel] Redirecting Cloudflare request from ${requestedPath} to /competition/screen.html`);
         res.redirect('/competition/screen.html');

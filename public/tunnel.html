@@ -94,6 +94,13 @@
                             Auto-start tunnel when server starts
                         </label>
                     </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="allowAllRoutes" name="allowAllRoutes"
+                            class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
+                        <label for="allowAllRoutes" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Allow access to all routes via tunnel (temporarily disable restrictions)
+                        </label>
+                    </div>
                     <div class="flex gap-4 pt-2">
                         <button type="submit"
                             class="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-cyan-600 hover:bg-cyan-700 transition-colors">
@@ -189,6 +196,7 @@
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
             const autoStartCheckbox = document.getElementById('autoStart');
+            const allowAllRoutesCheckbox = document.getElementById('allowAllRoutes');
 
             // Update badge
             if (status.running) {
@@ -223,6 +231,7 @@
             }
             
             detailsHtml += `<p><strong>Auto-start:</strong> ${status.autoStart ? 'Enabled' : 'Disabled'}</p>`;
+            detailsHtml += `<p><strong>Route restrictions:</strong> ${status.allowAllRoutes ? '<span class="text-yellow-600 dark:text-yellow-400">Disabled (All routes accessible)</span>' : 'Enabled (Restricted mode)'}</p>`;
             statusDetails.innerHTML = detailsHtml;
 
             // Update error message
@@ -237,8 +246,9 @@
             startBtn.disabled = status.running;
             stopBtn.disabled = !status.running;
 
-            // Update checkbox
+            // Update checkboxes
             autoStartCheckbox.checked = status.autoStart;
+            allowAllRoutesCheckbox.checked = status.allowAllRoutes;
         }
 
         async function startTunnel() {
@@ -282,6 +292,7 @@
             event.preventDefault();
             const token = document.getElementById('token').value;
             const autoStart = document.getElementById('autoStart').checked;
+            const allowAllRoutes = document.getElementById('allowAllRoutes').checked;
 
             if (!token) {
                 showToast('Please enter a tunnel token', 'warning');
@@ -292,7 +303,7 @@
                 const response = await fetch('/tunnel/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token, autoStart }),
+                    body: JSON.stringify({ token, autoStart, allowAllRoutes }),
                 });
                 const result = await response.json();
                 if (result.success) {

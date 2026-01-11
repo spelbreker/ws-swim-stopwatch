@@ -61,12 +61,12 @@ function postTunnelStop(_req, res) {
  */
 function postTunnelConfig(req, res) {
     try {
-        const { token, autoStart } = req.body || {};
+        const { token, autoStart, allowAllRoutes } = req.body || {};
         if (!token || typeof token !== 'string') {
             res.status(400).json({ error: 'Token is required' });
             return;
         }
-        const result = (0, tunnel_1.updateConfig)(token, autoStart === true);
+        const result = (0, tunnel_1.updateConfig)(token, autoStart === true, allowAllRoutes === true);
         if (result.success) {
             res.json({ success: true, message: 'Configuration saved' });
         }

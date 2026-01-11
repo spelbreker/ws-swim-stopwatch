@@ -28,6 +28,7 @@ describe('tunnelController', () => {
         pid: null,
         token: null,
         autoStart: false,
+        allowAllRoutes: false,
         error: null,
       });
       const res = await request(app).get('/tunnel/status');
@@ -37,6 +38,7 @@ describe('tunnelController', () => {
         pid: null,
         token: null,
         autoStart: false,
+        allowAllRoutes: false,
         error: null,
       });
     });
@@ -47,6 +49,7 @@ describe('tunnelController', () => {
         pid: 12345,
         token: '***abcd1234',
         autoStart: true,
+        allowAllRoutes: false,
         error: null,
       });
       const res = await request(app).get('/tunnel/status');
@@ -110,9 +113,22 @@ describe('tunnelController', () => {
       const res = await request(app).post('/tunnel/config').send({
         token: 'eyJtest123',
         autoStart: true,
+        allowAllRoutes: false,
       });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+    });
+
+    it('should save configuration with allowAllRoutes enabled', async () => {
+      spy = jest.spyOn(tunnel, 'updateConfig').mockReturnValue({ success: true });
+      const res = await request(app).post('/tunnel/config').send({
+        token: 'eyJtest123',
+        autoStart: true,
+        allowAllRoutes: true,
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(spy).toHaveBeenCalledWith('eyJtest123', true, true);
     });
 
     it('should return error when token is missing', async () => {

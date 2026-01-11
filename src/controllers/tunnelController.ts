@@ -60,14 +60,14 @@ export function postTunnelStop(_req: Request, res: Response): void {
  */
 export function postTunnelConfig(req: Request, res: Response): void {
   try {
-    const { token, autoStart } = req.body || {};
+    const { token, autoStart, allowAllRoutes } = req.body || {};
     
     if (!token || typeof token !== 'string') {
       res.status(400).json({ error: 'Token is required' });
       return;
     }
 
-    const result = updateConfig(token, autoStart === true);
+    const result = updateConfig(token, autoStart === true, allowAllRoutes === true);
     if (result.success) {
       res.json({ success: true, message: 'Configuration saved' });
     } else {

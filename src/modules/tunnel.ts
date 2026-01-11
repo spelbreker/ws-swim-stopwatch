@@ -9,6 +9,7 @@ const CONFIG_FILE = path.join(CONFIG_DIR, 'tunnel.json');
 interface TunnelConfig {
   token: string;
   autoStart: boolean;
+  allowAllRoutes: boolean;
 }
 
 interface ConnectionInfo {
@@ -22,6 +23,7 @@ interface TunnelStatus {
   pid: number | null;
   token: string | null;
   autoStart: boolean;
+  allowAllRoutes: boolean;
   url?: string | null;
   connectionInfo?: ConnectionInfo | null;
   error: string | null;
@@ -73,6 +75,7 @@ export function getStatus(): TunnelStatus {
     pid: tunnelProcess?.pid ?? null,
     token: config?.token ? '***' + config.token.slice(-8) : null,
     autoStart: config?.autoStart ?? false,
+    allowAllRoutes: config?.allowAllRoutes ?? false,
     url: tunnelUrl,
     connectionInfo,
     error: lastError,
@@ -97,7 +100,11 @@ export function startTunnel(token?: string): { success: boolean; error?: string 
 
   // Save the token if a new one was provided
   if (token) {
-    saveConfig({ token, autoStart: config?.autoStart ?? false });
+    saveConfig({ 
+      token, 
+      autoStart: config?.autoStart ?? false,
+      allowAllRoutes: config?.allowAllRoutes ?? false
+    });
   }
 
   lastError = null;
@@ -177,8 +184,8 @@ export function stopTunnel(): { success: boolean; error?: string } {
 /**
  * Update tunnel configuration
  */
-export function updateConfig(token: string, autoStart: boolean): { success: boolean; error?: string } {
-  const saved = saveConfig({ token, autoStart });
+export function updateConfig(token: string, autoStart: boolean, allowAllRoutes: boolean): { success: boolean; error?: string } {
+  const saved = saveConfig({ token, autoStart, allowAllRoutes });
   if (!saved) {
     return { success: false, error: 'Failed to save configuration' };
   }

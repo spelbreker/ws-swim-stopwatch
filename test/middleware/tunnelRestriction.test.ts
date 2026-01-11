@@ -329,4 +329,60 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockNext).toHaveBeenCalled();
     });
   });
+
+  describe('AllowAllRoutes configuration', () => {
+    let loadConfigSpy: jest.SpyInstance;
+
+    afterEach(() => {
+      if (loadConfigSpy) {
+        loadConfigSpy.mockRestore();
+      }
+    });
+
+    it('should allow all routes via Cloudflare when allowAllRoutes is true', () => {
+      // Mock loadConfig to return a config with allowAllRoutes enabled
+      const tunnelModule = jest.requireActual('../../src/modules/tunnel');
+      loadConfigSpy = jest.spyOn(tunnelModule, 'loadConfig').mockReturnValue({ 
+        token: 'test', 
+        autoStart: false, 
+        allowAllRoutes: true 
+      });
+
+      // This test verifies that when allowAllRoutes is enabled, 
+      // restricted routes like /competition/remote.html are accessible via Cloudflare
+      mockRequest = createMockRequest('/competition/remote.html', '1.2.3.4');
+
+      tunnelRestrictionMiddleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      // When allowAllRoutes is true, next() should be called
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+
+    it('should block routes via Cloudflare when allowAllRoutes is false', () => {
+      // Mock loadConfig to return a config with allowAllRoutes disabled
+      const tunnelModule = jest.requireActual('../../src/modules/tunnel');
+      loadConfigSpy = jest.spyOn(tunnelModule, 'loadConfig').mockReturnValue({ 
+        token: 'test', 
+        autoStart: false, 
+        allowAllRoutes: false 
+      });
+
+      mockRequest = createMockRequest('/competition/remote.html', '1.2.3.4');
+
+      tunnelRestrictionMiddleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      // When allowAllRoutes is false, status(403) should be called
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+    });
+  });
 });

@@ -62,6 +62,7 @@ function getStatus() {
         pid: tunnelProcess?.pid ?? null,
         token: config?.token ? '***' + config.token.slice(-8) : null,
         autoStart: config?.autoStart ?? false,
+        allowAllRoutes: config?.allowAllRoutes ?? false,
         url: tunnelUrl,
         connectionInfo,
         error: lastError,
@@ -82,7 +83,11 @@ function startTunnel(token) {
     }
     // Save the token if a new one was provided
     if (token) {
-        saveConfig({ token, autoStart: config?.autoStart ?? false });
+        saveConfig({
+            token,
+            autoStart: config?.autoStart ?? false,
+            allowAllRoutes: config?.allowAllRoutes ?? false
+        });
     }
     lastError = null;
     tunnelUrl = null;
@@ -112,6 +117,8 @@ function startTunnel(token) {
             }
         });
         tunnelProcess.on('close', (code, _signal) => {
+            // mark _signal as used to satisfy eslint
+            void _signal;
             console.log(`[Tunnel] Process exited with code ${code}`);
             if (code !== 0 && code !== null) {
                 lastError = `Tunnel exited with code ${code}`;
@@ -152,8 +159,8 @@ function stopTunnel() {
 /**
  * Update tunnel configuration
  */
-function updateConfig(token, autoStart) {
-    const saved = saveConfig({ token, autoStart });
+function updateConfig(token, autoStart, allowAllRoutes) {
+    const saved = saveConfig({ token, autoStart, allowAllRoutes });
     if (!saved) {
         return { success: false, error: 'Failed to save configuration' };
     }
