@@ -4,6 +4,7 @@ import {
   startTunnel,
   stopTunnel,
   updateConfig,
+  updatePartialConfig,
   deleteConfig,
 } from '../modules/tunnel';
 
@@ -62,8 +63,34 @@ export function postTunnelConfig(req: Request, res: Response): void {
   try {
     const { token, autoStart, allowAllRoutes } = req.body || {};
     
-    if (!token || typeof token !== 'string') {
-      res.status(400).json({ error: 'Token is required' });
+    // If no token provided, try partial update (only for existing config)
+    if (!token) {
+      // Build partial update object from provided fields
+      const updates: Partial<{ autoStart: boolean; allowAllRoutes: boolean }> = {};
+      if (typeof autoStart === 'boolean') {
+        updates.autoStart = autoStart;
+      }
+      if (typeof allowAllRoutes === 'boolean') {
+        updates.allowAllRoutes = allowAllRoutes;
+      }
+      
+      if (Object.keys(updates).length === 0) {
+        res.status(400).json({ error: 'No valid configuration fields provided' });
+        return;
+      }
+      
+      const result = updatePartialConfig(updates);
+      if (result.success) {
+        res.json({ success: true, message: 'Configuration updated' });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+      return;
+    }
+
+    // Full config update with token
+    if (typeof token !== 'string') {
+      res.status(400).json({ error: 'Token must be a string' });
       return;
     }
 

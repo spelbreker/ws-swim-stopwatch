@@ -9,6 +9,7 @@ exports.getStatus = getStatus;
 exports.startTunnel = startTunnel;
 exports.stopTunnel = stopTunnel;
 exports.updateConfig = updateConfig;
+exports.updatePartialConfig = updatePartialConfig;
 exports.deleteConfig = deleteConfig;
 exports.initTunnel = initTunnel;
 const child_process_1 = require("child_process");
@@ -161,6 +162,21 @@ function stopTunnel() {
  */
 function updateConfig(token, autoStart, allowAllRoutes) {
     const saved = saveConfig({ token, autoStart, allowAllRoutes });
+    if (!saved) {
+        return { success: false, error: 'Failed to save configuration' };
+    }
+    return { success: true };
+}
+/**
+ * Update specific tunnel configuration settings without requiring all fields
+ */
+function updatePartialConfig(updates) {
+    const existingConfig = loadConfig();
+    if (!existingConfig) {
+        return { success: false, error: 'No configuration found. Please configure a token first.' };
+    }
+    const updatedConfig = { ...existingConfig, ...updates };
+    const saved = saveConfig(updatedConfig);
     if (!saved) {
         return { success: false, error: 'Failed to save configuration' };
     }

@@ -193,6 +193,23 @@ export function updateConfig(token: string, autoStart: boolean, allowAllRoutes: 
 }
 
 /**
+ * Update specific tunnel configuration settings without requiring all fields
+ */
+export function updatePartialConfig(updates: Partial<TunnelConfig>): { success: boolean; error?: string } {
+  const existingConfig = loadConfig();
+  if (!existingConfig) {
+    return { success: false, error: 'No configuration found. Please configure a token first.' };
+  }
+  
+  const updatedConfig = { ...existingConfig, ...updates };
+  const saved = saveConfig(updatedConfig);
+  if (!saved) {
+    return { success: false, error: 'Failed to save configuration' };
+  }
+  return { success: true };
+}
+
+/**
  * Delete tunnel configuration
  */
 export function deleteConfig(): { success: boolean; error?: string } {

@@ -88,14 +88,14 @@
                         </p>
                     </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="autoStart" name="autoStart"
+                        <input type="checkbox" id="autoStart" name="autoStart" onchange="updateSetting('autoStart')"
                             class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
                         <label for="autoStart" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             Auto-start tunnel when server starts
                         </label>
                     </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="allowAllRoutes" name="allowAllRoutes"
+                        <input type="checkbox" id="allowAllRoutes" name="allowAllRoutes" onchange="updateSetting('allowAllRoutes')"
                             class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500">
                         <label for="allowAllRoutes" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             Allow access to all routes via tunnel (temporarily disable restrictions)
@@ -315,6 +315,32 @@
                 }
             } catch (error) {
                 showToast('Failed to save configuration: ' + error.message, 'error');
+            }
+        }
+
+        async function updateSetting(settingName) {
+            const checkbox = document.getElementById(settingName);
+            const value = checkbox.checked;
+
+            try {
+                const response = await fetch('/tunnel/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [settingName]: value }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Setting updated', 'success');
+                    fetchStatus();
+                } else {
+                    // Revert checkbox on error
+                    checkbox.checked = !value;
+                    showToast('Failed to update setting: ' + result.error, 'error');
+                }
+            } catch (error) {
+                // Revert checkbox on error
+                checkbox.checked = !value;
+                showToast('Failed to update setting: ' + error.message, 'error');
             }
         }
 
