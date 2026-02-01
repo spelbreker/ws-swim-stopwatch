@@ -123,6 +123,31 @@ const mockCompetitionData: CompetitionData = {
                 },
               ],
             },
+            {
+              relayid: 'R2',
+              entries: [
+                {
+                  eventid: 'E2',
+                  heatid: 'H2',
+                  entrytime: '2:05.00',
+                  lane: 2,
+                  relaypositions: [
+                    { athleteid: 1 },
+                    { athleteid: 2 },
+                  ],
+                },
+                {
+                  eventid: 'E2',
+                  heatid: 'H3',
+                  entrytime: '2:10.00',
+                  lane: 1,
+                  relaypositions: [
+                    { athleteid: 1 },
+                    { athleteid: 2 },
+                  ],
+                },
+              ],
+            },
           ],
         },
       ],
@@ -198,6 +223,21 @@ describe('Competition class', () => {
       expect((relays[0] as { relayid: string }).relayid).toBe('R1');
       expect(relays[0].athletes[0].firstname).toBe('John');
       expect(relays[0].athletes[1].firstname).toBe('Jane');
+    } else {
+      fail('Expected array of relay entries');
+    }
+  });
+
+  test('getHeat returns multiple relay entries for same heat', () => {
+    const relays = Competition.getHeat(0, 1, 2, 2); // Heat H2 has 2 relay entries (R1 lane 1, R2 lane 2)
+    expect(relays).not.toBeNull();
+    expect(Array.isArray(relays)).toBe(true);
+    if (Array.isArray(relays)) {
+      expect(relays.length).toBe(2);
+      expect((relays[0] as { relayid: string }).relayid).toBe('R1');
+      expect(relays[0].lane).toBe(1);
+      expect((relays[1] as { relayid: string }).relayid).toBe('R2');
+      expect(relays[1].lane).toBe(2);
     } else {
       fail('Expected array of relay entries');
     }

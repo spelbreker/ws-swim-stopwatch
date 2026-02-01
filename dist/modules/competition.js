@@ -268,16 +268,16 @@ class Competition {
             .flatMap((club) => {
             if (!Array.isArray(club.relays))
                 return [];
-            return club.relays.map((relay) => {
-                const firstEntry = relay.entries[0];
-                if (!firstEntry || firstEntry.heatid !== heat || firstEntry.eventid !== event)
-                    return null;
-                return {
-                    lane: firstEntry.lane,
-                    entrytime: firstEntry.entrytime,
+            return club.relays.flatMap((relay) => {
+                // Filter all entries that match the event and heat
+                const matchingEntries = relay.entries.filter((entry) => entry.heatid === heat && entry.eventid === event);
+                // Create a result for each matching entry (can be multiple entries per relay in same heat)
+                return matchingEntries.map((entry) => ({
+                    lane: entry.lane,
+                    entrytime: entry.entrytime,
                     club: club.name,
                     relayid: relay.relayid,
-                    athletes: firstEntry.relaypositions.map((position) => {
+                    athletes: entry.relaypositions.map((position) => {
                         const athlete = Competition.findAthleteById(data, position.athleteid);
                         return {
                             athleteid: position.athleteid,
@@ -285,7 +285,7 @@ class Competition {
                             lastname: athlete?.lastname ?? '',
                         };
                     }),
-                };
+                }));
             });
         })
             .filter((x) => x !== null)
