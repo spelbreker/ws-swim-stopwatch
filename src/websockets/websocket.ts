@@ -30,21 +30,38 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
   });
 }
 
+export function normalizeStartTimestamp(
+  timestamp: number,
+  timestamp_us: number | undefined,
+): { timestamp: number; timestamp_us: number } {
+  if (timestamp_us !== undefined) {
+    // New format: microsecond precision — forward both fields unchanged
+    return { timestamp, timestamp_us };
+  } else if (timestamp > 10000000000) {
+    // Intermediate format: milliseconds only — add timestamp_us = 0
+    return { timestamp, timestamp_us: 0 };
+  } else {
+    // Old format: seconds — convert to milliseconds and add timestamp_us = 0
+    return { timestamp: timestamp * 1000, timestamp_us: 0 };
+  }
+}
+
 function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { event, heat, timestamp } = msg;
+  const { event, heat, timestamp, timestamp_us } = msg;
   if (
-    (typeof timestamp === 'number')
+    typeof timestamp === 'number'
     && (typeof event === 'string' || typeof event === 'number')
     && (typeof heat === 'string' || typeof heat === 'number')
   ) {
-    logStart(event, heat, timestamp);
+    const normalized = normalizeStartTimestamp(
+      timestamp,
+      typeof timestamp_us === 'number' ? timestamp_us : undefined,
+    );
+    logStart(event, heat, normalized.timestamp);
+    broadcastAllClients(wss, { ...msg, timestamp: normalized.timestamp, timestamp_us: normalized.timestamp_us });
+  } else {
+    broadcastAllClients(wss, msg);
   }
-  // Preserve the original client timestamp - don't overwrite with server time
-  const payload = {
-    ...msg,
-    // timestamp: original timestamp is preserved
-  };
-  broadcastAllClients(wss, payload);
 }
 
 function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
