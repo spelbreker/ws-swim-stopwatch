@@ -15,11 +15,11 @@ function appendLog(message: string) {
 
 let lastStartTimestamp: number | null = null;
 
-export function logStart(event: string | number, heat: string | number, timestamp: number) {
-  lastStartTimestamp = timestamp;
+export function logStart(event: string | number, heat: string | number, timestampSec: number, timestampUsec: number = 0) {
+  lastStartTimestamp = timestampSec * 1000 + timestampUsec / 1000;
   const startLine = '====================================================================';
-   
-  const startMsg = `[${new Date(Number(timestamp)).toISOString()}] START - Event: ${event}, Heat: ${heat}, Timestamp: ${timestamp}`;
+
+  const startMsg = `[${new Date(lastStartTimestamp).toISOString()}] START - Event: ${event}, Heat: ${heat}, Timestamp: ${timestampSec}.${String(timestampUsec).padStart(6, '0')}`;
   appendLog(`\n${startLine}\n${startMsg}\n${startLine}`);
 }
 

@@ -19,10 +19,16 @@ describe('logger', () => {
   });
 
   it('should log a START event', () => {
-    logStart('1', '2', 1718000000000);
+    logStart('1', '2', 1718000000, 0);
     const log = fs.readFileSync(logPath, 'utf8');
-    expect(log).toMatch(/START - Event: 1, Heat: 2, Timestamp: 1718000000000/);
+    expect(log).toMatch(/START - Event: 1, Heat: 2, Timestamp: 1718000000\.000000/);
     expect(log).toMatch(/====================================================================/);
+  });
+
+  it('should log a START event with microsecond precision', () => {
+    logStart('1', '2', 1718000000, 123456);
+    const log = fs.readFileSync(logPath, 'utf8');
+    expect(log).toMatch(/START - Event: 1, Heat: 2, Timestamp: 1718000000\.123456/);
   });
 
   it('should log a STOP event and reset lastStartTimestamp', () => {
@@ -33,7 +39,7 @@ describe('logger', () => {
   });
 
   it('should log a LAP event with correct elapsed time', () => {
-    logStart('1', '2', 1718000000000);
+    logStart('1', '2', 1718000000, 0);
     logLap(3, 1718000002345);
     const log = fs.readFileSync(logPath, 'utf8');
     // Elapsed: 2345ms

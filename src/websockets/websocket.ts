@@ -31,19 +31,38 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
 }
 
 function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { event, heat, timestamp } = msg;
-  if (
-    (typeof timestamp === 'number')
-    && (typeof event === 'string' || typeof event === 'number')
-    && (typeof heat === 'string' || typeof heat === 'number')
-  ) {
-    logStart(event, heat, timestamp);
+  const { event, heat, timestamp_sec, timestamp_usec, timestamp } = msg;
+
+  let payload: Record<string, unknown>;
+
+  if (typeof timestamp_sec === 'number' && typeof timestamp_usec === 'number') {
+    // New format: forward as-is
+    if (
+      (typeof event === 'string' || typeof event === 'number')
+      && (typeof heat === 'string' || typeof heat === 'number')
+    ) {
+      logStart(event, heat, timestamp_sec, timestamp_usec);
+    }
+    payload = { ...msg };
+  } else if (typeof timestamp === 'number') {
+    // Legacy format: convert to new format
+    if (
+      (typeof event === 'string' || typeof event === 'number')
+      && (typeof heat === 'string' || typeof heat === 'number')
+    ) {
+      logStart(event, heat, timestamp, 0);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { timestamp: _ts, ...rest } = msg;
+    payload = {
+      ...rest,
+      timestamp_sec: timestamp,
+      timestamp_usec: 0,
+    };
+  } else {
+    payload = { ...msg };
   }
-  // Preserve the original client timestamp - don't overwrite with server time
-  const payload = {
-    ...msg,
-    // timestamp: original timestamp is preserved
-  };
+
   broadcastAllClients(wss, payload);
 }
 
