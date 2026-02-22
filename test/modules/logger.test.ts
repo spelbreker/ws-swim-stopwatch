@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {
   logStart,
-  logStop,
-  logLap,
+  logReset,
+  logSplit,
   resetLoggerState,
 } from '../../src/websockets/logger';
 
@@ -25,24 +25,31 @@ describe('logger', () => {
     expect(log).toMatch(/====================================================================/);
   });
 
-  it('should log a STOP event and reset lastStartTimestamp', () => {
-    logStop(1718000001234);
+  it('should log a RESET event and reset lastStartTimestamp', () => {
+    logReset(1718000001234);
     const log = fs.readFileSync(logPath, 'utf8');
-    expect(log).toMatch(/STOP - Timestamp: 1718000001234/);
+    expect(log).toMatch(/RESET - Timestamp: 1718000001234/);
     expect(log).toMatch(/--------------------------------------------------------------------/);
   });
 
-  it('should log a LAP event with correct elapsed time', () => {
+  it('should log a SPLIT event with correct elapsed time', () => {
     logStart('1', '2', 1718000000000);
-    logLap(3, 1718000002345);
+    logSplit(3, 1718000002345);
     const log = fs.readFileSync(logPath, 'utf8');
     // Elapsed: 2345ms
-    expect(log).toMatch(/LAP - Lane: 3, Time: 00:02.345, Timestamp: 1718000002345/);
+    expect(log).toMatch(/SPLIT - Lane: 3, Time: 00:02.345, Timestamp: 1718000002345/);
   });
 
-  it('should log a LAP event with elapsed 0 if no start', () => {
-    logLap(5, 1718000002345);
+  it('should log a SPLIT event with elapsed 0 if no start', () => {
+    logSplit(5, 1718000002345);
     const log = fs.readFileSync(logPath, 'utf8');
-    expect(log).toMatch(/LAP - Lane: 5, Time: 00:00.345, Timestamp: 1718000002345/);
+    expect(log).toMatch(/SPLIT - Lane: 5, Time: 00:00.345, Timestamp: 1718000002345/);
+  });
+
+  it('should log a SPLIT event with elapsed_ms when provided', () => {
+    logStart('1', '2', 1718000000000);
+    logSplit(3, 1718000002345, 2345);
+    const log = fs.readFileSync(logPath, 'utf8');
+    expect(log).toMatch(/SPLIT - Lane: 3, Time: 00:02.345, Timestamp: 1718000002345, Elapsed: 2345ms/);
   });
 });

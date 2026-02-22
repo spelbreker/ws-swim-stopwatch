@@ -1,0 +1,43 @@
+---
+- name: Create /opt/swimwatch directory
+  ansible.builtin.file:
+    path: /opt/swimwatch
+    state: directory
+    owner: swimwatch
+    group: swimwatch
+    mode: "0755"
+
+- name: Create swimwatch subdirectories
+  ansible.builtin.file:
+    path: "/opt/swimwatch/{{ item }}"
+    state: directory
+    owner: swimwatch
+    group: swimwatch
+    mode: "0755"
+  loop:
+    - uploads
+    - logs
+    - config
+
+- name: Ensure competition.json exists
+  ansible.builtin.copy:
+    content: "{}"
+    dest: /opt/swimwatch/competition.json
+    owner: swimwatch
+    group: swimwatch
+    mode: "0644"
+    force: false
+
+- name: Deploy docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/swimwatch/docker-compose.yml
+    owner: swimwatch
+    group: swimwatch
+    mode: "0644"
+
+- name: Pull images and start containers
+  ansible.builtin.command:
+    cmd: docker compose up -d --pull always
+    chdir: /opt/swimwatch
+  changed_when: true

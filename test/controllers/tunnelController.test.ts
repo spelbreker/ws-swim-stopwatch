@@ -132,6 +132,10 @@ describe('tunnelController', () => {
     });
 
     it('should return error when token is missing and no config exists', async () => {
+      spy = jest.spyOn(tunnel, 'updatePartialConfig').mockReturnValue({
+        success: false,
+        error: 'No configuration found. Please configure a token first.',
+      });
       const res = await request(app).post('/tunnel/config').send({
         autoStart: true,
       });
