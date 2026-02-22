@@ -4,7 +4,7 @@ import type WebSocket from 'ws';
 export type Message =
   | { type: 'ping'; time: number }
   | { type: 'pong'; client_ping_time: number; server_time: number }
-  | { type: 'start'; timestamp: number; event?: number | string; heat?: number | string }
+  | { type: 'start'; timestamp: number; timestamp_us?: number; event?: number | string; heat?: number | string }
   | { type: 'reset'; timestamp: number }
   | { type: 'stop'; timestamp: number }
   | { type: 'split'; lane: number; time: string }
