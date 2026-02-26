@@ -25,3 +25,6 @@ yarn-error.log*
 
 # Configuration files with sensitive data
 config/
+
+# Backup files
+*.backup
