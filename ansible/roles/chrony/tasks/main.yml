@@ -14,9 +14,14 @@
     mode: "0644"
   notify: Restart chronyd
 
+- name: Set Chrony systemd service name
+  ansible.builtin.set_fact:
+    chrony_systemd_service_name: >-
+      {{ 'chronyd' if ansible_facts.os_family in ['RedHat', 'Suse'] else 'chrony' }}
+
 - name: Enable and start chronyd service
   ansible.builtin.systemd:
-    name: chronyd
+    name: "{{ chrony_systemd_service_name }}"
     enabled: true
     state: started
 
@@ -27,6 +32,8 @@
   failed_when: false
 
 - name: Allow UDP port 123 (NTP) through ufw
-  ansible.builtin.command: ufw allow 123/udp
+  community.general.ufw:
+    rule: allow
+    port: "123"
+    proto: udp
   when: ufw_check.rc == 0
-  changed_when: true

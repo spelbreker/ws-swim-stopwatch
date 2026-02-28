@@ -37,7 +37,8 @@
     mode: "0644"
 
 - name: Pull images and start containers
-  ansible.builtin.command:
-    cmd: docker compose up -d --pull always
-    chdir: /opt/swimwatch
-  changed_when: true
+  community.docker.docker_compose_v2:
+    project_src: /opt/swimwatch
+    pull: always
+    state: present
+    recreate: smart

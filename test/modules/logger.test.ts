@@ -40,7 +40,7 @@ describe('logger', () => {
     expect(log).toMatch(/SPLIT - Lane: 3, Time: 00:02.345, Timestamp: 1718000002345/);
   });
 
-  it('should log a SPLIT event with elapsed 0 if no start', () => {
+  it('should log a SPLIT event using derived elapsed time when no start', () => {
     logSplit(5, 1718000002345);
     const log = fs.readFileSync(logPath, 'utf8');
     expect(log).toMatch(/SPLIT - Lane: 5, Time: 00:00.345, Timestamp: 1718000002345/);

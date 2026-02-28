@@ -6,7 +6,7 @@ export type Message =
   | { type: 'pong'; client_ping_time: number; server_time: number }
   | { type: 'start'; timestamp: number; timestamp_us?: number; event?: number | string; heat?: number | string }
   | { type: 'reset'; timestamp: number }
-  | { type: 'split'; lane: number; elapsed_ms: number; timestamp: number }
+  | { type: 'split'; lane: number; elapsed_ms?: number; timestamp: number }
   | { type: 'event-heat'; event: number | string; heat: number | string; session?: number | string }
   | { type: 'clear' }
   | { type: 'time_sync'; server_time: number }
