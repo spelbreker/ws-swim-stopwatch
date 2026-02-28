@@ -50,18 +50,6 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
 }
 
 function handleEventHeat(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { event, heat, session } = msg;
-  if (typeof event === 'string' || typeof event === 'number') {
-    raceState.currentEvent = event;
-  }
-  if (typeof heat === 'string' || typeof heat === 'number') {
-    raceState.currentHeat = heat;
-  }
-  if (typeof session === 'string' || typeof session === 'number') {
-    raceState.currentSession = session;
-  } else {
-    raceState.currentSession = null;
-  }
   broadcastAllClients(wss, msg);
 }
 
@@ -75,12 +63,17 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
     raceState.raceStartTimestamp = timestamp;
   }
 
-  // Use event/heat from start message as fallback
+  // Set event/heat/session from start message
   if (typeof event === 'string' || typeof event === 'number') {
-    raceState.currentEvent = raceState.currentEvent ?? event;
+    raceState.currentEvent = event;
   }
   if (typeof heat === 'string' || typeof heat === 'number') {
-    raceState.currentHeat = raceState.currentHeat ?? heat;
+    raceState.currentHeat = heat;
+  }
+  if (typeof msg.session === 'string' || typeof msg.session === 'number') {
+    raceState.currentSession = msg.session;
+  } else {
+    raceState.currentSession = null;
   }
 
   if (
