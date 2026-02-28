@@ -6,9 +6,28 @@ import {
   logStart,
   logStop,
 } from './logger';
+import {
+  exportHeatToSplashFile,
+  RaceState,
+  SPLIT_IGNORE_WINDOW_MS,
+} from '../modules/splashExporter';
 
 // Store device information
 const devices = new Map<string, DeviceInfo>();
+
+// Race state for Splash Meet Manager export
+const raceState: RaceState = {
+  currentSession: null,
+  currentEvent: null,
+  currentHeat: null,
+  raceStartTimestamp: null,
+  splitsByLane: new Map(),
+};
+
+function resetRaceState() {
+  raceState.raceStartTimestamp = null;
+  raceState.splitsByLane = new Map();
+}
 
 function isMessage(obj: unknown): obj is Message {
   return (
@@ -30,8 +49,40 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
   });
 }
 
+function handleEventHeat(msg: Record<string, unknown>, wss: WebSocketServer) {
+  const { event, heat, session } = msg;
+  if (typeof event === 'string' || typeof event === 'number') {
+    raceState.currentEvent = event;
+  }
+  if (typeof heat === 'string' || typeof heat === 'number') {
+    raceState.currentHeat = heat;
+  }
+  if (typeof session === 'string' || typeof session === 'number') {
+    raceState.currentSession = session;
+  } else {
+    raceState.currentSession = null;
+  }
+  broadcastAllClients(wss, msg);
+}
+
 function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   const { event, heat, timestamp } = msg;
+
+  // Reset race state for new race
+  resetRaceState();
+
+  if (typeof timestamp === 'number') {
+    raceState.raceStartTimestamp = timestamp;
+  }
+
+  // Use event/heat from start message as fallback
+  if (typeof event === 'string' || typeof event === 'number') {
+    raceState.currentEvent = raceState.currentEvent ?? event;
+  }
+  if (typeof heat === 'string' || typeof heat === 'number') {
+    raceState.currentHeat = raceState.currentHeat ?? heat;
+  }
+
   if (
     (typeof timestamp === 'number')
     && (typeof event === 'string' || typeof event === 'number')
@@ -49,11 +100,30 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
 
 function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
   const { lane, timestamp } = msg;
+
+  // Ignore splits within the ignore window after start (prevents accidental presses)
+  if (
+    typeof timestamp === 'number'
+    && raceState.raceStartTimestamp !== null
+    && (timestamp - raceState.raceStartTimestamp) < SPLIT_IGNORE_WINDOW_MS
+  ) {
+    console.log(`[WebSocket] Ignoring split for lane ${lane}: within ${SPLIT_IGNORE_WINDOW_MS}ms of start`);
+    return;
+  }
+
   if (
     (typeof lane === 'string' || typeof lane === 'number')
     && typeof timestamp === 'number'
   ) {
     logLap(lane, timestamp);
+
+    // Track split for Splash export
+    const laneNum = typeof lane === 'string' ? parseInt(lane, 10) : lane;
+    if (!Number.isNaN(laneNum)) {
+      const existing = raceState.splitsByLane.get(laneNum) ?? [];
+      existing.push(timestamp);
+      raceState.splitsByLane.set(laneNum, existing);
+    }
   }
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
@@ -65,6 +135,17 @@ function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
 
 function handleReset(msg: Record<string, unknown>, wss: WebSocketServer) {
   logStop(Date.now());
+
+  // Export heat results to Splash Meet Manager TXT file
+  try {
+    exportHeatToSplashFile(raceState);
+  } catch (err) {
+    console.error('[WebSocket] Failed to export heat results:', err);
+  }
+
+  // Reset race state after export
+  resetRaceState();
+
   const payload = {
     ...msg,
     timestamp: Date.now(),
@@ -176,6 +257,10 @@ export function setupWebSocket(server: http.Server) {
         case 'device_update_lane':
           handleDeviceUpdateLane(msgObj);
           broadcastAllClients(wss, msgObj);
+          return;
+        case 'event-heat':
+        case 'select-event':
+          handleEventHeat(msgObj, wss);
           return;
         case 'start':
           handleStart(msgObj, wss);
