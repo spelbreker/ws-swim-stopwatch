@@ -2,9 +2,9 @@ import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Message, DeviceInfo, DeviceInfoResponse } from './messageTypes';
 import {
-  logLap,
+  logSplit,
   logStart,
-  logStop,
+  logReset,
 } from './logger';
 
 // Store device information
@@ -47,13 +47,13 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   broadcastAllClients(wss, payload);
 }
 
-function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { lane, timestamp } = msg;
+function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
+  const { lane, timestamp, elapsed_ms } = msg;
   if (
     (typeof lane === 'string' || typeof lane === 'number')
     && typeof timestamp === 'number'
   ) {
-    logLap(lane, timestamp);
+    logSplit(lane, timestamp, typeof elapsed_ms === 'number' ? elapsed_ms : undefined);
   }
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
@@ -64,10 +64,12 @@ function handleLap(msg: Record<string, unknown>, wss: WebSocketServer) {
 }
 
 function handleReset(msg: Record<string, unknown>, wss: WebSocketServer) {
-  logStop(Date.now());
+  const timestamp = typeof msg.timestamp === 'number' ? msg.timestamp : Date.now();
+  logReset(timestamp);
+  // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
-    timestamp: Date.now(),
+    timestamp,
   };
   broadcastAllClients(wss, payload);
 }
@@ -181,12 +183,25 @@ export function setupWebSocket(server: http.Server) {
           handleStart(msgObj, wss);
           return;
         case 'split':
-          handleLap(msgObj, wss);
+          handleSplit(msgObj, wss);
           return;
         case 'reset':
           handleReset(msgObj, wss);
           return;
+        case 'select-event':
+          // Backward compatibility: map select-event to event-heat
+          msgObj.type = 'event-heat';
+          // falls through
+        case 'event-heat':
+          console.log(`[WebSocket] Event/Heat changed: event=${msgObj.event}, heat=${msgObj.heat}`);
+          broadcastAllClients(wss, msgObj);
+          return;
+        case 'clear':
+          console.log('[WebSocket] Clear display');
+          broadcastAllClients(wss, msgObj);
+          return;
         default:
+          console.log(`[WebSocket] Unknown message type: ${msgObj.type}`);
           break;
       }
       // Default: broadcast other messages as-is

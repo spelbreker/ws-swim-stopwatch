@@ -1,0 +1,26 @@
+# Managed by Ansible - do not edit manually
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - "9443:9443"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+
+  ws-swim-stopwatch:
+    image: ghcr.io/spelbreker/ws-swim-stopwatch:latest
+    ports:
+      - "80:8080"
+    volumes:
+      - /opt/swimwatch/uploads:/app/uploads
+      - /opt/swimwatch/logs:/app/logs
+      - /opt/swimwatch/config:/app/config
+      - /opt/swimwatch/competition.json:/app/public/competition.json
+    restart: unless-stopped
+
+volumes:
+  portainer_data:
