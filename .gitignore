@@ -28,3 +28,6 @@ config/
 
 # Backup files
 *.backup
+
+# Splash Meet Manager exports
+exports/
