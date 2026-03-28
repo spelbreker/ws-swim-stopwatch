@@ -1,0 +1,9 @@
+---
+- name: Provision Swim Stopwatch on Raspberry Pi
+  hosts: swimwatch
+  become: true
+
+  roles:
+    - docker
+    - chrony
+    - swimwatch
