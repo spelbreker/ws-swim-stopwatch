@@ -23,6 +23,9 @@ The project consists of a Node.js server that serves HTML files and manages WebS
 - Start and reset a stopwatch from a remote interface.
 - Display split times for multiple lanes on a screen.
 - Real-time synchronization of stopwatch and split times using WebSockets.
+- Split-aware timing: splits are labelled with the distance covered (50m, 100m, ...), lanes are
+  ranked by completed splits and time, the finish is marked, and accidental double presses are
+  filtered by a per-lane cooldown (ignored splits are logged).
 
 ## Getting Started
 
@@ -55,6 +58,7 @@ The project consists of a Node.js server that serves HTML files and manages WebS
 
 - **Remote Control Interface**: Open [http://localhost:8080/remote.html](http://_vscodecontentref_/2) to access the remote control interface. Use the buttons to start/reset the stopwatch and record split times.
 - **Display Screen**: Open [http://localhost:8080/screen.html](http://_vscodecontentref_/3) to view the split times for each lane.
+- **Settings**: Open [http://localhost:8080/settings.html](http://localhost:8080/settings.html) to set the pool length (25m/50m) and the split cooldown in seconds (default 12). Settings are stored in `config/app.json` and are only reachable locally (not via the Cloudflare tunnel). See [docs/websocket-api.md](docs/websocket-api.md#split-cooldown--ignored-splits) for how splits are labelled and filtered.
 
 ## Docker Setup
 
