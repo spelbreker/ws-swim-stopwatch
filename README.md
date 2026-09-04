@@ -76,6 +76,11 @@ To run the project using Docker, follow these steps:
 
 3. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/4).
 
+The compose file bind-mounts four host directories so data survives container rebuilds:
+`uploads/` (raw Lenex uploads), `logs/`, `config/` (tunnel + app settings) and `data/`
+(the processed `competition.json`). The data directory can be overridden with the `DATA_DIR`
+environment variable (default `./data`).
+
 ### Docker with Cloudflare Tunnel
 
 The Docker image includes cloudflared, allowing you to expose the server to the internet without port forwarding:
@@ -148,6 +153,8 @@ project-root/
 │   └── server/
 │       └── modules/
 ├── uploads/                # Uploaded files (e.g. Lenex)
+├── data/                   # Processed competition.json (gitignored, Docker volume)
+├── config/                 # tunnel.json / app.json (gitignored, Docker volume)
 ├── examples/               # Example files (e.g. sample Lenex)
 ├── package.json
 ├── tsconfig.json

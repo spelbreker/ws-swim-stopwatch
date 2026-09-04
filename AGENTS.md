@@ -100,7 +100,7 @@ it('should return tunnel status', async () => {
 ## 8) Data And File Safety
 
 - Keep uploads/logs/config volumes and paths stable.
-- Do not change `public/competition.json` semantics without updating dependent controllers and screens.
+- Do not change `data/competition.json` semantics without updating dependent controllers and screens. Its location comes from `Competition.filePath()` (`DATA_DIR`, default `./data`); never hard-code the path.
 - Avoid destructive file operations beyond current behavior (for example competition delete endpoint).
 
 ## 9) CI Awareness
