@@ -1,12 +1,29 @@
 import type WebSocket from 'ws';
 
+// Arrival ranking of all lanes that have split in the current heat
+export interface SplitRankingEntry {
+  lane: number;
+  place: number;
+  splitNumber: number;
+}
+
 // Competition & device message types (matches swimwatch-hardware protocol)
 export type Message =
   | { type: 'ping'; time: number }
   | { type: 'pong'; client_ping_time: number; server_time: number }
   | { type: 'start'; timestamp: number; timestamp_us?: number; event?: number | string; heat?: number | string }
   | { type: 'reset'; timestamp: number }
-  | { type: 'split'; lane: number; elapsed_ms?: number; timestamp: number }
+  | {
+    type: 'split';
+    lane: number;
+    elapsed_ms?: number;
+    timestamp: number;
+    // Server-side enrichment (optional; absent on messages sent by clients)
+    distance?: number;
+    splitNumber?: number;
+    isFinish?: boolean;
+    ranking?: SplitRankingEntry[];
+  }
   | { type: 'event-heat'; event: number | string; heat: number | string; session?: number | string }
   | { type: 'clear' }
   | { type: 'time_sync'; server_time: number }

@@ -26,5 +26,11 @@ yarn-error.log*
 # Configuration files with sensitive data
 config/
 
+# Uploaded competition data (competition.json)
+data/
+
 # Backup files
 *.backup
+
+# macOS
+.DS_Store

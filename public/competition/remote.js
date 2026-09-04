@@ -10,6 +10,9 @@ let pingStartTime;
 let serverTimeOffset = 0;
 // Time synchronization instance
 let timeSync;
+// Per-lane split cooldown (ms); the lane button stays green for exactly this long
+let splitCooldownMs = 12000;
+const laneHighlightTimers = new Map();
 
 // ------------------------------------------------------------------
 // Utility functions
@@ -18,10 +21,10 @@ function pad(number) {
     return number.toString().padStart(2, '0');
 }
 
-function updateLaneInfo(lane, time) {
+function updateLaneInfo(lane, time, distance) {
     const timeSpan = document.querySelector(`.lane-time[data-lane="${lane}"]`);
     if (timeSpan) {
-        timeSpan.textContent = time;
+        timeSpan.textContent = distance ? `${distance}m ${time}` : time;
     }
 }
 
@@ -36,6 +39,8 @@ function clearLaneInformation() {
     document.querySelectorAll('.lane-button').forEach(button => {
         const lane = button.getAttribute('data-lane');
         updateLaneInfo(lane, '00:00:00');
+        clearTimeout(laneHighlightTimers.get(lane));
+        laneHighlightTimers.delete(lane);
         button.classList.remove('bg-green-500');
         button.classList.add('bg-blue-500');
     });
@@ -83,12 +88,26 @@ function fillSelectOptions(selectElement, maxValue) {
 }
 
 function highlightLaneButton(button) {
+    const lane = button.getAttribute('data-lane');
+    clearTimeout(laneHighlightTimers.get(lane));
     button.classList.add('bg-green-500');
     button.classList.remove('bg-blue-500');
-    setTimeout(() => {
+    laneHighlightTimers.set(lane, setTimeout(() => {
         button.classList.remove('bg-green-500');
         button.classList.add('bg-blue-500');
-    }, 10000);
+        laneHighlightTimers.delete(lane);
+    }, splitCooldownMs));
+}
+
+function loadSplitCooldown() {
+    fetch('/settings')
+        .then(res => res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`)))
+        .then(settings => {
+            if (Number.isFinite(settings.splitCooldownSec)) {
+                splitCooldownMs = settings.splitCooldownSec * 1000;
+            }
+        })
+        .catch(() => console.warn('Could not load split cooldown, using default'));
 }
 
 // Function to send a ping message over WebSocket
@@ -194,6 +213,8 @@ async function updateEventHeatInfoBar(eventNr, heatNr) {
 document.addEventListener('DOMContentLoaded', function () {
     let stopwatchInterval;
 
+    loadSplitCooldown();
+
     // Initialize TimeSync with callbacks
     timeSync = new TimeSync({
         debugLogging: true,
@@ -297,12 +318,10 @@ document.addEventListener('DOMContentLoaded', function () {
     laneButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
-            // Use server-synchronized timestamp for sending, but calculate display time consistently
+            // Use server-synchronized timestamp for sending. The lane time is only updated
+            // from the server broadcast, so ignored splits (cooldown) never show up here.
             const lapTimestamp = Date.now() + serverTimeOffset;
-            // For display, use the same calculation as will be used on screen
-            updateLaneInfo(lane, window.formatLapTime(lapTimestamp, startTime || 0));
             window.socket.send(JSON.stringify({ type: 'split', lane, timestamp: lapTimestamp }));
-            highlightLaneButton(button);
         });
     });
 
@@ -369,7 +388,9 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i <= 9; i++) {
                 updateLaneInfo(i, '---:---:---');
             }
-            
+            // Pick up a changed cooldown setting for this heat
+            loadSplitCooldown();
+
             // Update UI elements when receiving start from other device
             updateStartButtonUI(true);
             
@@ -387,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const lane = message.lane;
             if (message.timestamp) {
                 // When receiving split from server, the timestamp is already server-synchronized
-                updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0));
+                updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0), message.distance);
             }
             const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
             if (button) {

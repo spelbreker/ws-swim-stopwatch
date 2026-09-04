@@ -9,6 +9,7 @@ const sessionController_1 = require("../controllers/competition/sessionControlle
 const logController_1 = require("../controllers/competition/logController");
 const devicesController_1 = require("../controllers/devicesController");
 const tunnelController_1 = require("../controllers/tunnelController");
+const settingsController_1 = require("../controllers/settingsController");
 // Register all competition-related routes
 function registerRoutes(app, upload) {
     // JSON body parser for tunnel routes - must be registered BEFORE routes
@@ -30,4 +31,7 @@ function registerRoutes(app, upload) {
     app.get('/logs/competition.log', logController_1.getCompetitionLog);
     // Device management routes
     app.get('/devices', devicesController_1.getDevicesList);
+    // Application settings (pool length, split cooldown)
+    app.get('/settings', settingsController_1.getSettings);
+    app.post('/settings', (0, express_1.json)(), settingsController_1.postSettings);
 }
