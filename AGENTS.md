@@ -119,3 +119,19 @@ Before finishing substantial changes, run relevant checks locally.
 - Keep API error responses explicit (400 vs 404 vs 500).
 - Keep browser JS compatible with current global runtime assumptions (`window.socket`, `window.formatLapTime`).
 - Keep docs in `README.md` or `docs/` aligned when behavior changes.
+
+## 11) Known Vulnerabilities (Accepted)
+
+`npm audit` reports 2 moderate vulnerabilities in `fast-xml-parser@3.21.1`,
+pulled in transitively by `js-lenex@0.0.7`:
+
+- GHSA-x3cc-x39p-42qx — Prototype Pollution through tag or attribute name.
+- GHSA-gh4j-gqv2-49f6 — XMLBuilder comment/CDATA injection via unescaped delimiters.
+
+These are accepted for the following reasons:
+
+- `js-lenex@0.0.7` is unmaintained (latest release) and pins `fast-xml-parser@^3.20.0`.
+- No patched 3.x release exists; the fix landed in `fast-xml-parser@5.6.1+`, which changed the public API (`new XMLParser().parse()` instead of `parse()`), so an `npm override` would break `js-lenex`.
+- The parser only processes Lenex files uploaded by an administrator via the tunnel-restricted `/competition/upload` route — not untrusted public input.
+
+If `js-lenex` is ever replaced or a patched fork is published, remove this section and re-run `npm audit --audit-level=moderate`.
