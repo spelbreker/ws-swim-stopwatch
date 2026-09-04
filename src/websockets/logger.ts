@@ -33,9 +33,10 @@ export function logReset(timestamp: number) {
 function formatRaceTime(timestamp: number): string {
   if (lastStartTimestamp === null) {
     // No start: show 00:00.xxx where xxx is the last three digits of the timestamp
-    return `00:00.${String(timestamp % 1000).padStart(3, '0')}`;
+    return `00:00.${String(Math.floor(timestamp) % 1000).padStart(3, '0')}`;
   }
-  const elapsed = timestamp - lastStartTimestamp;
+  // Timestamps may carry sub-millisecond fractions from time sync; log whole ms
+  const elapsed = Math.floor(timestamp - lastStartTimestamp);
   const minutes = String(Math.floor(elapsed / 60000)).padStart(2, '0');
   const seconds = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
   const millis = String(elapsed % 1000).padStart(3, '0');

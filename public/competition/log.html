@@ -34,14 +34,21 @@
 
     <!-- Main Content -->
     <div class="relative flex min-h-screen flex-col justify-center overflow-hidden py-6 sm:py-12">
-        <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <!-- Log Viewer -->
             <main>
-                <div class="flex justify-center mb-6">
+                <div class="flex justify-center gap-4 mb-6">
                     <button id="refresh-btn" aria-label="Refresh Log"
                         class="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-6 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
                         Refresh Log
                     </button>
+                    <a id="download-btn" href="/logs/competition.log?download=1" download aria-label="Download Log"
+                        class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        Download Log
+                    </a>
                 </div>
                 <div class="card rounded-lg shadow-lg overflow-hidden">
                     <div class="bg-gray-200 dark:bg-gray-700 p-2 flex items-center">

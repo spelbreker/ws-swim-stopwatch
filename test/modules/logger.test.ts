@@ -54,6 +54,13 @@ describe('logger', () => {
     expect(log).toMatch(/SPLIT - Lane: 3, Time: 00:02.345, Timestamp: 1718000002345, Elapsed: 2345ms/);
   });
 
+  it('should log whole milliseconds for fractional timestamps', () => {
+    logStart('1', '2', 1718000000000.528);
+    logSplit(3, 1718000006954.6475);
+    const log = fs.readFileSync(logPath, 'utf8');
+    expect(log).toMatch(/SPLIT - Lane: 3, Time: 00:06.954, Timestamp: 1718000006954.6475/);
+  });
+
   it('should log distance and split number when provided', () => {
     logStart('1', '2', 1718000000000);
     logSplit(3, 1718000002345, undefined, 50, 1);

@@ -1209,6 +1209,13 @@
       }
     }
   }
+  .hover\:bg-gray-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-700);
+      }
+    }
+  }
   .hover\:bg-green-700 {
     &:hover {
       @media (hover: hover) {
@@ -1323,6 +1330,11 @@
   .focus\:ring-gray-300 {
     &:focus {
       --tw-ring-color: var(--color-gray-300);
+    }
+  }
+  .focus\:ring-gray-400 {
+    &:focus {
+      --tw-ring-color: var(--color-gray-400);
     }
   }
   .focus\:ring-indigo-500 {
