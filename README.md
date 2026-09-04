@@ -12,7 +12,24 @@ This project is a web server with WebSocket support for stopwatch synchronizatio
 - [Using GitHub Packages](#using-github-packages)
 - [External Access (Cloudflare Tunnel)](#external-access-cloudflare-tunnel)
 - [Project Structure](#project-structure)
+- [Documentation](#documentation)
 - [License](#license)
+
+## Documentation
+
+Full documentation lives in [`docs/`](docs/):
+
+| Document | Description |
+|----------|-------------|
+| [architecture.md](docs/architecture.md) | System architecture, request flow, layers, data storage, design rules |
+| [http-api.md](docs/http-api.md) | Complete REST API reference |
+| [websocket-api.md](docs/websocket-api.md) | WebSocket message contract and state diagrams |
+| [split-aware-timing.md](docs/split-aware-timing.md) | Split labels, cooldown, finish detection, arrival ranking |
+| [frontend.md](docs/frontend.md) | Page map, shared JS, page-by-page behaviour, layout convention |
+| [deployment.md](docs/deployment.md) | Docker, environment variables, volumes, operations, CI |
+| [cloudflare-tunnel.md](docs/cloudflare-tunnel.md) | Cloudflare Tunnel setup and route restrictions |
+| [timesync.md](docs/timesync.md) | NTP-style time synchronisation between clients and server |
+| [plan-split-aware-timing.md](docs/plan-split-aware-timing.md) | Original feature plan for split-aware timing |
 
 ## Overview
 
@@ -132,39 +149,47 @@ Security behavior when accessed via Cloudflare Tunnel:
 
 ## Project Structure
 
-The project uses a modern, modular folder structure for clarity and maintainability:
+The project uses a modular folder structure for clarity and maintainability:
 
 ```
 project-root/
-├── public/                  # Static assets (HTML, JS, images, manifest, etc.)
-│   ├── competition/         # Competition views/scripts
-│   ├── image/               # Public images
-│   ├── js/                  # General JS scripts
-│   ├── training/            # Training module views/scripts
+├── public/                  # Static assets (HTML, JS, CSS, images, manifest)
+│   ├── competition/         # Competition remote, screen, log, upload pages
+│   ├── training/            # Training remote and screen pages
+│   ├── js/                  # Shared JS (main.js, timeSync.js, devices.js, settings.js)
+│   ├── css/                 # Tailwind source (base.css) and compiled output (output.css)
 │   ├── index.html           # Dashboard
-│   ├── manifest.json        # PWA manifest
-│   └── ...
-├── src/                    # All source code (Node.js server, modules, types)
-│   └── server/
-│       ├── server.ts        # Server entry point
-│       ├── modules/         # Business logic modules (e.g. competition.ts)
-│       └── types/           # TypeScript types/interfaces
-├── test/                   # Automated tests (mirrors src/ structure)
-│   └── server/
-│       └── modules/
-├── uploads/                # Uploaded files (e.g. Lenex)
-├── data/                   # Processed competition.json (gitignored, Docker volume)
-├── config/                 # tunnel.json / app.json (gitignored, Docker volume)
-├── examples/               # Example files (e.g. sample Lenex)
+│   ├── devices.html         # Device manager
+│   ├── tunnel.html          # Cloudflare tunnel admin
+│   ├── settings.html        # Application settings
+│   └── manifest.json        # PWA manifest
+├── src/                     # Server-side TypeScript source
+│   ├── server.ts            # Server entry point (Express + HTTP + WebSocket on port 8080)
+│   ├── routes/routes.ts     # Centralised route registration
+│   ├── controllers/         # Thin HTTP adapters (competition, devices, tunnel, settings)
+│   ├── modules/             # Domain logic (competition, splitTracker, settings, tunnel)
+│   ├── middleware/          # tunnelRestriction middleware
+│   ├── websockets/          # WebSocket server, message types, logger
+│   └── types/               # Shared TypeScript types (competition, results)
+├── test/                    # Jest tests mirroring src/ structure
+├── docs/                    # Project documentation
+├── uploads/                 # Temporary Lenex uploads (gitignored)
+├── data/                    # Processed competition.json (gitignored, Docker volume)
+├── config/                  # app.json + tunnel.json (gitignored, Docker volume)
+├── logs/                    # competition.log (gitignored, Docker volume)
+├── examples/                # Example Lenex files
+├── Dockerfile
+├── docker-compose.yml
+├── docker-entrypoint.sh
 ├── package.json
 ├── tsconfig.json
-└── ...etc (config files)
+└── AGENTS.md                # Guide for coding agents
 ```
 
 ### Key Points
-- All server-side code is now under `src/server/`.
-- Types are in `src/server/types/` (or `types/` if shared project-wide).
-- Tests are in `test/`, mirroring the source structure.
-- Static assets remain in `public/`.
+- Server-side code is under `src/` with a strict routes → controllers → modules layering.
+- Tests mirror the source structure under `test/`.
+- Static assets remain in `public/` (no server-side templating).
+- See [docs/architecture.md](docs/architecture.md) for the full layer breakdown.
 
 > This structure improves maintainability, scalability, and testability.
