@@ -14,10 +14,6 @@
 import { formatLapTime } from '../../js/modules/format.js';
 import { getStartTime } from './stopwatch.js';
 
-function pad(n) {
-  return n.toString().padStart(2, '0');
-}
-
 /**
  * Fetch event and heat data from the API and update the display.
  * @param {number} eventNum

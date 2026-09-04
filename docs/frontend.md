@@ -32,8 +32,6 @@ graph LR
     Index --> Devices["/devices.html"]
     Index --> Tunnel["/tunnel.html"]
     Index --> Settings["/settings.html"]
-    Index --> TrainRemote["/training/training-remote.html"]
-    Index --> TrainScreen["/training/training-screen.html"]
 ```
 
 | Page | Path | Purpose | Tunnel access |
@@ -46,8 +44,6 @@ graph LR
 | Device Manager | `/devices.html` | Register, edit and monitor hardware devices | blocked |
 | Cloudflare Tunnel | `/tunnel.html` | Start/stop tunnel, configure token and flags | blocked |
 | Settings | `/settings.html` | Pool length and split cooldown | blocked |
-| Training Remote | `/training/training-remote.html` | Interval training controller | blocked |
-| Training Screen | `/training/training-screen.html` | Interval training display | blocked |
 
 ## Module Structure
 
@@ -82,10 +78,6 @@ graph BT
         Upload[js/upload.js]
     end
 
-    subgraph Training[Training]
-        Training[js/training.js]
-    end
-
     RemoteEntry --> Socket
     RemoteEntry --> TimeSync
     RemoteEntry --> Format
@@ -101,7 +93,6 @@ graph BT
     ScreenEntry --> WakeLock
 
     Devices --> Socket
-    Training --> Socket
 ```
 
 Each HTML page loads a single entry-point script with
@@ -254,14 +245,10 @@ All admin pages share a common layout (see [Layout Convention](#layout-conventio
 
 ## Training Pages
 
-**Files:** `public/training/training-remote.html`,
-`public/training/training-screen.html`, `public/js/training.js`
-
-A separate interval-training mode. The remote creates/deletes/starts
-intervals; the screen displays the active interval timer. Uses the same
-WebSocket connection but with `add-interval`, `start-interval` and
-`delete-interval` message types (see `TrainingMessage` in
-`src/websockets/messageTypes.ts`).
+Training pages (`training-remote.html`, `training-screen.html`,
+`training.js`) have been removed from the frontend. The WebSocket
+`TrainingMessage` type still exists in `src/websockets/messageTypes.ts`
+for backward compatibility but no page consumes it.
 
 ## Layout Convention
 

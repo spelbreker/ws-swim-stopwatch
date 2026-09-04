@@ -5,6 +5,8 @@
 //   stopStopwatch()
 //   updateStopwatch()
 
+import { pad } from '../../js/modules/format.js';
+
 let startTime = null;
 let stopwatchInterval = null;
 let serverTimeOffset = 0;
@@ -15,10 +17,6 @@ let serverTimeOffset = 0;
  */
 export function setServerTimeOffset(offset) {
   serverTimeOffset = offset;
-}
-
-function pad(n) {
-  return n.toString().padStart(2, '0');
 }
 
 export function updateStopwatch() {

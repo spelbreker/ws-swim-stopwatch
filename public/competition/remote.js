@@ -5,7 +5,7 @@
 
 import { send, onSocketEvent } from '../js/modules/socket.js';
 import { TimeSync } from '../js/modules/timeSync.js';
-import { formatLapTime } from '../js/modules/format.js';
+import { formatLapTime, pad } from '../js/modules/format.js';
 import { setupConnectionIndicator } from '../js/modules/connectionIndicator.js';
 import { requestWakeLock } from '../js/modules/wakeLock.js';
 import {
@@ -22,13 +22,10 @@ import {
   fillSelectOptions,
   sendEventAndHeat,
   updateEventHeatInfoBar,
-  getEventSelect,
-  getHeatSelect,
 } from './remote/eventHeat.js';
 import {
   initSessionSelector,
   getCurrentSession,
-  setCurrentSession,
 } from './remote/sessionSelector.js';
 
 // State
@@ -36,10 +33,6 @@ let startTime = null;
 let stopwatchInterval = null;
 let serverTimeOffset = 0;
 let timeSync = null;
-
-function pad(n) {
-  return n.toString().padStart(2, '0');
-}
 
 function updateStopwatch() {
   const stopwatchElement = document.getElementById('stopwatch');

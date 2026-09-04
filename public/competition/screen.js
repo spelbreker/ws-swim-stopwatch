@@ -8,9 +8,7 @@ import { requestWakeLock } from '../js/modules/wakeLock.js';
 import {
   startStopwatch,
   stopStopwatch,
-  updateStopwatch,
   setServerTimeOffset,
-  getStartTime,
 } from './screen/stopwatch.js';
 import {
   fetchCompetitionData,
@@ -19,7 +17,6 @@ import {
   clearArrivalOrders,
   renderRanking,
   renderSplitTime,
-  formatSwimStyle,
   formatSplitTime,
 } from './screen/laneDisplay.js';
 

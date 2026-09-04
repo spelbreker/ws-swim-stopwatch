@@ -3,7 +3,7 @@
 // and lane time display updates.
 //
 // Exports:
-//   initLaneButtons({ send, serverTimeOffset, formatLapTime, startTime })
+//   initLaneButtons({ send, getStartTime, getServerTimeOffset })
 //   updateLaneInfo(lane, time, distance)
 //   resetSplitTimes()
 //   clearLaneInformation()
