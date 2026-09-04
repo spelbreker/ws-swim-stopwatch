@@ -224,8 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const laneElement = document.getElementById(`lane-${lane}`);
                 if (laneElement) {
                     const splitCell = laneElement.querySelector('.split-time');
-                    const arrivalCell = laneElement.querySelector('.arrival-order');
-                    if (splitCell && arrivalCell) {
+                    if (splitCell) {
                         // Use the same calculation method as remote: timestamp vs startTime directly
                         const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
                         renderSplitTime(splitCell, message.distance, formattedTime);
