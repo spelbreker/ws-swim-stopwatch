@@ -108,10 +108,21 @@
                 width: 7rem;
             }
 
+            .lane-table .split-time .split-distance {
+                font-size: 0.6em;
+                opacity: 0.75;
+                margin-right: 0.25rem;
+            }
+
             .lane-table .arrival-order {
                 text-align: center;
                 padding: 0.4rem 0.25rem;
                 width: 1.5rem;
+            }
+
+            /* Lane has completed all expected splits */
+            .lane.finished .split-time {
+                color: #22c55e; /* green-500 */
             }
 
             /* ── Bottom bar ── */
@@ -347,8 +358,6 @@
             </div>
         </footer>
 
-        <script src="/js/main.js"></script>
-        <script src="/js/timeSync.js"></script>
-        <script src="/competition/screen.js"></script>
+        <script type="module" src="/competition/screen.js"></script>
     </body>
 </html>

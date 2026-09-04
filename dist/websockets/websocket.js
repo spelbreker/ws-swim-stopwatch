@@ -33,12 +33,40 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSplitTracker = getSplitTracker;
+exports.resetSplitTracker = resetSplitTracker;
 exports.getDevices = getDevices;
 exports.setupWebSocket = setupWebSocket;
 const ws_1 = __importStar(require("ws"));
 const logger_1 = require("./logger");
+const settings_1 = require("../modules/settings");
+const splitTracker_1 = require("../modules/splitTracker");
 // Store device information
 const devices = new Map();
+// Per-heat split state (cooldown, distance labels, ranking)
+let splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
+function getSplitTracker() {
+    return splitTracker;
+}
+function resetSplitTracker() {
+    splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
+}
+function toNumber(value) {
+    if (typeof value === 'number')
+        return value;
+    if (typeof value === 'string' && value.trim() !== '') {
+        const n = Number(value);
+        return Number.isNaN(n) ? undefined : n;
+    }
+    return undefined;
+}
+function applyHeatFromMessage(msg) {
+    const event = toNumber(msg.event);
+    const heat = toNumber(msg.heat);
+    if (event === undefined || heat === undefined)
+        return;
+    splitTracker.setHeat((0, splitTracker_1.computeHeatInfo)(event, heat, toNumber(msg.session), (0, settings_1.loadSettings)().poolLength));
+}
 function isMessage(obj) {
     return (typeof obj === 'object'
         && obj !== null
@@ -62,6 +90,12 @@ function handleStart(msg, wss) {
         && (typeof heat === 'string' || typeof heat === 'number')) {
         (0, logger_1.logStart)(event, heat, timestamp);
     }
+    // Defensive: a starter may send start without a preceding event-heat
+    const current = splitTracker.getHeat();
+    if (!current || current.event !== toNumber(event) || current.heat !== toNumber(heat)) {
+        applyHeatFromMessage(msg);
+    }
+    splitTracker.onStart();
     // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,
@@ -69,24 +103,44 @@ function handleStart(msg, wss) {
     };
     broadcastAllClients(wss, payload);
 }
-function handleLap(msg, wss) {
-    const { lane, timestamp } = msg;
-    if ((typeof lane === 'string' || typeof lane === 'number')
-        && typeof timestamp === 'number') {
-        (0, logger_1.logLap)(lane, timestamp);
+function handleSplit(msg, wss) {
+    const lane = toNumber(msg.lane);
+    const { timestamp, elapsed_ms } = msg;
+    if (lane === undefined || typeof timestamp !== 'number') {
+        // Malformed split: keep legacy behaviour and just relay it
+        broadcastAllClients(wss, msg);
+        return;
     }
+    const result = splitTracker.onSplit(lane, timestamp);
+    if (!result.accepted) {
+        (0, logger_1.logIgnoredSplit)(lane, timestamp, result.reason, result.msSinceLast);
+        return;
+    }
+    const { distance, splitNumber, isFinish, ranking } = result;
+    (0, logger_1.logSplit)(lane, timestamp, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
     // Preserve the original client timestamp - don't overwrite with server time
-    const payload = {
+    broadcastAllClients(wss, {
         ...msg,
-        // timestamp: original timestamp is preserved
-    };
-    broadcastAllClients(wss, payload);
+        lane,
+        distance,
+        splitNumber,
+        isFinish,
+        ranking,
+    });
+}
+function handleEventHeat(msg, wss) {
+    console.log(`[WebSocket] Event/Heat changed: event=${msg.event}, heat=${msg.heat}`);
+    applyHeatFromMessage(msg);
+    broadcastAllClients(wss, msg);
 }
 function handleReset(msg, wss) {
-    (0, logger_1.logStop)(Date.now());
+    const timestamp = typeof msg.timestamp === 'number' ? msg.timestamp : Date.now();
+    (0, logger_1.logReset)(timestamp);
+    splitTracker.onReset();
+    // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,
-        timestamp: Date.now(),
+        timestamp,
     };
     broadcastAllClients(wss, payload);
 }
@@ -185,12 +239,24 @@ function setupWebSocket(server) {
                     handleStart(msgObj, wss);
                     return;
                 case 'split':
-                    handleLap(msgObj, wss);
+                    handleSplit(msgObj, wss);
                     return;
                 case 'reset':
                     handleReset(msgObj, wss);
                     return;
+                case 'select-event':
+                    // Backward compatibility: map select-event to event-heat
+                    msgObj.type = 'event-heat';
+                // falls through
+                case 'event-heat':
+                    handleEventHeat(msgObj, wss);
+                    return;
+                case 'clear':
+                    console.log('[WebSocket] Clear display');
+                    broadcastAllClients(wss, msgObj);
+                    return;
                 default:
+                    console.log(`[WebSocket] Unknown message type: ${msgObj.type}`);
                     break;
             }
             // Default: broadcast other messages as-is
@@ -224,7 +290,7 @@ function setupWebSocket(server) {
         });
     }, 30000);
     // Periodically broadcast time_sync to all clients
-    setInterval(() => {
+    const timeSync = setInterval(() => {
         wss.clients.forEach((client) => {
             if (client.readyState === ws_1.default.OPEN) {
                 client.send(JSON.stringify({ type: 'time_sync', server_time: Date.now() }));
@@ -233,6 +299,10 @@ function setupWebSocket(server) {
     }, 5000);
     wss.on('close', () => {
         clearInterval(heartbeat);
+        clearInterval(timeSync);
         clientLiveness.clear();
     });
+    // Shut down the WebSocket server (and its timers) together with the HTTP server
+    server.on('close', () => wss.close());
+    return wss;
 }

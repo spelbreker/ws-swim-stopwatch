@@ -7,7 +7,7 @@ This guide is for coding agents working in this repository.
 - Build and maintain a swim stopwatch system with:
   - Express API endpoints
   - WebSocket real-time messaging
-  - Static pages in `public/` for remote/screen/training/tunnel views
+  - Static pages in `public/` for remote/screen/tunnel views
 - Keep competition, tunnel, and device flows stable.
 
 ## 2) Stack Summary
@@ -97,10 +97,21 @@ it('should return tunnel status', async () => {
   - Client handlers in `public/js/*.js` and `public/competition/*.js`
 - Preserve backward compatibility unless explicitly told to break it.
 
+### Frontend Module System
+
+The frontend uses native ES modules (`import`/`export`). No build step.
+
+- Shared modules live in `public/js/modules/` (`socket.js`, `timeSync.js`, `format.js`, `wakeLock.js`, `connectionIndicator.js`).
+- Page entry points import from `../js/modules/*.js` and are loaded with `<script type="module">`.
+- The shared WebSocket connection is imported from `js/modules/socket.js` — do **not** set or read `window.socket`.
+- Time formatting is imported from `js/modules/format.js` — do **not** set or read `window.formatLapTime`.
+- Time synchronization is imported from `js/modules/timeSync.js` — do **not** set or read `window.TimeSync`.
+- Use event delegation (`data-*` attributes + `addEventListener`) instead of `onclick` in `innerHTML`.
+
 ## 8) Data And File Safety
 
 - Keep uploads/logs/config volumes and paths stable.
-- Do not change `public/competition.json` semantics without updating dependent controllers and screens.
+- Do not change `data/competition.json` semantics without updating dependent controllers and screens. Its location comes from `Competition.filePath()` (`DATA_DIR`, default `./data`); never hard-code the path.
 - Avoid destructive file operations beyond current behavior (for example competition delete endpoint).
 
 ## 9) CI Awareness
@@ -117,5 +128,21 @@ Before finishing substantial changes, run relevant checks locally.
 
 - Update tests for changed behavior.
 - Keep API error responses explicit (400 vs 404 vs 500).
-- Keep browser JS compatible with current global runtime assumptions (`window.socket`, `window.formatLapTime`).
+- Keep browser JS compatible with the ES module system: import from `js/modules/*`, never use `window.socket`, `window.formatLapTime`, or `window.TimeSync`.
 - Keep docs in `README.md` or `docs/` aligned when behavior changes.
+
+## 11) Known Vulnerabilities (Accepted)
+
+`npm audit` reports 2 moderate vulnerabilities in `fast-xml-parser@3.21.1`,
+pulled in transitively by `js-lenex@0.0.7`:
+
+- GHSA-x3cc-x39p-42qx — Prototype Pollution through tag or attribute name.
+- GHSA-gh4j-gqv2-49f6 — XMLBuilder comment/CDATA injection via unescaped delimiters.
+
+These are accepted for the following reasons:
+
+- `js-lenex@0.0.7` is unmaintained (latest release) and pins `fast-xml-parser@^3.20.0`.
+- No patched 3.x release exists; the fix landed in `fast-xml-parser@5.6.1+`, which changed the public API (`new XMLParser().parse()` instead of `parse()`), so an `npm override` would break `js-lenex`.
+- The parser only processes Lenex files uploaded by an administrator via the tunnel-restricted `/competition/upload` route — not untrusted public input.
+
+If `js-lenex` is ever replaced or a patched fork is published, remove this section and re-run `npm audit --audit-level=moderate`.

@@ -3,12 +3,42 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { Message, DeviceInfo, DeviceInfoResponse } from './messageTypes';
 import {
   logSplit,
+  logIgnoredSplit,
   logStart,
   logReset,
 } from './logger';
+import { loadSettings } from '../modules/settings';
+import { SplitTracker, computeHeatInfo } from '../modules/splitTracker';
 
 // Store device information
 const devices = new Map<string, DeviceInfo>();
+
+// Per-heat split state (cooldown, distance labels, ranking)
+let splitTracker = new SplitTracker(loadSettings);
+
+export function getSplitTracker(): SplitTracker {
+  return splitTracker;
+}
+
+export function resetSplitTracker() {
+  splitTracker = new SplitTracker(loadSettings);
+}
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const n = Number(value);
+    return Number.isNaN(n) ? undefined : n;
+  }
+  return undefined;
+}
+
+function applyHeatFromMessage(msg: Record<string, unknown>) {
+  const event = toNumber(msg.event);
+  const heat = toNumber(msg.heat);
+  if (event === undefined || heat === undefined) return;
+  splitTracker.setHeat(computeHeatInfo(event, heat, toNumber(msg.session), loadSettings().poolLength));
+}
 
 function isMessage(obj: unknown): obj is Message {
   return (
@@ -39,6 +69,12 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   ) {
     logStart(event, heat, timestamp);
   }
+  // Defensive: a starter may send start without a preceding event-heat
+  const current = splitTracker.getHeat();
+  if (!current || current.event !== toNumber(event) || current.heat !== toNumber(heat)) {
+    applyHeatFromMessage(msg);
+  }
+  splitTracker.onStart();
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
@@ -48,24 +84,41 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
 }
 
 function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const { lane, timestamp, elapsed_ms } = msg;
-  if (
-    (typeof lane === 'string' || typeof lane === 'number')
-    && typeof timestamp === 'number'
-  ) {
-    logSplit(lane, timestamp, typeof elapsed_ms === 'number' ? elapsed_ms : undefined);
+  const lane = toNumber(msg.lane);
+  const { timestamp, elapsed_ms } = msg;
+  if (lane === undefined || typeof timestamp !== 'number') {
+    // Malformed split: keep legacy behaviour and just relay it
+    broadcastAllClients(wss, msg);
+    return;
   }
+  const result = splitTracker.onSplit(lane, timestamp);
+  if (!result.accepted) {
+    logIgnoredSplit(lane, timestamp, result.reason, result.msSinceLast);
+    return;
+  }
+  const { distance, splitNumber, isFinish, ranking } = result;
+  logSplit(lane, timestamp, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
   // Preserve the original client timestamp - don't overwrite with server time
-  const payload = {
+  broadcastAllClients(wss, {
     ...msg,
-    // timestamp: original timestamp is preserved
-  };
-  broadcastAllClients(wss, payload);
+    lane,
+    distance,
+    splitNumber,
+    isFinish,
+    ranking,
+  });
+}
+
+function handleEventHeat(msg: Record<string, unknown>, wss: WebSocketServer) {
+  console.log(`[WebSocket] Event/Heat changed: event=${msg.event}, heat=${msg.heat}`);
+  applyHeatFromMessage(msg);
+  broadcastAllClients(wss, msg);
 }
 
 function handleReset(msg: Record<string, unknown>, wss: WebSocketServer) {
   const timestamp = typeof msg.timestamp === 'number' ? msg.timestamp : Date.now();
   logReset(timestamp);
+  splitTracker.onReset();
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
@@ -193,8 +246,7 @@ export function setupWebSocket(server: http.Server) {
           msgObj.type = 'event-heat';
           // falls through
         case 'event-heat':
-          console.log(`[WebSocket] Event/Heat changed: event=${msgObj.event}, heat=${msgObj.heat}`);
-          broadcastAllClients(wss, msgObj);
+          handleEventHeat(msgObj, wss);
           return;
         case 'clear':
           console.log('[WebSocket] Clear display');
@@ -237,7 +289,7 @@ export function setupWebSocket(server: http.Server) {
   }, 30000);
 
   // Periodically broadcast time_sync to all clients
-  setInterval(() => {
+  const timeSync = setInterval(() => {
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ type: 'time_sync', server_time: Date.now() }));
@@ -247,6 +299,11 @@ export function setupWebSocket(server: http.Server) {
 
   wss.on('close', () => {
     clearInterval(heartbeat);
+    clearInterval(timeSync);
     clientLiveness.clear();
   });
+
+  // Shut down the WebSocket server (and its timers) together with the HTTP server
+  server.on('close', () => wss.close());
+  return wss;
 }

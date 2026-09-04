@@ -19,11 +19,11 @@ Deze middleware beschermt de applicatie door alleen specifieke routes toe te sta
 Deze routes zijn toegankelijk voor externe/publieke gebruikers:
 
 - `/competition/screen.html` - Competition screen weergave
-- `/competition/screen.js` - Screen JavaScript
+- `/competition/screen.js` - Screen JavaScript entry point
+- `/competition/screen/*` - Screen submodules (laneDisplay, stopwatch)
 - `/css/*` - Alle stylesheets
 - `/image/*` - Alle afbeeldingen
-- `/js/main.js` - Hoofd JavaScript bestand
-- `/js/timeSync.js` - Tijd synchronisatie
+- `/js/modules/*` - Gedeelde ES modules (socket, timeSync, format, etc.)
 - `/competition/event/*` - Event data API endpoints
 - `/competition/summary` - Competitie samenvatting API
 - `/devices` - Apparaten lijst API

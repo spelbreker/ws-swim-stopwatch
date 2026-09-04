@@ -16,14 +16,22 @@ import {
 } from '../types/competition-result-types';
 
 class Competition {
-  private static readonly COMPETITION_FILE_PATH = './public/competition.json';
+  /**
+   * Absolute path of the processed competition file. Lives in a data directory
+   * (default ./data, override with DATA_DIR) so Docker can bind-mount the
+   * directory instead of a single file that may not exist yet on the host.
+   */
+  public static filePath(): string {
+    return path.resolve(process.cwd(), process.env.DATA_DIR || './data', 'competition.json');
+  }
 
   private static readCompetitionDataFromDisk(): CompetitionData {
-    if (!fs.existsSync(Competition.COMPETITION_FILE_PATH)) {
+    const filePath = Competition.filePath();
+    if (!fs.existsSync(filePath)) {
       throw new Error('Missing competition.json');
     }
     try {
-      const fileContent = fs.readFileSync(Competition.COMPETITION_FILE_PATH, 'utf-8');
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
       return JSON.parse(fileContent) as CompetitionData;
     } catch (err) {
       console.error('[Competition] Failed to parse competition.json:', err);
@@ -298,7 +306,7 @@ class Competition {
 
   /**
    * Reads and processes a Lenex competition file, converting it to internal format.
-   * Validates the structure and writes the processed data to public/competition.json.
+   * Validates the structure and writes the processed data to the competition file (see filePath()).
    * @param filePath - Path to the Lenex file to process
    * @param callback - Callback function with error and result parameters
    */
@@ -335,10 +343,10 @@ class Competition {
         callback('No clubs found', null);
         return;
       }
-      // Use absolute path for reliability
-      const absPath = path.resolve(process.cwd(), 'public', 'competition.json');
+      const absPath = Competition.filePath();
       console.log('[Competition] Writing competition.json to:', absPath);
       try {
+        fs.mkdirSync(path.dirname(absPath), { recursive: true });
         fs.writeFileSync(absPath, JSON.stringify(result));
       } catch (writeErr) {
         const error = writeErr instanceof Error ? writeErr : new Error(String(writeErr));

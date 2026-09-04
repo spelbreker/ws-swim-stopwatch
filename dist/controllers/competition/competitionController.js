@@ -45,12 +45,9 @@ function getCompetitionSummary(req, res) {
 }
 function deleteCompetition(req, res) {
     try {
-        if (fs_1.default.existsSync('./public/competition.json'))
-            fs_1.default.unlinkSync('./public/competition.json');
-        if (fs_1.default.existsSync('./public/events.json'))
-            fs_1.default.unlinkSync('./public/events.json');
-        if (fs_1.default.existsSync('./public/athletes.json'))
-            fs_1.default.unlinkSync('./public/athletes.json');
+        const filePath = competition_1.default.filePath();
+        if (fs_1.default.existsSync(filePath))
+            fs_1.default.unlinkSync(filePath);
         res.status(200).send('Competition deleted');
     } // eslint-disable-next-line @typescript-eslint/no-unused-vars
     catch (_e) {

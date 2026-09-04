@@ -37,7 +37,6 @@ This application includes built-in middleware that restricts tunnel access to sp
 - `/competition/remote.html` - Remote control interface
 - `/competition/upload.html` - File upload interface
 - `/index.html` - Dashboard
-- `/training/*` - Training mode
 - All other administrative routes
 
 This restriction happens at the application level (middleware), so no Cloudflare path rules are needed.
