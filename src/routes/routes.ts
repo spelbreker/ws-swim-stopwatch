@@ -17,6 +17,7 @@ import {
   postTunnelConfig,
   deleteTunnelConfig,
 } from '../controllers/tunnelController';
+import { getSettings, postSettings } from '../controllers/settingsController';
 
 // Register all competition-related routes
 export function registerRoutes(app: Express, upload: multer.Multer) {
@@ -43,4 +44,8 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
 
   // Device management routes
   app.get('/devices', getDevicesList);
+
+  // Application settings (pool length, split cooldown)
+  app.get('/settings', getSettings);
+  app.post('/settings', json(), postSettings);
 }
