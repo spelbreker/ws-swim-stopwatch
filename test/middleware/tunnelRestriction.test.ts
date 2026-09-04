@@ -121,8 +121,8 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockResponse.status).not.toHaveBeenCalled();
     });
 
-    it('should allow main.js via Cloudflare', () => {
-      mockRequest = createMockRequest('/js/main.js', '1.2.3.4');
+    it('should allow shared ES module socket.js via Cloudflare', () => {
+      mockRequest = createMockRequest('/js/modules/socket.js', '1.2.3.4');
 
       tunnelRestrictionMiddleware(
         mockRequest as Request,
@@ -134,8 +134,21 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockResponse.status).not.toHaveBeenCalled();
     });
 
-    it('should allow timeSync.js via Cloudflare', () => {
-      mockRequest = createMockRequest('/js/timeSync.js', '1.2.3.4');
+    it('should allow shared ES module timeSync.js via Cloudflare', () => {
+      mockRequest = createMockRequest('/js/modules/timeSync.js', '1.2.3.4');
+
+      tunnelRestrictionMiddleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+
+    it('should allow screen submodule via Cloudflare', () => {
+      mockRequest = createMockRequest('/competition/screen/stopwatch.js', '1.2.3.4');
 
       tunnelRestrictionMiddleware(
         mockRequest as Request,
