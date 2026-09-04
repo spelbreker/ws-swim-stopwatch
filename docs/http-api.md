@@ -322,8 +322,6 @@ pages are the main entry points:
 | `/devices.html` | Device Manager | blocked |
 | `/tunnel.html` | Cloudflare Tunnel | blocked |
 | `/settings.html` | Settings | blocked |
-| `/training/training-remote.html` | Training Remote | blocked |
-| `/training/training-screen.html` | Training Screen | blocked |
 
 See [cloudflare-tunnel.md](cloudflare-tunnel.md) for the full tunnel allowlist.
 

@@ -3,7 +3,7 @@
 // Exports:
 //   startStopwatch(timestamp)
 //   stopStopwatch()
-//   updateStopwatch()
+//   getStartTime()
 
 import { pad } from '../../js/modules/format.js';
 
@@ -19,7 +19,7 @@ export function setServerTimeOffset(offset) {
   serverTimeOffset = offset;
 }
 
-export function updateStopwatch() {
+function updateStopwatch() {
   const stopwatchElement = document.getElementById('stopwatch');
   if (!stopwatchElement) return;
   if (!startTime) {

@@ -247,17 +247,11 @@ graph TB
         Upload[upload.html Lenex Upload]
     end
 
-    subgraph Training
-        TrainRemote[training-remote.html]
-        TrainScreen[training-screen.html]
-    end
-
     subgraph SharedJS
         Main[main.js WebSocket + wake lock]
         TimeSync[timeSync.js NTP-style sync]
         DevicesJS[devices.js]
         SettingsJS[settings.js]
-        TrainingJS[training.js]
     end
 
     Index --> Main
@@ -267,20 +261,19 @@ graph TB
     Screen --> TimeSync
     Devices --> DevicesJS
     SettingsPage --> SettingsJS
-    TrainRemote --> TrainingJS
-    TrainScreen --> TrainingJS
 ```
 
-### Shared browser globals
+### Shared browser modules
 
-The frontend relies on a few globals that `main.js` and `timeSync.js` set up:
+The frontend uses native ES modules. Shared modules live in `public/js/modules/`:
 
-- `window.socket` — the shared `WebSocket` instance with auto-reconnect.
-- `window.formatLapTime(ts, base)` — formats an elapsed timestamp as
-  `mm:ss:cc`.
-- `window.TimeSync` — the `TimeSync` class (NTP-style offset calculation).
+- `socket.js` — shared `WebSocket` with auto-reconnect; exports `send()`, `onSocketEvent()`.
+- `timeSync.js` — `TimeSync` class (NTP-style offset calculation).
+- `format.js` — `formatLapTime(ts, base)` and `pad(n)`.
 
-Any new frontend code must remain compatible with this global runtime style.
+Page entry points import from `../js/modules/*.js` and are loaded with
+`<script type="module">`. See [frontend.md](frontend.md) for the full
+module structure.
 
 ## Data Storage
 

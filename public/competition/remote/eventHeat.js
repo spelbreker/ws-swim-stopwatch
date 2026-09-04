@@ -7,7 +7,6 @@
 //   fillSelectOptions(selectElement, maxValue)
 //   sendEventAndHeat(event, heat, send, session)
 //   updateEventHeatInfoBar(eventNr, heatNr, session)
-//   getEventSelect() / getHeatSelect()
 
 let eventSelect = null;
 let heatSelect = null;
@@ -155,14 +154,4 @@ export function initEventHeat({ send, getCurrentSession }) {
   }
 
   return { eventSelect, heatSelect, incrementEvent, incrementHeat };
-}
-
-/** @returns {HTMLSelectElement|null} */
-export function getEventSelect() {
-  return eventSelect;
-}
-
-/** @returns {HTMLSelectElement|null} */
-export function getHeatSelect() {
-  return heatSelect;
 }
