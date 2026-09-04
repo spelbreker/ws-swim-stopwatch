@@ -5,8 +5,6 @@ let stopwatchInterval;
 let startTime;
 let stopwatchElement;
 let serverTimeOffset = 0;
-let arrivalOrder = 1; // Track next arrival order number
-let arrivalClearTimer = null; // Timer for clearing arrival order numbers
 // Time synchronization instance
 let timeSync;
 
@@ -106,6 +104,7 @@ function clearLaneInformation() {
             laneElement.querySelector('.club').textContent = '';
             laneElement.querySelector('.split-time').textContent = '---:---:---';
             laneElement.querySelector('.arrival-order').textContent = '';
+            laneElement.classList.remove('finished');
         }
     }
 }
@@ -117,26 +116,38 @@ function clearSplitTimes() {
 }
 
 function clearArrivalOrders() {
-    // Clear arrival order numbers from all arrival-order cells
+    // Clear arrival order numbers and finish markers from all lanes
     document.querySelectorAll('.arrival-order').forEach(element => {
         element.textContent = '';
     });
-
-    // Reset tracking variables
-    arrivalOrder = 1;
-    if (arrivalClearTimer) {
-        clearTimeout(arrivalClearTimer);
-        arrivalClearTimer = null;
-    }
+    document.querySelectorAll('.lane.finished').forEach(element => {
+        element.classList.remove('finished');
+    });
 }
 
-function resetArrivalOrderTracking() {
-    // Reset only the tracking variables, don't clear displayed orders
-    arrivalOrder = 1;
-    if (arrivalClearTimer) {
-        clearTimeout(arrivalClearTimer);
-        arrivalClearTimer = null;
+function renderRanking(ranking) {
+    // Server sends the full ranking on every accepted split; redraw all cells
+    if (!Array.isArray(ranking)) return;
+    document.querySelectorAll('.arrival-order').forEach(element => {
+        element.textContent = '';
+    });
+    ranking.forEach(({ lane, place }) => {
+        const laneElement = document.getElementById(`lane-${lane}`);
+        const cell = laneElement && laneElement.querySelector('.arrival-order');
+        if (cell) cell.textContent = place;
+    });
+}
+
+function renderSplitTime(splitCell, distance, formattedTime) {
+    splitCell.textContent = '';
+    if (distance) {
+        const label = document.createElement('span');
+        label.className = 'split-distance';
+        label.textContent = `${distance}m`;
+        splitCell.appendChild(label);
+        splitCell.appendChild(document.createTextNode(' '));
     }
+    splitCell.appendChild(document.createTextNode(formattedTime));
 }
 
 // ------------------------------------------------------------------
@@ -190,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             stopwatchInterval = setInterval(updateStopwatch, 10);
             clearSplitTimes();
-            resetArrivalOrderTracking(); // Reset arrival order tracking without clearing displayed orders
+            clearArrivalOrders();
             return
         }
 
@@ -217,24 +228,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (splitCell && arrivalCell) {
                         // Use the same calculation method as remote: timestamp vs startTime directly
                         const formattedTime = window.formatLapTime(message.timestamp, startTime || 0);
-                        const currentArrivalOrder = arrivalOrder;
-
-                        // Display time and arrival order in separate columns
-                        splitCell.textContent = formattedTime;
-                        arrivalCell.textContent = currentArrivalOrder;
-
-                        // Increment arrival order for next split
-                        if(arrivalOrder < 10) {
-                            // Only increment if we have less than 10 arrivals
-                            arrivalOrder++;
-                        }
-
-                        // Start 20-second timer after first split
-                        if (currentArrivalOrder === 1) {
-                            arrivalClearTimer = setTimeout(() => {
-                                clearArrivalOrders();
-                            }, 20000);
-                        }
+                        renderSplitTime(splitCell, message.distance, formattedTime);
+                    }
+                    // Server determines placement: redraw all lanes from the ranking
+                    renderRanking(message.ranking);
+                    if (message.isFinish) {
+                        laneElement.classList.add('finished');
                     }
                     laneElement.classList.add('highlight');
                     setTimeout(() => laneElement.classList.remove('highlight'), 2000);
@@ -247,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (message.type === 'event-heat' || message.type === 'select-event') {
             document.getElementById('event-number').textContent = message.event;
             document.getElementById('heat-number').textContent = message.heat;
+            clearArrivalOrders();
             fetchCompetitionData(message.event, message.heat, message.session);
             return;
         }

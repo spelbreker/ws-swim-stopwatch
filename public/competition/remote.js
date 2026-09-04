@@ -18,10 +18,10 @@ function pad(number) {
     return number.toString().padStart(2, '0');
 }
 
-function updateLaneInfo(lane, time) {
+function updateLaneInfo(lane, time, distance) {
     const timeSpan = document.querySelector(`.lane-time[data-lane="${lane}"]`);
     if (timeSpan) {
-        timeSpan.textContent = time;
+        timeSpan.textContent = distance ? `${distance}m ${time}` : time;
     }
 }
 
@@ -297,12 +297,10 @@ document.addEventListener('DOMContentLoaded', function () {
     laneButtons.forEach(button => {
         button.addEventListener('click', () => {
             const lane = button.getAttribute('data-lane');
-            // Use server-synchronized timestamp for sending, but calculate display time consistently
+            // Use server-synchronized timestamp for sending. The lane time is only updated
+            // from the server broadcast, so ignored splits (cooldown) never show up here.
             const lapTimestamp = Date.now() + serverTimeOffset;
-            // For display, use the same calculation as will be used on screen
-            updateLaneInfo(lane, window.formatLapTime(lapTimestamp, startTime || 0));
             window.socket.send(JSON.stringify({ type: 'split', lane, timestamp: lapTimestamp }));
-            highlightLaneButton(button);
         });
     });
 
@@ -387,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const lane = message.lane;
             if (message.timestamp) {
                 // When receiving split from server, the timestamp is already server-synchronized
-                updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0));
+                updateLaneInfo(lane, window.formatLapTime(message.timestamp, startTime || 0), message.distance);
             }
             const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
             if (button) {
