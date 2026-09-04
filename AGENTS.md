@@ -7,7 +7,7 @@ This guide is for coding agents working in this repository.
 - Build and maintain a swim stopwatch system with:
   - Express API endpoints
   - WebSocket real-time messaging
-  - Static pages in `public/` for remote/screen/training/tunnel views
+  - Static pages in `public/` for remote/screen/tunnel views
 - Keep competition, tunnel, and device flows stable.
 
 ## 2) Stack Summary

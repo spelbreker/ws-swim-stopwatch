@@ -247,20 +247,27 @@ graph TB
         Upload[upload.html Lenex Upload]
     end
 
-    subgraph SharedJS
-        Main[main.js WebSocket + wake lock]
+    subgraph SharedModules[public/js/modules]
+        Socket[socket.js WebSocket + reconnect]
         TimeSync[timeSync.js NTP-style sync]
-        DevicesJS[devices.js]
-        SettingsJS[settings.js]
+        Format[format.js time formatting]
     end
 
-    Index --> Main
-    Remote --> Main
+    subgraph AdminJS
+        DevicesJS[devices.js]
+        SettingsJS[settings.js]
+        TunnelJS[tunnel.js]
+    end
+
+    Remote --> Socket
     Remote --> TimeSync
-    Screen --> Main
+    Remote --> Format
+    Screen --> Socket
     Screen --> TimeSync
+    Devices --> Socket
     Devices --> DevicesJS
     SettingsPage --> SettingsJS
+    Tunnel --> TunnelJS
 ```
 
 ### Shared browser modules

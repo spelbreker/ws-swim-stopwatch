@@ -240,7 +240,7 @@ Run these locally before pushing substantial changes.
 ## Security Notes
 
 - **Tunnel restriction** is the primary access control for public exposure.
-  Admin pages, settings, upload, logs, remote and training pages are blocked
+  Admin pages, settings, upload, logs, and remote pages are blocked
   through Cloudflare by default.
 - **Settings and tunnel config** are stored in `config/` (gitignored). Do not
   commit tokens.
