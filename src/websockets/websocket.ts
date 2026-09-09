@@ -74,7 +74,7 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   if (!current || current.event !== toNumber(event) || current.heat !== toNumber(heat)) {
     applyHeatFromMessage(msg);
   }
-  splitTracker.onStart();
+  splitTracker.onStart(typeof timestamp === 'number' ? timestamp : undefined);
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
@@ -93,7 +93,7 @@ function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
   }
   const result = splitTracker.onSplit(lane, timestamp);
   if (!result.accepted) {
-    logIgnoredSplit(lane, timestamp, result.reason, result.msSinceLast);
+    logIgnoredSplit(lane, timestamp, result.reason, result.msSinceLast, result.msSinceStart);
     return;
   }
   const { distance, splitNumber, isFinish, ranking } = result;

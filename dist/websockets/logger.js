@@ -56,8 +56,13 @@ function logSplit(lane, timestamp, elapsedMs, distance, splitNumber) {
         + `Timestamp: ${timestamp}${elapsedStr}${distanceStr}${splitStr}`;
     appendLog(splitMsg);
 }
-function logIgnoredSplit(lane, timestamp, reason, msSinceLast) {
-    const sinceStr = typeof msSinceLast === 'number' ? `, Since last: ${msSinceLast}ms` : '';
+function logIgnoredSplit(lane, timestamp, reason, msSinceLast, msSinceStart) {
+    const parts = [];
+    if (typeof msSinceLast === 'number')
+        parts.push(`Since last: ${msSinceLast}ms`);
+    if (typeof msSinceStart === 'number')
+        parts.push(`Since start: ${msSinceStart}ms`);
+    const sinceStr = parts.length > 0 ? `, ${parts.join(', ')}` : '';
     const msg = `[${new Date(Number(timestamp)).toISOString()}] SPLIT IGNORED - Lane: ${lane}, Reason: ${reason}, `
         + `Time: ${formatRaceTime(timestamp)}, Timestamp: ${timestamp}${sinceStr}`;
     appendLog(msg);

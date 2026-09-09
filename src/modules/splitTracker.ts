@@ -28,7 +28,7 @@ export type SplitResult =
     isFinish: boolean;
     ranking: RankingEntry[];
   }
-  | { accepted: false; reason: IgnoredSplitReason; msSinceLast?: number };
+  | { accepted: false; reason: IgnoredSplitReason; msSinceLast?: number; msSinceStart?: number };
 
 interface LaneState {
   splitCount: number;
@@ -71,6 +71,7 @@ export class SplitTracker {
   private lanes = new Map<number, LaneState>();
 
   private heat: HeatInfo | null = null;
+  private startTime: number | null = null;
 
   constructor(private readonly getSettings: () => AppSettings) {}
 
@@ -83,13 +84,15 @@ export class SplitTracker {
     this.lanes.clear();
   }
 
-  onStart() {
+  onStart(timestamp?: number) {
     this.lanes.clear();
+    this.startTime = timestamp ?? null;
   }
 
   onReset() {
     this.lanes.clear();
     this.heat = null;
+    this.startTime = null;
   }
 
   onSplit(lane: number, timestamp: number): SplitResult {
@@ -103,6 +106,13 @@ export class SplitTracker {
       const msSinceLast = timestamp - state.lastTimestamp;
       if (msSinceLast < splitCooldownSec * 1000) {
         return { accepted: false, reason: 'cooldown', msSinceLast };
+      }
+    } else if (this.startTime !== null) {
+      // First split for this lane: ignore if it arrives within the cooldown
+      // window of the start signal (users sometimes press at start).
+      const msSinceStart = timestamp - this.startTime;
+      if (msSinceStart < splitCooldownSec * 1000) {
+        return { accepted: false, reason: 'start-cooldown', msSinceStart };
       }
     }
 

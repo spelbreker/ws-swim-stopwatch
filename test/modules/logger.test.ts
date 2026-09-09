@@ -80,4 +80,11 @@ describe('logger', () => {
     const log = fs.readFileSync(logPath, 'utf8');
     expect(log).toMatch(/SPLIT IGNORED - Lane: 4, Reason: after-finish, Time: 00:00.000, Timestamp: 1718000003000$/m);
   });
+
+  it('should log an ignored split within start cooldown with since-start', () => {
+    logStart('1', '2', 1718000000000);
+    logIgnoredSplit(3, 1718000003000, 'start-cooldown', undefined, 500);
+    const log = fs.readFileSync(logPath, 'utf8');
+    expect(log).toMatch(/SPLIT IGNORED - Lane: 3, Reason: start-cooldown, Time: 00:03.000, Timestamp: 1718000003000, Since start: 500ms/);
+  });
 });
