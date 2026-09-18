@@ -38,6 +38,17 @@ async function fetchStatus() {
   }
 }
 
+// Build a "<p><strong>Label:</strong> content</p>" row without innerHTML
+// so server-provided status values can never be parsed as markup.
+function detailRow(label, content) {
+  const p = document.createElement('p');
+  const strong = document.createElement('strong');
+  strong.textContent = label;
+  p.append(strong, ' ');
+  p.appendChild(typeof content === 'string' ? document.createTextNode(content) : content);
+  return p;
+}
+
 function updateUI(status) {
   const statusBadge = document.getElementById('statusBadge');
   const statusDetails = document.getElementById('statusDetails');
@@ -55,29 +66,49 @@ function updateUI(status) {
     statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400';
   }
 
-  let detailsHtml = '';
+  statusDetails.textContent = '';
   if (status.pid) {
-    detailsHtml += `<p><strong>Process ID:</strong> ${status.pid}</p>`;
+    statusDetails.appendChild(detailRow('Process ID:', String(status.pid)));
   }
   if (status.token) {
-    detailsHtml += `<p><strong>Token:</strong> ${status.token}</p>`;
+    statusDetails.appendChild(detailRow('Token:', String(status.token)));
   } else {
-    detailsHtml += `<p><strong>Token:</strong> <span class="text-yellow-600 dark:text-yellow-400">Not configured</span></p>`;
+    const notConfigured = document.createElement('span');
+    notConfigured.className = 'text-yellow-600 dark:text-yellow-400';
+    notConfigured.textContent = 'Not configured';
+    statusDetails.appendChild(detailRow('Token:', notConfigured));
   }
 
   if (status.url) {
-    detailsHtml += `<p><strong>Tunnel URL:</strong> <a href="${status.url}" target="_blank" rel="noopener" class="text-cyan-600 dark:text-cyan-400 hover:underline break-all">${status.url}</a></p>`;
+    const url = String(status.url);
+    const link = document.createElement('a');
+    link.href = /^https?:\/\//i.test(url) ? url : '#';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.className = 'text-cyan-600 dark:text-cyan-400 hover:underline break-all';
+    link.textContent = url;
+    statusDetails.appendChild(detailRow('Tunnel URL:', link));
   }
 
   if (status.connectionInfo) {
-    detailsHtml += `<p><strong>Connection ID:</strong> <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">${status.connectionInfo.id}</code></p>`;
-    detailsHtml += `<p><strong>Connection IP:</strong> ${status.connectionInfo.ip}</p>`;
-    detailsHtml += `<p><strong>Location:</strong> ${status.connectionInfo.location}</p>`;
+    const { id, ip, location } = status.connectionInfo;
+    const idCode = document.createElement('code');
+    idCode.className = 'bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs';
+    idCode.textContent = id;
+    statusDetails.appendChild(detailRow('Connection ID:', idCode));
+    statusDetails.appendChild(detailRow('Connection IP:', String(ip ?? '')));
+    statusDetails.appendChild(detailRow('Location:', String(location ?? '')));
   }
 
-  detailsHtml += `<p><strong>Auto-start:</strong> ${status.autoStart ? 'Enabled' : 'Disabled'}</p>`;
-  detailsHtml += `<p><strong>Route restrictions:</strong> ${status.allowAllRoutes ? '<span class="text-yellow-600 dark:text-yellow-400">Disabled (All routes accessible)</span>' : 'Enabled (Restricted mode)'}</p>`;
-  statusDetails.innerHTML = detailsHtml;
+  statusDetails.appendChild(detailRow('Auto-start:', status.autoStart ? 'Enabled' : 'Disabled'));
+  const restrictState = document.createElement('span');
+  if (status.allowAllRoutes) {
+    restrictState.className = 'text-yellow-600 dark:text-yellow-400';
+    restrictState.textContent = 'Disabled (All routes accessible)';
+  } else {
+    restrictState.textContent = 'Enabled (Restricted mode)';
+  }
+  statusDetails.appendChild(detailRow('Route restrictions:', restrictState));
 
   if (status.error) {
     errorMessage.textContent = status.error;
