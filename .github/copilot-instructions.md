@@ -3,7 +3,7 @@
 Use this file as the quick, always-on project guide.
 
 ## Stack And Runtime
-- Node 22+, Express 5, TypeScript backend, static browser JS frontend.
+- Node 24+, Express 5, TypeScript backend, static browser JS frontend.
 - Build output goes to `dist/`; runtime entry is `dist/server.js`.
 
 ## Important Paths
