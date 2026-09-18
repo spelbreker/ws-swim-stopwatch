@@ -17,7 +17,7 @@ services:
 
   # Alternative: Development mode with live reload (no tunnel support)
   node-server-dev:
-    image: node:22
+    image: node:24
     working_dir: /app
     volumes:
       - .:/app

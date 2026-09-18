@@ -18,7 +18,7 @@ operational tasks.
 
 ## Prerequisites
 
-- Node.js >= 22.0.0
+- Node.js >= 24.0.0
 - Docker (optional, for containerised deployment)
 - A Cloudflare account and tunnel token (optional, for public access)
 
@@ -54,7 +54,7 @@ docker compose build
 docker compose up
 ```
 
-This builds the image from `Dockerfile` (Node.js 22 Alpine, `npm ci`,
+This builds the image from `Dockerfile` (Node.js 24 Alpine, `npm ci`,
 `npm run build`) and starts the server on port 8080 with four bind-mounted
 volumes for persistent data.
 
@@ -63,7 +63,7 @@ volumes for persistent data.
 | Service | Profile | Description |
 |---------|---------|-------------|
 | `node-server` | default | Production build, port 8080, persistent volumes |
-| `node-server-dev` | `dev` | Live-reload dev container using Node 22 image |
+| `node-server-dev` | `dev` | Live-reload dev container using Node 24 image |
 
 ```sh
 # Development container
@@ -73,7 +73,7 @@ docker compose --profile dev up
 ### Dockerfile
 
 ```dockerfile
-FROM node:22-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
