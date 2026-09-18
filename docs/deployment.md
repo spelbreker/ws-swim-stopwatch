@@ -178,9 +178,9 @@ non-local `x-forwarded-for` headers.
 
 Default allowlist:
 
-- `/competition/screen.html`, `/competition/screen.js`
+- `/competition/screen.html`, `/competition/screen.js`, `/competition/screen/` (ES submodules)
 - `/css/`, `/image/`
-- `/js/main.js`, `/js/timeSync.js`
+- `/js/modules/` (shared ES modules)
 - `/favicon.ico`
 - `/competition/event/`, `/competition/summary`
 - `/devices`

@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /** Stop the stopwatch */
     if (message.type === 'reset') {
       stopStopwatch();
+      clearSplitTimes();
       clearArrivalOrders();
       return;
     }

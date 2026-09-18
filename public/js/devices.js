@@ -63,50 +63,72 @@ async function loadDevices() {
   }
 }
 
-// Render devices table using event delegation instead of onclick
+function td(className, text) {
+  const cell = document.createElement('td');
+  cell.className = className;
+  cell.textContent = text;
+  return cell;
+}
+
+// Render devices table using event delegation instead of onclick.
+// Build DOM nodes with textContent/dataset so device-supplied fields
+// (mac, ip, role) can never be parsed as markup.
 function renderDevices() {
   deviceCount.textContent = `${devices.length} device${devices.length !== 1 ? 's' : ''}`;
 
+  devicesTableBody.textContent = '';
   if (devices.length === 0) {
-    devicesTableBody.innerHTML = '';
     emptyState.classList.remove('hidden');
     return;
   }
 
   emptyState.classList.add('hidden');
-  devicesTableBody.innerHTML = devices
-    .map((device) => {
-      const statusClass = device.connected ? 'bg-green-500' : 'bg-gray-400';
-      const statusText = device.connected ? 'Connected' : 'Disconnected';
-      const lastSeen = new Date(device.lastSeen).toLocaleString();
-      const laneDisplay = device.lane !== undefined ? device.lane : '-';
+  devices.forEach((device) => {
+    const statusClass = device.connected ? 'bg-green-500' : 'bg-gray-400';
+    const statusText = device.connected ? 'Connected' : 'Disconnected';
+    const lastSeen = new Date(device.lastSeen).toLocaleString();
+    const laneDisplay = device.lane !== undefined ? device.lane : '-';
+    const roleClass = device.role === 'starter'
+      ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+      : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
 
-      return `
-        <tr>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex items-center">
-              <div class="h-2 w-2 rounded-full ${statusClass} mr-2"></div>
-              <span class="text-sm text-gray-900 dark:text-white">${statusText}</span>
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">${device.mac}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${device.ip}</td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${device.role === 'starter' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'}">
-              ${device.role}
-            </span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${laneDisplay}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${lastSeen}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">
-            <button data-edit-mac="${device.mac}" class="text-cyan-600 dark:text-cyan-400 hover:text-cyan-900 dark:hover:text-cyan-300 font-medium">
-              Edit
-            </button>
-          </td>
-        </tr>
-      `;
-    })
-    .join('');
+    const row = document.createElement('tr');
+
+    const statusCell = td('px-6 py-4 whitespace-nowrap', '');
+    const statusWrapper = document.createElement('div');
+    statusWrapper.className = 'flex items-center';
+    const statusDot = document.createElement('div');
+    statusDot.className = `h-2 w-2 rounded-full ${statusClass} mr-2`;
+    const statusLabel = document.createElement('span');
+    statusLabel.className = 'text-sm text-gray-900 dark:text-white';
+    statusLabel.textContent = statusText;
+    statusWrapper.append(statusDot, statusLabel);
+    statusCell.appendChild(statusWrapper);
+    row.appendChild(statusCell);
+
+    row.appendChild(td('px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white', device.mac));
+    row.appendChild(td('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', device.ip));
+
+    const roleCell = td('px-6 py-4 whitespace-nowrap', '');
+    const roleBadge = document.createElement('span');
+    roleBadge.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${roleClass}`;
+    roleBadge.textContent = device.role;
+    roleCell.appendChild(roleBadge);
+    row.appendChild(roleCell);
+
+    row.appendChild(td('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', laneDisplay));
+    row.appendChild(td('px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400', lastSeen));
+
+    const editCell = td('px-6 py-4 whitespace-nowrap text-sm', '');
+    const editButton = document.createElement('button');
+    editButton.dataset.editMac = device.mac;
+    editButton.className = 'text-cyan-600 dark:text-cyan-400 hover:text-cyan-900 dark:hover:text-cyan-300 font-medium';
+    editButton.textContent = 'Edit';
+    editCell.appendChild(editButton);
+    row.appendChild(editCell);
+
+    devicesTableBody.appendChild(row);
+  });
 }
 
 // Event delegation for edit buttons
