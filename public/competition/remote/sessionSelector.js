@@ -51,12 +51,18 @@ export function initSessionSelector({ onSessionChanged }) {
 
         const sessionTime = session.daytime ? ` ${session.daytime}` : '';
 
-        listItem.innerHTML = `
-          <div class="text-left">
-            <div class="font-medium text-gray-900 dark:text-gray-100">Session ${session.number}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">${session.date}${sessionTime}</div>
-          </div>
-        `;
+        // Build labels with textContent so competition-data fields
+        // (date, daytime) can never be parsed as markup.
+        const wrapper = document.createElement('div');
+        wrapper.className = 'text-left';
+        const title = document.createElement('div');
+        title.className = 'font-medium text-gray-900 dark:text-gray-100';
+        title.textContent = `Session ${session.number}`;
+        const subtitle = document.createElement('div');
+        subtitle.className = 'text-sm text-gray-500 dark:text-gray-400';
+        subtitle.textContent = `${session.date}${sessionTime}`;
+        wrapper.append(title, subtitle);
+        listItem.appendChild(wrapper);
         listItem.addEventListener('click', () => selectSession(session.number));
         sessionList.appendChild(listItem);
       });
