@@ -39,12 +39,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 class Competition {
+    /**
+     * Absolute path of the processed competition file. Lives in a data directory
+     * (default ./data, override with DATA_DIR) so Docker can bind-mount the
+     * directory instead of a single file that may not exist yet on the host.
+     */
+    static filePath() {
+        return path_1.default.resolve(process.cwd(), process.env.DATA_DIR || './data', 'competition.json');
+    }
     static readCompetitionDataFromDisk() {
-        if (!fs_1.default.existsSync(Competition.COMPETITION_FILE_PATH)) {
+        const filePath = Competition.filePath();
+        if (!fs_1.default.existsSync(filePath)) {
             throw new Error('Missing competition.json');
         }
         try {
-            const fileContent = fs_1.default.readFileSync(Competition.COMPETITION_FILE_PATH, 'utf-8');
+            const fileContent = fs_1.default.readFileSync(filePath, 'utf-8');
             return JSON.parse(fileContent);
         }
         catch (err) {
@@ -294,7 +303,7 @@ class Competition {
     }
     /**
      * Reads and processes a Lenex competition file, converting it to internal format.
-     * Validates the structure and writes the processed data to public/competition.json.
+     * Validates the structure and writes the processed data to the competition file (see filePath()).
      * @param filePath - Path to the Lenex file to process
      * @param callback - Callback function with error and result parameters
      */
@@ -328,10 +337,10 @@ class Competition {
                 callback('No clubs found', null);
                 return;
             }
-            // Use absolute path for reliability
-            const absPath = path_1.default.resolve(process.cwd(), 'public', 'competition.json');
+            const absPath = Competition.filePath();
             console.log('[Competition] Writing competition.json to:', absPath);
             try {
+                fs_1.default.mkdirSync(path_1.default.dirname(absPath), { recursive: true });
                 fs_1.default.writeFileSync(absPath, JSON.stringify(result));
             }
             catch (writeErr) {
@@ -344,7 +353,6 @@ class Competition {
         });
     }
 }
-Competition.COMPETITION_FILE_PATH = './public/competition.json';
 exports.default = Competition;
 // Usage: import Competition from './competition';
 // const comp = new Competition();

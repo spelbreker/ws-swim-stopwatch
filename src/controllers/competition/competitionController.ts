@@ -41,9 +41,8 @@ export function getCompetitionSummary(req: Request, res: Response) {
 
 export function deleteCompetition(req: Request, res: Response) {
   try {
-    if (fs.existsSync('./public/competition.json')) fs.unlinkSync('./public/competition.json');
-    if (fs.existsSync('./public/events.json')) fs.unlinkSync('./public/events.json');
-    if (fs.existsSync('./public/athletes.json')) fs.unlinkSync('./public/athletes.json');
+    const filePath = Competition.filePath();
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     res.status(200).send('Competition deleted');
   } // eslint-disable-next-line @typescript-eslint/no-unused-vars
   catch (_e) {

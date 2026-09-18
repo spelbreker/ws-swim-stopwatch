@@ -280,6 +280,19 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(403);
     });
 
+    it.each(['/settings', '/settings.html', '/js/settings.js'])('should block %s via Cloudflare', (path) => {
+      mockRequest = createMockRequest(path, '1.2.3.4');
+
+      tunnelRestrictionMiddleware(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+    });
+
     it('should block log viewer via Cloudflare', () => {
       mockRequest = createMockRequest('/competition/log.html', '1.2.3.4');
 

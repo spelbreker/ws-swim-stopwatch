@@ -1,43 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Lenex File</title>
+    <title>Upload Competition - SwimWatch</title>
     <link rel="manifest" href="/manifest.json" />
     <link href="/css/output.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 font-sans antialiased">
-
-    <!-- Top Navigation Bar -->
-    <header class="bg-cyan-500 dark:bg-cyan-600 text-white shadow-lg sticky top-0 z-10">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex h-16 items-center justify-between">
-                <div class="flex items-center">
-                    <a href="/index.html" class="flex-shrink-0 flex items-center space-x-2">
-                        <svg class="h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased">
+    <div class="relative flex min-h-screen flex-col overflow-hidden py-6 sm:py-12">
+        <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                         </svg>
-                        <span class="text-2xl font-bold">SwimWatch</span>
+                        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white ml-3">Upload Competition</h1>
+                    </div>
+                    <a href="/" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        Back to Dashboard
                     </a>
                 </div>
-                <div>
-                    <h1 class="text-xl font-semibold">Upload Competition</h1>
-                </div>
-            </div>
-        </div>
-    </header>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Load a Lenex start list (.lxf / .lef) so events, heats and athletes appear on the remote and screen.</p>
+            </header>
 
-    <!-- Main Content -->
-    <div class="py-12">
-        <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             <!-- Left Column -->
             <div class="space-y-8">
                 <!-- Upload Card -->
-                <section class="p-6 rounded-lg bg-blue-100 dark:bg-gray-700 shadow-lg">
+                <section class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Upload Lenex File</h2>
                     <form id="uploadForm" action="/competition/upload" method="post" enctype="multipart/form-data">
                         <div class="mb-4">
@@ -49,7 +50,7 @@
                 </section>
 
                 <!-- Instructions Card -->
-                <section class="p-6 rounded-lg bg-blue-100 dark:bg-gray-700 shadow-lg">
+                <section class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">How to Export from SplashMe</h2>
                     <ul class="list-disc list-inside space-y-2 text-gray-800 dark:text-gray-300">
                         <li>Navigate to <strong>Import/Export</strong>.</li>
@@ -63,7 +64,7 @@
             <!-- Right Column -->
             <div class="space-y-8">
                 <!-- Loaded Competition Card -->
-                <section class="card p-6 rounded-lg bg-blue-100 dark:bg-gray-700 shadow-lg">
+                <section class="card p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Loaded Competition</h2>
                     <div class="space-y-3">
                         <div class="flex justify-between">
@@ -97,11 +98,11 @@
                     <a href="/competition/delete" class="w-full block text-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Delete Loaded Competition</a>
                 </section>
             </div>
+            </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 dark:bg-gray-700 text-white p-4 text-center">
+    <footer class="bg-gray-800 text-white p-4 text-center mt-8">
         <p>&copy; Patrick Development 2025</p>
     </footer>
 

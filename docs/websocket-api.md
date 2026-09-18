@@ -86,11 +86,56 @@ This document describes all WebSocket message types exchanged between the fronte
   ```
 - **Payload (Incoming - Server broadcast):**
   ```json
-  { "type": "split", "lane": 3, "timestamp": 1718035205000.5678, "server_timestamp": 1718035205003 }
+  {
+    "type": "split",
+    "lane": 3,
+    "timestamp": 1718035205000.5678,
+    "distance": 100,
+    "splitNumber": 2,
+    "isFinish": true,
+    "ranking": [
+      { "lane": 3, "place": 1, "splitNumber": 2 },
+      { "lane": 5, "place": 2, "splitNumber": 1 }
+    ],
+    "server_timestamp": 1718035205003
+  }
   ```
-  - `lane`: Lane number (0-9)
+  - `lane`: Lane number (0-9), normalized to a number by the server
   - `timestamp`: Split time (ms since epoch, client-generated with server offset applied, preserved by server)
+  - `distance`: Distance covered at this split in meters (added by server, see below)
+  - `splitNumber`: 1-based index of this split for the lane in the current heat (added by server)
+  - `isFinish`: `true` when the lane has completed all expected splits for the event (added by server)
+  - `ranking`: Full arrival ranking of all lanes that have split in this heat, sorted by
+    `(splitNumber desc, timestamp asc)`. Clients should redraw all placement cells from this
+    array on every split, since another lane's place may change. (added by server)
   - `server_timestamp`: Server's local timestamp when message was processed (added by server)
+
+  The enrichment fields are optional: hardware and older clients keep sending the bare
+  `{ type, lane, timestamp }` payload and may ignore the extra fields.
+
+#### Split cooldown & ignored splits
+
+The server keeps per-lane state for the current heat and filters splits before broadcasting:
+
+1. **After finish:** once a lane has `isFinish: true`, further splits on that lane are ignored.
+2. **Cooldown:** a split on a lane less than `splitCooldownSec` (default 12s, see
+   `GET/POST /settings`) after that lane's previous *accepted* split is ignored. The comparison
+   uses the synchronized client `timestamp`, not server wall-clock time.
+
+Ignored splits are **not broadcast** and are written to `logs/competition.log` as
+`SPLIT IGNORED - Lane: 3, Reason: cooldown, ..., Since last: 500ms`.
+
+**Distance and finish detection:** the official clocks from one end of the pool, so every split
+covers two lengths: `splitDistance = 2 * poolLength` (50m in a 25m pool, 100m in a 50m pool).
+`distance = splitNumber * splitDistance`, capped at the event's total distance
+(`swimstyle.distance * relaycount`) when known. `expectedSplits = ceil(totalDistance / splitDistance)`;
+`isFinish` is set when `splitNumber >= expectedSplits`. Without a loaded `competition.json` the
+labels still work but `isFinish` is never set.
+
+**State lifecycle:**
+- `event-heat`: heat info is (re)loaded from `competition.json`, all lane state is cleared.
+- `start`: lane state is cleared; if the message carries a different `event`/`heat` the heat info is reloaded.
+- `reset`: lane state and heat info are cleared.
 
 ## Event and Heat Control
 
@@ -236,9 +281,9 @@ stateDiagram-v2
     
     state Running {
         [*] --> Timing
-        Timing --> Timing : split (lane 0-9)
-        Timing --> LapRecorded : split processed
-        LapRecorded --> Timing : continue timing
+        Timing --> Timing : split ignored (cooldown / after finish, logged)
+        Timing --> LapRecorded : split accepted
+        LapRecorded --> Timing : broadcast enriched split + ranking
     }
     
     note right of TimeSyncing
@@ -259,8 +304,8 @@ stateDiagram-v2
 - **TimeSyncing:** Performing initial rapid ping sequence for time synchronization
 - **Stopped:** Stopwatch inactive, can change event/heat, clear data, or start timing
 - **Running:** Stopwatch active, recording split times with synchronized timestamps
-- **Timing:** Within running state, actively timing the race
-- **LapRecorded:** Momentary state when a split is recorded and broadcast
+- **Timing:** Within running state, actively timing the race. Each lane additionally has a cooldown window after its last accepted split and a `finished` flag once all expected splits are in.
+- **LapRecorded:** Momentary state when a split is accepted, enriched (distance, split number, finish, ranking) and broadcast
 
 This diagram summarizes the control flow; actual message payloads and additional details are described above.
 
