@@ -61,15 +61,19 @@ export function logSplit(
   appendLog(splitMsg);
 }
 
-export type IgnoredSplitReason = 'cooldown' | 'after-finish';
+export type IgnoredSplitReason = 'cooldown' | 'after-finish' | 'start-cooldown';
 
 export function logIgnoredSplit(
   lane: string | number,
   timestamp: number,
   reason: IgnoredSplitReason,
   msSinceLast?: number,
+  msSinceStart?: number,
 ) {
-  const sinceStr = typeof msSinceLast === 'number' ? `, Since last: ${msSinceLast}ms` : '';
+  const parts: string[] = [];
+  if (typeof msSinceLast === 'number') parts.push(`Since last: ${msSinceLast}ms`);
+  if (typeof msSinceStart === 'number') parts.push(`Since start: ${msSinceStart}ms`);
+  const sinceStr = parts.length > 0 ? `, ${parts.join(', ')}` : '';
   const msg = `[${new Date(Number(timestamp)).toISOString()}] SPLIT IGNORED - Lane: ${lane}, Reason: ${reason}, `
     + `Time: ${formatRaceTime(timestamp)}, Timestamp: ${timestamp}${sinceStr}`;
   appendLog(msg);

@@ -12,7 +12,7 @@ This guide is for coding agents working in this repository.
 
 ## 2) Stack Summary
 
-- Runtime: Node.js 22+
+- Runtime: Node.js 24+
 - Backend: TypeScript + Express 5 + ws
 - Frontend: plain browser JavaScript + static HTML/CSS
 - Tests: Jest + ts-jest + supertest

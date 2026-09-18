@@ -89,13 +89,27 @@ if msSinceLast < splitCooldownSec * 1000:
     → ignored (reason: "cooldown")
 ```
 
+The **first split** on a lane after the start signal is also subject to
+cooldown. If a lane button is pressed within the cooldown window of the
+start timestamp, the split is ignored:
+
+```
+msSinceStart = msg.timestamp - startTime
+if msSinceStart < splitCooldownSec * 1000:
+    → ignored (reason: "start-cooldown")
+```
+
+This prevents accidental splits from operators who press the lane button
+at the same time as the start signal.
+
 Key properties:
 
 - The cooldown compares the **synchronized client `timestamp`**, not server
   `Date.now()`. This keeps cooldown deterministic across devices.
 - An ignored split does **not** advance the cooldown window — the next split
   is still compared against the last *accepted* split's timestamp.
-- The first split on a lane is always accepted (no previous timestamp).
+- The first split on a lane is accepted once the start cooldown window has
+  elapsed (or when no start timestamp was recorded).
 - Cooldown is per-lane; one lane's cooldown does not affect another.
 
 ## Finish Detection
@@ -151,7 +165,7 @@ stateDiagram-v2
     HeatLoaded --> HeatLoaded: event-heat (reload)
     HeatLoaded --> Racing: start (clear lanes)
     Racing --> Racing: split accepted (update lane, ranking)
-    Racing --> Racing: split ignored (cooldown / after-finish, logged)
+    Racing --> Racing: split ignored (cooldown / start-cooldown / after-finish, logged)
     NoHeat --> Racing: start (defensive heat load)
     Racing --> NoHeat: reset (clear lanes + heat)
     HeatLoaded --> NoHeat: reset

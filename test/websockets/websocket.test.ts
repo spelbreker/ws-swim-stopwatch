@@ -102,7 +102,7 @@ describe('websocket split handling', () => {
     await send({ type: 'split', lane: 3, timestamp: T0 + 30_500 });
 
     expect(screenMessages).toHaveLength(1);
-    expect(logger.logIgnoredSplit).toHaveBeenCalledWith(3, T0 + 30_500, 'cooldown', 500);
+    expect(logger.logIgnoredSplit).toHaveBeenCalledWith(3, T0 + 30_500, 'cooldown', 500, undefined);
   });
 
   it('marks the finish and updates ranking for other lanes', async () => {
@@ -129,7 +129,7 @@ describe('websocket split handling', () => {
     await send({ type: 'start', timestamp: T0, event: 1, heat: 1 });
     await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
     await send({ type: 'start', timestamp: T0 + 100_000, event: 1, heat: 2 });
-    await send({ type: 'split', lane: 3, timestamp: T0 + 100_500 });
+    await send({ type: 'split', lane: 3, timestamp: T0 + 120_000 });
 
     expect(screenMessages).toHaveLength(2);
     expect(screenMessages[1]).toMatchObject({ splitNumber: 1, ranking: [{ lane: 3, place: 1, splitNumber: 1 }] });

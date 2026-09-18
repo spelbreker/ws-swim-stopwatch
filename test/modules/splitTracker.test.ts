@@ -170,10 +170,44 @@ describe('SplitTracker', () => {
       const { tracker } = makeTracker();
       tracker.setHeat(heat(100));
       tracker.onSplit(1, T0);
-      tracker.onStart();
+      tracker.onStart(T0);
       expect(tracker.getRanking()).toEqual([]);
       expect(tracker.getHeat()).toEqual(heat(100));
-      expect(tracker.onSplit(1, T0 + 100).accepted).toBe(true);
+      expect(tracker.onSplit(1, T0 + 20_000).accepted).toBe(true);
+    });
+
+    it('ignores the first split if it arrives within the cooldown window of start', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart(T0);
+      const result = tracker.onSplit(3, T0 + 500);
+      expect(result).toEqual({ accepted: false, reason: 'start-cooldown', msSinceStart: 500 });
+    });
+
+    it('accepts the first split after the start cooldown window expires', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart(T0);
+      expect(tracker.onSplit(3, T0 + 12_000).accepted).toBe(true);
+    });
+
+    it('start-cooldown does not affect subsequent splits', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart(T0);
+      accepted(tracker.onSplit(3, T0 + 12_000)); // first split accepted after window
+      // second split still subject to normal cooldown from last split
+      expect(tracker.onSplit(3, T0 + 13_000).accepted).toBe(false);
+    });
+
+    it('start-cooldown is independent per lane', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart(T0);
+      expect(tracker.onSplit(3, T0 + 500).accepted).toBe(false);
+      expect(tracker.onSplit(4, T0 + 500).accepted).toBe(false);
+    });
+
+    it('onStart without timestamp does not apply start-cooldown', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart();
+      expect(tracker.onSplit(3, T0).accepted).toBe(true);
     });
 
     it('onReset clears lane state and heat info', () => {

@@ -64,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const laneElement = document.getElementById(`lane-${lane}`);
         if (laneElement) {
           const splitCell = laneElement.querySelector('.split-time');
-          const arrivalCell = laneElement.querySelector('.arrival-order');
-          if (splitCell && arrivalCell) {
+          if (splitCell) {
             const formattedTime = formatSplitTime(message.timestamp);
             renderSplitTime(splitCell, message.distance, formattedTime);
           }
