@@ -105,7 +105,7 @@
                 white-space: nowrap;
                 text-align: right;
                 padding: 0.4rem 0.25rem;
-                width: 7rem;
+                width: auto;
             }
 
             .lane-table .split-time .split-distance {
@@ -115,9 +115,11 @@
             }
 
             .lane-table .arrival-order {
-                text-align: center;
-                padding: 0.4rem 0.25rem;
-                width: 1.5rem;
+                display: none;  /* hidden on mobile, place shown via .split-place */
+            }
+
+            .lane-table .split-place {
+                margin-left: 0.4rem;
             }
 
             /* Lane has completed all expected splits */
@@ -182,8 +184,14 @@
                 }
 
                 .lane-table .arrival-order {
+                    display: table-cell;  /* separate column on tablet+ */
                     width: 2rem;
+                    text-align: center;
                     padding: 0.5rem 0.375rem;
+                }
+
+                .lane-table .split-place {
+                    display: none;  /* place shown via .arrival-order column */
                 }
 
                 .bottom-bar {

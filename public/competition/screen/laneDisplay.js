@@ -94,6 +94,9 @@ export function clearArrivalOrders() {
   document.querySelectorAll('.arrival-order').forEach((element) => {
     element.textContent = '';
   });
+  document.querySelectorAll('.split-place').forEach((element) => {
+    element.remove();
+  });
   document.querySelectorAll('.lane.finished').forEach((element) => {
     element.classList.remove('finished');
   });
@@ -101,6 +104,9 @@ export function clearArrivalOrders() {
 
 /**
  * Redraw all arrival-order cells from the server-provided ranking array.
+ * The place is rendered both in the .arrival-order column (tablet/desktop)
+ * and as a .split-place span inside .split-time (mobile). CSS decides which
+ * one is visible.
  * @param {Array<{lane: number, place: number}>} ranking
  */
 export function renderRanking(ranking) {
@@ -108,10 +114,21 @@ export function renderRanking(ranking) {
   document.querySelectorAll('.arrival-order').forEach((element) => {
     element.textContent = '';
   });
+  document.querySelectorAll('.split-place').forEach((element) => {
+    element.remove();
+  });
   ranking.forEach(({ lane, place }) => {
     const laneElement = document.getElementById(`lane-${lane}`);
-    const cell = laneElement && laneElement.querySelector('.arrival-order');
+    if (!laneElement) return;
+    const cell = laneElement.querySelector('.arrival-order');
     if (cell) cell.textContent = place;
+    const splitCell = laneElement.querySelector('.split-time');
+    if (splitCell) {
+      const placeSpan = document.createElement('span');
+      placeSpan.className = 'split-place';
+      placeSpan.textContent = place;
+      splitCell.appendChild(placeSpan);
+    }
   });
 }
 
