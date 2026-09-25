@@ -26,6 +26,8 @@ This guide is for coding agents working in this repository.
 - `npm run lint` - run ESLint
 - `npm run build:css` - compile Tailwind CSS output
 - `docker compose up --build` - run production-like container setup
+- `npm test -- --runInBand test/modules/remoteFrontend.test.ts` - run remote lifecycle regressions (highlight cleanup and reconnect ping timers). These tests execute the browser modules with TypeScript transpilation, Node VM, DOM stubs, and Jest fake timers; no browser dependency is required.
+- `npm run lint` only checks `src/` and `test/`; browser JS needs a separate ESLint invocation. The TypeScript build also excludes `public/`.
 
 ## 4) Code Organization
 

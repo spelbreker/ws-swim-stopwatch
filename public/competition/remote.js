@@ -190,14 +190,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Ping logic
   let pingStartTime = 0;
+  let pingInterval = null;
   function sendPing() {
     pingStartTime = Date.now();
     send({ type: 'ping', time: pingStartTime });
   }
 
+  function stopPingSync() {
+    clearInterval(pingInterval);
+    pingInterval = null;
+  }
+
   // WebSocket event handler
   onSocketEvent((event, socket, message) => {
     if (event === 'open') {
+      stopPingSync();
       fillSelectOptions(eventSelect, 25, getCurrentSession());
       fillSelectOptions(heatSelect, 25, getCurrentSession());
 
@@ -207,17 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const initialPingInterval = 500;
       const normalPingInterval = 5000;
 
-      const initialSync = setInterval(() => {
+      pingInterval = setInterval(() => {
         sendPing();
         pingCount++;
         if (pingCount >= maxInitialPings) {
-          clearInterval(initialSync);
-          setInterval(sendPing, normalPingInterval);
+          stopPingSync();
+          pingInterval = setInterval(sendPing, normalPingInterval);
           console.log('[Remote] Switched to normal ping interval after initial sync');
         }
       }, initialPingInterval);
 
       updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, getCurrentSession());
+      return;
+    }
+
+    if (event === 'close') {
+      stopPingSync();
       return;
     }
 

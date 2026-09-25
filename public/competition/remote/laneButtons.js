@@ -35,13 +35,9 @@ export function resetSplitTimes() {
 
 /** Clear all lane information: times, highlight timers, button colors. */
 export function clearLaneInformation() {
+  cancelAllHighlightTimers();
   document.querySelectorAll('.lane-button').forEach((button) => {
-    const lane = button.getAttribute('data-lane');
-    updateLaneInfo(lane, '00:00:00');
-    clearTimeout(laneHighlightTimers.get(lane));
-    laneHighlightTimers.delete(lane);
-    button.classList.remove('bg-green-500');
-    button.classList.add('bg-blue-500');
+    updateLaneInfo(button.getAttribute('data-lane'), '00:00:00');
   });
 }
 
@@ -69,6 +65,10 @@ export function highlightLaneButton(button) {
 export function cancelAllHighlightTimers() {
   laneHighlightTimers.forEach((timer) => clearTimeout(timer));
   laneHighlightTimers.clear();
+  document.querySelectorAll('.lane-button').forEach((button) => {
+    button.classList.remove('bg-green-500');
+    button.classList.add('bg-blue-500');
+  });
 }
 
 /**
