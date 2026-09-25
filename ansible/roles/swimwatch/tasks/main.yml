@@ -18,11 +18,28 @@
     - uploads
     - logs
     - config
+    - data
+
+- name: Check for legacy competition.json at old location
+  ansible.builtin.stat:
+    path: /opt/swimwatch/competition.json
+  register: legacy_competition_json
+
+- name: Migrate legacy competition.json into data directory
+  ansible.builtin.copy:
+    src: /opt/swimwatch/competition.json
+    dest: /opt/swimwatch/data/competition.json
+    remote_src: true
+    owner: swimwatch
+    group: swimwatch
+    mode: "0644"
+    force: false
+  when: legacy_competition_json.stat.exists
 
 - name: Ensure competition.json exists
   ansible.builtin.copy:
     content: "{}"
-    dest: /opt/swimwatch/competition.json
+    dest: /opt/swimwatch/data/competition.json
     owner: swimwatch
     group: swimwatch
     mode: "0644"

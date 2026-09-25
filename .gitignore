@@ -34,3 +34,8 @@ data/
 
 # macOS
 .DS_Store
+
+# playwright test artifacts
+playwright-report/
+test-results/
+/.playwright-mcp

@@ -56,7 +56,8 @@ The Pi is configured as an NTP server for the `192.168.8.0/24` network. Devices 
 ```
 /opt/swimwatch/
 ├── docker-compose.yml
-├── competition.json
+├── data/
+│   └── competition.json
 ├── uploads/
 ├── logs/
 └── config/

@@ -4,10 +4,14 @@ The frontend is plain HTML + browser JavaScript + Tailwind CSS v4. There is
 no framework and no client-side build step; Tailwind is compiled ahead of
 time into `public/css/output.css` via `npm run build:css`.
 
+All page scripts use native ES modules (`import`/`export`) loaded with
+`<script type="module">`. Shared modules live in `public/js/modules/`.
+
 ## Table of Contents
 
 - [Page Map](#page-map)
-- [Shared JavaScript](#shared-javascript)
+- [Module Structure](#module-structure)
+- [Shared Modules](#shared-modules)
 - [Competition Remote](#competition-remote)
 - [Competition Screen](#competition-screen)
 - [Dashboard](#dashboard)
@@ -28,8 +32,6 @@ graph LR
     Index --> Devices["/devices.html"]
     Index --> Tunnel["/tunnel.html"]
     Index --> Settings["/settings.html"]
-    Index --> TrainRemote["/training/training-remote.html"]
-    Index --> TrainScreen["/training/training-screen.html"]
 ```
 
 | Page | Path | Purpose | Tunnel access |
@@ -42,44 +44,121 @@ graph LR
 | Device Manager | `/devices.html` | Register, edit and monitor hardware devices | blocked |
 | Cloudflare Tunnel | `/tunnel.html` | Start/stop tunnel, configure token and flags | blocked |
 | Settings | `/settings.html` | Pool length and split cooldown | blocked |
-| Training Remote | `/training/training-remote.html` | Interval training controller | blocked |
-| Training Screen | `/training/training-screen.html` | Interval training display | blocked |
 
-## Shared JavaScript
+## Module Structure
 
-Two scripts are loaded by most pages and set up global state:
+```mermaid
+graph BT
+    subgraph Shared[public/js/modules]
+        Socket[socket.js]
+        TimeSync[timeSync.js]
+        Format[format.js]
+        WakeLock[wakeLock.js]
+        Indicator[connectionIndicator.js]
+    end
 
-### `public/js/main.js`
+    subgraph Remote[Competition Remote]
+        RemoteEntry[competition/remote.js]
+        LaneButtons[competition/remote/laneButtons.js]
+        EventHeat[competition/remote/eventHeat.js]
+        SessionSel[competition/remote/sessionSelector.js]
+    end
 
-- Creates `window.socket` — a shared `WebSocket` with auto-reconnect (1 s
-  backoff).
-- Manages a connection indicator element (`#connection-indicator`) that
-  toggles between green (connected) and red (disconnected).
-- Requests a screen wake lock (where supported) to prevent the display from
-  sleeping.
-- Provides `window.formatLapTime(ts, base)` — formats elapsed ms as
-  `mm:ss:cc`.
+    subgraph Screen[Competition Screen]
+        ScreenEntry[competition/screen.js]
+        LaneDisplay[competition/screen/laneDisplay.js]
+        Stopwatch[competition/screen/stopwatch.js]
+    end
 
-### `public/js/timeSync.js`
+    subgraph Admin[Admin pages]
+        Devices[js/devices.js]
+        Settings[js/settings.js]
+        Tunnel[js/tunnel.js]
+        LogViewer[js/logViewer.js]
+        Upload[js/upload.js]
+    end
 
-- Defines the `TimeSync` class (exposed as `window.TimeSync`).
+    RemoteEntry --> Socket
+    RemoteEntry --> TimeSync
+    RemoteEntry --> Format
+    RemoteEntry --> LaneButtons
+    RemoteEntry --> EventHeat
+    RemoteEntry --> SessionSel
+
+    ScreenEntry --> Socket
+    ScreenEntry --> TimeSync
+    ScreenEntry --> Format
+    ScreenEntry --> LaneDisplay
+    ScreenEntry --> Stopwatch
+    ScreenEntry --> WakeLock
+
+    Devices --> Socket
+```
+
+Each HTML page loads a single entry-point script with
+`<script type="module">`. The browser resolves the import graph — no build
+step required.
+
+## Shared Modules
+
+All shared modules live in `public/js/modules/` and are imported by page
+entry points.
+
+### `public/js/modules/socket.js`
+
+- Exports `send(msg)`, `getSocket()`, and `onSocketEvent(callback)`.
+- Creates a single shared `WebSocket` with auto-reconnect (1 s backoff).
+- `onSocketEvent` callbacks receive `(event, socket, data)` where `event` is
+  `'open'`, `'close'`, or `'message'` and `data` is the parsed JSON message
+  (for `'message'` events only).
+- Replaces the old `window.socket` global.
+
+### `public/js/modules/timeSync.js`
+
+- Exports the `TimeSync` class.
 - NTP-inspired offset calculation: collects up to 8 samples, filters outliers
   by RTT and standard deviation, computes a weighted average offset.
 - `getSynchronizedTime()` returns `Date.now() + currentOffset`.
 - Used by the remote and screen to keep their stopwatches in sync with the
   server clock.
+- Replaces the old `window.TimeSync` global.
+
+### `public/js/modules/format.js`
+
+- Exports `formatLapTime(ts, base)` and `pad(n)`.
+- Formats elapsed ms as `mm:ss:cc`.
+- Replaces the old `window.formatLapTime` global.
+
+### `public/js/modules/wakeLock.js`
+
+- Exports `requestWakeLock()`.
+- Requests a screen wake lock (where supported) to prevent the display from
+- sleeping. Re-acquires on visibility change.
+
+### `public/js/modules/connectionIndicator.js`
+
+- Exports `setupConnectionIndicator(onSocketEvent)`.
+- Toggles `#connection-indicator` between green (connected) and red
+  (disconnected).
 
 ## Competition Remote
 
-**Files:** `public/competition/remote.html`, `public/competition/remote.js`
+**Files:** `public/competition/remote.html`, `public/competition/remote.js`,
+`public/competition/remote/laneButtons.js`,
+`public/competition/remote/eventHeat.js`,
+`public/competition/remote/sessionSelector.js`
 
 The remote is the operator's control panel. It sends WebSocket messages and
 displays accepted server broadcasts.
 
 Features:
 
-- **Event/heat selection** — fetches `/competition/event` to populate the
-  event dropdown; sends `event-heat` messages.
+- **Event/heat selection** — loads the initial session before fetching
+  `/competition/event` to populate the dropdown, then updates the info bar.
+  Initialization runs once per page, independently of WebSocket connections;
+  reconnects preserve the selection and do not send `event-heat` messages.
+  Explicit operator selection still sends `event-heat` messages. Missed race
+  messages are not replayed after reconnect.
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
 - **Lane buttons** — clicking a lane button sends a `split` message with the
   current synchronized timestamp. The button does **not** update optimistically;
@@ -93,7 +172,9 @@ Features:
 
 ## Competition Screen
 
-**Files:** `public/competition/screen.html`, `public/competition/screen.js`
+**Files:** `public/competition/screen.html`, `public/competition/screen.js`,
+`public/competition/screen/laneDisplay.js`,
+`public/competition/screen/stopwatch.js`
 
 The screen is the public display shown on a TV or projector. It only
 receives data — it has no controls.
@@ -140,7 +221,7 @@ All admin pages share a common layout (see [Layout Convention](#layout-conventio
 - Shows tunnel status (running, PID, URL, connection info, errors).
 - Start/stop the tunnel, configure the token, toggle auto-start and
   allow-all-routes.
-- Script: inline; calls `/tunnel/*` REST endpoints.
+- Script: `public/js/tunnel.js`; calls `/tunnel/*` REST endpoints.
 
 ### Settings (`/settings.html`)
 
@@ -155,6 +236,7 @@ All admin pages share a common layout (see [Layout Convention](#layout-conventio
 - Auto-refreshes every 10 seconds.
 - "Refresh Log" and "Download Log" buttons.
 - Download triggers `GET /logs/competition.log?download=1`.
+- Script: `public/js/logViewer.js`.
 
 ### Lenex Upload (`/competition/upload.html`)
 
@@ -163,17 +245,14 @@ All admin pages share a common layout (see [Layout Convention](#layout-conventio
   events, clubs).
 - Delete button to remove the loaded competition.
 - Instructions for exporting from SplashMe.
+- Script: `public/js/upload.js`.
 
 ## Training Pages
 
-**Files:** `public/training/training-remote.html`,
-`public/training/training-screen.html`, `public/js/training.js`
-
-A separate interval-training mode. The remote creates/deletes/starts
-intervals; the screen displays the active interval timer. Uses the same
-WebSocket connection but with `add-interval`, `start-interval` and
-`delete-interval` message types (see `TrainingMessage` in
-`src/websockets/messageTypes.ts`).
+Training pages (`training-remote.html`, `training-screen.html`,
+`training.js`) have been removed from the frontend. The WebSocket
+`TrainingMessage` type still exists in `src/websockets/messageTypes.ts`
+for backward compatibility but no page consumes it.
 
 ## Layout Convention
 

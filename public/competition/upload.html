@@ -106,36 +106,7 @@
         <p>&copy; Patrick Development 2025</p>
     </footer>
 
-    <script>
-        function fetchCompetitionSummary() {
-            fetch('/competition/summary')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('competition').textContent = data.meet || '-';
-                    document.getElementById('first_session_date').textContent = data.first_session_date || '-';
-                    document.getElementById('club_count').textContent = data.club_count || '-';
-                    document.getElementById('session_count').textContent = data.session_count || '-';
-                    document.getElementById('event_count').textContent = data.event_count || '-';
-                })
-                .catch(() => {
-                    // Handle cases where no competition is loaded
-                    document.getElementById('competition').textContent = 'No competition loaded';
-                    document.getElementById('first_session_date').textContent = '-';
-                    document.getElementById('club_count').textContent = '-';
-                    document.getElementById('session_count').textContent = '-';
-                    document.getElementById('event_count').textContent = '-';
-                });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchCompetitionSummary();
-        });
-    </script>
+    <script type="module" src="/js/upload.js"></script>
 </body>
 
 </html>

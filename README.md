@@ -145,7 +145,7 @@ See the [Cloudflare Tunnel Deployment Guide](docs/cloudflare-tunnel.md) for deta
 Security behavior when accessed via Cloudflare Tunnel:
 - Redirects `/` and `/index.html` to `/competition/screen.html`.
 - Only serves the competition screen and essential assets/APIs.
-- Blocks admin pages (remote, upload, dashboard), training, and logs.
+- Blocks admin pages (remote, upload, dashboard, settings, devices) and logs.
 
 ## Project Structure
 
@@ -155,8 +155,7 @@ The project uses a modular folder structure for clarity and maintainability:
 project-root/
 ├── public/                  # Static assets (HTML, JS, CSS, images, manifest)
 │   ├── competition/         # Competition remote, screen, log, upload pages
-│   ├── training/            # Training remote and screen pages
-│   ├── js/                  # Shared JS (main.js, timeSync.js, devices.js, settings.js)
+│   ├── js/                  # Page scripts (devices.js, settings.js, ...) and shared modules/
 │   ├── css/                 # Tailwind source (base.css) and compiled output (output.css)
 │   ├── index.html           # Dashboard
 │   ├── devices.html         # Device manager

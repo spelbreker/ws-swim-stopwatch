@@ -23,11 +23,11 @@ This application includes built-in middleware that restricts tunnel access to sp
 
 **Accessible via Cloudflare Tunnel (public):**
 - `/competition/screen.html` - Competition screen view
-- `/competition/screen.js` - Screen JavaScript
+- `/competition/screen.js` - Screen JavaScript (ES module entry)
+- `/competition/screen/*` - Screen ES submodules
 - `/css/*` - Stylesheets
 - `/image/*` - Images
-- `/js/main.js` - Main JavaScript
-- `/js/timeSync.js` - Time synchronization
+- `/js/modules/*` - Shared ES modules (socket, timeSync, format, etc.)
 - `/competition/event/*` - Event data API
 - `/competition/summary` - Competition summary API
 - `/devices` - Device list API
@@ -37,7 +37,6 @@ This application includes built-in middleware that restricts tunnel access to sp
 - `/competition/remote.html` - Remote control interface
 - `/competition/upload.html` - File upload interface
 - `/index.html` - Dashboard
-- `/training/*` - Training mode
 - All other administrative routes
 
 This restriction happens at the application level (middleware), so no Cloudflare path rules are needed.
