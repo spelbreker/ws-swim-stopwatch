@@ -1,14 +1,28 @@
-# Open reviewbevinding: reconnect verliest event/heat-selectie
+# Reviewbevinding: behoud event/heat-selectie bij reconnect
 
 ## Status en afbakening
 
-- Status: **open; niet opgelost**.
+- Status: **de dropdownregressie bij reconnect is opgelost**.
 - Vastgesteld op `feature/es-modules-frontend`, commit `71aaa02`, op 25 september 2026.
 - Dit is bevinding 1 uit de onafhankelijke branchreview.
-- De fixes voor vastzittende baankleuren en oplopende pingtimers staan hier los van. Die wijzigen de event/heat-selectie niet.
-- Dit document beschrijft een mogelijke oplossing; het is geen bewijs dat reconnects de volledige wedstrijdstatus herstellen.
+- De fixes voor vastzittende baankleuren en oplopende pingtimers staan hier los van.
+- Volledig herstel van gemiste wedstrijdberichten en robuuste expliciete verversing zijn afzonderlijk vervolgwerk; zie hieronder.
 
-## Probleem en impact
+## Geïmplementeerde gerichte fix
+
+De sessie- en dropdowninitialisatie is losgemaakt van WebSocket-`open`:
+
+1. `initSessionSelector()` geeft de promise van de bestaande sessielading terug.
+2. De remote wacht eenmalig op deze lading en vult daarna de event- en heat-dropdowns voor de gekozen sessie.
+3. De infobalk wordt pas bijgewerkt nadat de opties geladen zijn, zodat ook een eerste event anders dan 1 correct wordt weergegeven.
+4. Iedere socketopening start alleen de verbindingsgebonden pingsynchronisatie. Selecties en infobalk worden daarbij niet opnieuw geladen of overschreven.
+5. De remote stuurt bij initialisatie of reconnect geen oude selectie naar de server terug.
+
+Hierdoor blijft een lopende initialisatie één lading, ook als ondertussen meerdere reconnects plaatsvinden. De fix introduceert geen nieuwe initialisatieflag, retryloop of wedstrijdspecifieke logica in `socket.js`.
+
+De bestaande fallback bij een mislukte sessie-/eventfetch blijft behouden, evenals de bestaande expliciete sessiewisselflow. De uitgebreidere voorstellen hieronder voor fetchfouten, ongeldige keuzes, achterhaalde responses en het vervangen van de 100ms-wachttijd zijn **niet onderdeel van deze gerichte fix**. Er is ook geen nieuwe actie toegevoegd om competitiegegevens bij reconnect te verversen.
+
+## Oorspronkelijk probleem en impact
 
 De remote vult bij ieder WebSocket-`open`-event de event- en heat-dropdowns opnieuw. Dit gebeurt niet alleen bij het openen van de pagina, maar ook na iedere automatische reconnect. Het vervangen van de opties selecteert opnieuw de eerste optie en verliest de eerder gekozen wedstrijd/serie.
 
@@ -107,25 +121,30 @@ Los de mismatch niet op door bij iedere reconnect blind `sendEventAndHeat()` aan
 
 Behoud van de lokale selectie lost de hier gereproduceerde dropdownregressie op, maar herstelt geen gemiste `start`, `reset`, `split` of `event-heat`-berichten. Volledig herstel na gemiste berichten of een serverrestart vereist een afzonderlijk ontwerp: bijvoorbeeld een servergestuurde status-snapshot met sessie/event/heat, startstatus en splits. Dat is een protocolwijziging en hoort niet verstopt te worden in deze frontendfix.
 
-## Acceptatie- en regressietests voor de toekomstige fix
+## Verificatie en resterende acceptatiescenario's
 
-| Scenario | Verwacht resultaat |
-|---|---|
-| Event 3 / heat 4, disconnect en reconnect | Selectie en infobalk blijven 3 / 4; geen spontaan selectie- of startbericht |
-| Meerdere opeenvolgende reconnects | Geen terugval naar de eerste opties en geen dubbele initialisatie |
-| Reconnect tijdens lopende stopwatch | Geen wijziging van selectie, geen extra `start`, `reset` of `event-heat` |
-| Trage eerste eventfetch met tussentijdse reconnect | Eén geldige initialisatie; geen latere response die een nieuwere selectie overschrijft |
-| Sessies waarvan het eerste event niet 1 is | Eerste initialisatie gebruikt de juiste sessie en een bestaand event |
-| Expliciete verversing met ongewijzigde data | Bestaande sessie/event/heat worden behouden |
-| Nieuwe sessie kiezen met een trage response | Nieuwe keuze pas toepassen na de juiste response, niet na een vaste 100 ms |
-| Twee snel opeenvolgende sessiekeuzes | Alleen de laatste keuze bepaalt dropdowns en infobalk |
-| Huidig event verdwijnt uit de competitie | Zichtbare ongeldige selectie; geen stille start onder event 1 |
-| Tijdelijke fetchfout bij bestaande selectie | Geen stille terugval naar de generieke optielijst |
-| Volgende start na gewone reconnect | `start` bevat exact de eerder gekozen event- en heatwaarden |
-| Andere remote wijzigde de selectie tijdens disconnect | Reconnect zendt de oude keuze niet blind terug; snapshot-herstel blijft afzonderlijk werk |
+`test/modules/remoteFrontend.test.ts` bevat zes regressietests voor deze fix. Alle zes faalden vóór de wijziging. Ze testen de echte remote-entrypoint met gemockte sessie-/selectiemodules: de mock voor het vullen van opties overschrijft, net als de bestaande implementatie, de geselecteerde waarde. Zo wordt daadwerkelijk gecontroleerd dat een reconnect dit pad niet opnieuw uitvoert.
 
-Voer naast gerichte tests een browsercheck uit met remote en scherm naast elkaar en kunstmatige vertraging op de event-API. De bestaande backendtests bewijzen niet dat de browser zijn selectiestaat bewaart. De tests voor highlightreset en pingtimers in `test/modules/remoteFrontend.test.ts` mocken de selectiemodule en dekken deze open bevinding daarom nadrukkelijk niet.
+| Scenario | Verwacht resultaat | Dekking / scope |
+|---|---|---|
+| Event 3 / heat 4, disconnect en reconnect | Selectie en infobalk blijven 3 / 4; geen spontaan selectie- of startbericht | Regressietest |
+| Meerdere opeenvolgende reconnects | Geen terugval naar de eerste opties en geen dubbele initialisatie | Regressietest |
+| Reconnect tijdens lopende stopwatch | Geen wijziging van selectie, geen extra `start`, `reset` of `event-heat` | Regressietest |
+| Trage eerste eventfetch met tussentijdse reconnect | Eén lading; infobalk pas bijwerken na afronding | Regressietest |
+| Trage sessielading, eerste event niet 1 | Wachten op de sessie, vervolgens juiste event en infobalk laden | Regressietest |
+| Socket heeft nog geen verbinding | HTTP-initialisatie kan wel afgerond worden | Regressietest |
+| Volgende start na gewone reconnect | `start` bevat exact de eerder gekozen event- en heatwaarden | Regressietest |
+| Expliciete verversing met ongewijzigde data | Bestaande sessie/event/heat worden behouden | Vervolgwerk; geen verversingsactie toegevoegd |
+| Nieuwe sessie kiezen met een trage response | Nieuwe keuze pas toepassen na de juiste response, niet na een vaste 100 ms | Bestaand probleem; vervolgwerk |
+| Twee snel opeenvolgende sessiekeuzes of nieuwe keuze tijdens initialisatie | Alleen de laatste keuze bepaalt dropdowns en infobalk | Bestaande async-races; vervolgwerk |
+| Huidig event verdwijnt uit de competitie | Zichtbare ongeldige selectie; geen stille start onder event 1 | Vervolgwerk bij dataverversing |
+| Tijdelijke fetchfout bij bestaande selectie | Geen stille terugval naar de generieke optielijst | Reconnect doet geen fetch meer; expliciete herlading blijft vervolgwerk |
+| Andere remote wijzigde de selectie tijdens disconnect | Reconnect zendt de oude keuze niet blind terug | Geen automatische broadcast; snapshot-herstel blijft vervolgwerk |
 
-## Tijdelijke werkwijze
+Daarnaast is een browsercheck uitgevoerd met de echte modules en een geïsoleerde mockserver: sessielading met 1 seconde vertraging, eventlading met 4 seconden vertraging, sessie 2 met eerste event 7. Na selectie van event 8 / heat 4 bleven dropdowns en infobalk bij drie reconnects ongewijzigd. De server registreerde één sessielading, één eventlijstlading en geen extra wedstrijdberichten door reconnect. De volgende start bevatte event 8 / heat 4; ook een reconnect tijdens die race behield de selectie. Het afzonderlijke scherm bleef event 8 / heat 4 tonen met lopende stopwatch.
 
-Controleer na een verbindingsonderbreking expliciet sessie, event en heat op de remote én op het scherm voordat een volgende race begint. Herstel een onjuiste selectie alleen bewust, buiten een lopende race. Dit is een operationele voorzorg, geen vervanging voor de codefix.
+Verificatie: 183 tests geslaagd, TypeScript-build en standaardlint geslaagd, plus afzonderlijke ESLint-controle van `remote.js` en `remote/sessionSelector.js`. Er zijn geen nieuwe dependencies of protocolwijzigingen.
+
+## Operationele beperking
+
+Controleer na een verbindingsonderbreking expliciet sessie, event en heat op de remote én op het scherm voordat een volgende race begint. De selectie valt niet meer zelfstandig terug, maar berichten die tijdens disconnect zijn gemist worden niet opnieuw afgespeeld. Herstel een onjuiste selectie alleen bewust, buiten een lopende race.

@@ -107,5 +107,5 @@ export function initSessionSelector({ onSessionChanged }) {
     });
   }
 
-  loadSessions();
+  return loadSessions();
 }

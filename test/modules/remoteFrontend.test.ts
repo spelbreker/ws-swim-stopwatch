@@ -5,7 +5,14 @@ import ts from 'typescript';
 
 type SocketListener = (event: string, socket: undefined, message?: Record<string, unknown>) => void;
 
-function setupRemote() {
+function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.resolve(), session = 1, firstEvent = '1' } = {}) {
+  const eventSelect = { id: 'event-select', value: '', options: [{ value: firstEvent }] };
+  const heatSelect = { id: 'heat-select', value: '' };
+  const fillSelectOptions = jest.fn(async (select: { id: string; value: string }) => {
+    if (select.id === 'event-select') await eventsReady;
+    select.value = select.id === 'event-select' ? firstEvent : '1';
+  });
+  const updateEventHeatInfoBar = jest.fn();
   const classes = new Set(['bg-blue-500']);
   const button = {
     getAttribute: () => '1',
@@ -31,13 +38,13 @@ function setupRemote() {
     '../js/modules/connectionIndicator.js': { setupConnectionIndicator: jest.fn() },
     '../js/modules/wakeLock.js': { requestWakeLock: jest.fn() },
     './remote/eventHeat.js': {
-      initEventHeat: () => ({ eventSelect: { value: '3' }, heatSelect: { value: '4' } }),
-      fillSelectOptions: jest.fn(),
-      updateEventHeatInfoBar: jest.fn(),
+      initEventHeat: () => ({ eventSelect, heatSelect }),
+      fillSelectOptions,
+      updateEventHeatInfoBar,
     },
     './remote/sessionSelector.js': {
-      initSessionSelector: jest.fn(),
-      getCurrentSession: () => 1,
+      initSessionSelector: () => sessionsReady,
+      getCurrentSession: () => session,
     },
   };
 
@@ -77,6 +84,11 @@ function setupRemote() {
     classes,
     laneTime,
     send,
+    eventSelect,
+    heatSelect,
+    fillSelectOptions,
+    updateEventHeatInfoBar,
+    pressEnter: () => document.addEventListener.mock.calls.find(([event]) => event === 'keydown')![1]({ key: 'Enter' }),
     emit: (event: string, message?: Record<string, unknown>) => listener(event, undefined, message),
   };
 }
@@ -87,8 +99,7 @@ describe('competition remote lifecycle', () => {
   beforeEach(async () => {
     jest.useFakeTimers();
     remote = setupRemote();
-    await Promise.resolve();
-    await Promise.resolve();
+    await jest.advanceTimersByTimeAsync(0);
   });
 
   afterEach(() => {
@@ -124,6 +135,96 @@ describe('competition remote lifecycle', () => {
     jest.advanceTimersByTime(1000);
     expect(remote.classes.has('bg-green-500')).toBe(false);
     expect(remote.classes.has('bg-blue-500')).toBe(true);
+  });
+
+  it('preserves the selection and info bar across repeated reconnects', async () => {
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    remote.emit('message', { type: 'event-heat', event: '3', heat: '4', session: 1 });
+    remote.updateEventHeatInfoBar.mockClear();
+    remote.fillSelectOptions.mockClear();
+
+    for (let i = 0; i < 3; i++) {
+      remote.emit('close');
+      remote.emit('open');
+      await jest.advanceTimersByTimeAsync(0);
+      expect(remote.eventSelect.value).toBe('3');
+      expect(remote.heatSelect.value).toBe('4');
+    }
+    expect(remote.fillSelectOptions).not.toHaveBeenCalled();
+    expect(remote.updateEventHeatInfoBar).not.toHaveBeenCalled();
+    expect(remote.send).not.toHaveBeenCalled();
+  });
+
+  it('starts with the preserved event and heat after reconnect', async () => {
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+    remote.emit('close');
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    remote.pressEnter();
+    expect(remote.send).toHaveBeenCalledWith({ type: 'start', event: '3', heat: '4', timestamp: Date.now() });
+  });
+
+  it('does not change selection or send race commands when reconnecting during a race', async () => {
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+    remote.emit('message', { type: 'start', timestamp: Date.now() });
+    remote.emit('close');
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(100);
+    expect(remote.eventSelect.value).toBe('3');
+    expect(remote.heatSelect.value).toBe('4');
+    expect(remote.send).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(2);
+  });
+
+  it('waits for the session before initializing dropdowns, independently of socket opens', async () => {
+    let finishSessions!: () => void;
+    remote = setupRemote({
+      sessionsReady: new Promise<void>((resolve) => { finishSessions = resolve; }),
+      session: 2,
+      firstEvent: '7',
+    });
+    remote.emit('open');
+    remote.emit('close');
+    remote.emit('open');
+    expect(remote.fillSelectOptions).not.toHaveBeenCalled();
+    finishSessions();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.fillSelectOptions).toHaveBeenCalledTimes(2);
+    expect(remote.fillSelectOptions).toHaveBeenCalledWith(remote.eventSelect, 25, 2);
+    expect(remote.eventSelect.value).toBe('7');
+    expect(remote.heatSelect.value).toBe('1');
+    expect(remote.updateEventHeatInfoBar).toHaveBeenLastCalledWith('7', '1', 2);
+    expect(remote.send).not.toHaveBeenCalled();
+  });
+
+  it('does not duplicate a pending event load and updates the info bar only when it finishes', async () => {
+    let finishEvents!: () => void;
+    remote = setupRemote({
+      eventsReady: new Promise<void>((resolve) => { finishEvents = resolve; }),
+      firstEvent: '7',
+    });
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    remote.emit('close');
+    remote.emit('open');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.updateEventHeatInfoBar).not.toHaveBeenCalled();
+    finishEvents();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.fillSelectOptions).toHaveBeenCalledTimes(2);
+    expect(remote.updateEventHeatInfoBar).toHaveBeenCalledTimes(1);
+    expect(remote.updateEventHeatInfoBar).toHaveBeenLastCalledWith('7', '1', 1);
+  });
+
+  it('initializes options even before the first socket opens', () => {
+    expect(remote.eventSelect.value).toBe('1');
+    expect(remote.heatSelect.value).toBe('1');
+    expect(remote.send).not.toHaveBeenCalled();
   });
 
   it('sends five initial pings followed by one ping every five seconds', () => {

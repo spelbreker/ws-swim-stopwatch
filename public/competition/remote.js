@@ -108,6 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateEventHeatInfoBar(firstEvent, 1, sessionNumber);
       }, 100);
     },
+  }).then(async () => {
+    const session = getCurrentSession();
+    await Promise.all([
+      fillSelectOptions(eventSelect, 25, session),
+      fillSelectOptions(heatSelect, 25, session),
+    ]);
+    updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
   });
 
   const controlElements = [eventSelect, heatSelect, document.getElementById('increment-event'), document.getElementById('increment-heat')];
@@ -205,8 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
   onSocketEvent((event, socket, message) => {
     if (event === 'open') {
       stopPingSync();
-      fillSelectOptions(eventSelect, 25, getCurrentSession());
-      fillSelectOptions(heatSelect, 25, getCurrentSession());
 
       // Start initial fast sync sequence
       let pingCount = 0;
@@ -224,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }, initialPingInterval);
 
-      updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, getCurrentSession());
       return;
     }
 

@@ -153,8 +153,12 @@ displays accepted server broadcasts.
 
 Features:
 
-- **Event/heat selection** — fetches `/competition/event` to populate the
-  event dropdown; sends `event-heat` messages.
+- **Event/heat selection** — loads the initial session before fetching
+  `/competition/event` to populate the dropdown, then updates the info bar.
+  Initialization runs once per page, independently of WebSocket connections;
+  reconnects preserve the selection and do not send `event-heat` messages.
+  Explicit operator selection still sends `event-heat` messages. Missed race
+  messages are not replayed after reconnect.
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
 - **Lane buttons** — clicking a lane button sends a `split` message with the
   current synchronized timestamp. The button does **not** update optimistically;
