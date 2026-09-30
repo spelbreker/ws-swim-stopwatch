@@ -8,7 +8,7 @@ import {
 import { getEvents, getEvent } from '../controllers/competition/event/eventController';
 import { getHeat } from '../controllers/competition/heat/heatController';
 import { getSessions } from '../controllers/competition/sessionController';
-import { getCompetitionLog } from '../controllers/competition/logController';
+import { getCompetitionLog, clearCompetitionLog } from '../controllers/competition/logController';
 import { getDevicesList } from '../controllers/devicesController';
 import {
   getTunnelStatus,
@@ -41,6 +41,7 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
 
   // Serve the log file securely for the log viewer
   app.get('/logs/competition.log', getCompetitionLog);
+  app.delete('/logs/competition.log', clearCompetitionLog);
 
   // Device management routes
   app.get('/devices', getDevicesList);

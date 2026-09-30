@@ -7,8 +7,12 @@ function downloadFilename(now = new Date()): string {
   return `competition-${stamp}.log`;
 }
 
+function logFilePath(): string {
+  return path.join(process.cwd(), 'logs', 'competition.log');
+}
+
 export function getCompetitionLog(req: Request, res: Response) {
-  const logPath = path.join(process.cwd(), 'logs', 'competition.log');
+  const logPath = logFilePath();
   fs.readFile(logPath, 'utf8', (err, data) => {
     if (err) {
       res.status(404).send('Logbestand niet gevonden.');
@@ -19,5 +23,16 @@ export function getCompetitionLog(req: Request, res: Response) {
       res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename()}"`);
     }
     res.send(data);
+  });
+}
+
+// Truncate rather than unlink: the logger appends per write, and the viewer then shows an empty log instead of a 404.
+export function clearCompetitionLog(_req: Request, res: Response) {
+  fs.writeFile(logFilePath(), '', (err) => {
+    if (err) {
+      res.status(500).send('Logbestand kon niet worden gewist.');
+      return;
+    }
+    res.status(204).end();
   });
 }

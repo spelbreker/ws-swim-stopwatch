@@ -52,5 +52,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const deleteLogButton = document.getElementById('deleteLogButton');
+  const logStatus = document.getElementById('logStatus');
+
+  deleteLogButton.addEventListener('click', async () => {
+    if (!window.confirm('Delete the competition log? This cannot be undone.')) return;
+    deleteLogButton.disabled = true;
+    logStatus.textContent = '';
+    logStatus.classList.remove('text-red-500', 'text-green-500');
+    try {
+      const res = await fetch('/logs/competition.log', { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      logStatus.textContent = 'Log deleted';
+      logStatus.classList.add('text-green-500');
+    } catch (err) {
+      logStatus.textContent = err.message || 'Failed to delete log';
+      logStatus.classList.add('text-red-500');
+    } finally {
+      deleteLogButton.disabled = false;
+    }
+  });
+
   loadSettings();
 });
