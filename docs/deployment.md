@@ -178,9 +178,9 @@ non-local `x-forwarded-for` headers.
 
 Default allowlist:
 
-- `/competition/screen.html`, `/competition/screen.js`
+- `/competition/screen.html`, `/competition/screen.js`, `/competition/screen/` (ES submodules)
 - `/css/`, `/image/`
-- `/js/main.js`, `/js/timeSync.js`
+- `/js/modules/` (shared ES modules)
 - `/favicon.ico`
 - `/competition/event/`, `/competition/summary`
 - `/devices`
@@ -240,7 +240,7 @@ Run these locally before pushing substantial changes.
 ## Security Notes
 
 - **Tunnel restriction** is the primary access control for public exposure.
-  Admin pages, settings, upload, logs, remote and training pages are blocked
+  Admin pages, settings, upload, logs, and remote pages are blocked
   through Cloudflare by default.
 - **Settings and tunnel config** are stored in `config/` (gitignored). Do not
   commit tokens.

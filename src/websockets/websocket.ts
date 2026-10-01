@@ -24,13 +24,23 @@ export function resetSplitTracker() {
   splitTracker = new SplitTracker(loadSettings);
 }
 
+// Largest timestamp that still produces a valid Date; beyond this
+// new Date() yields "Invalid Date" and toISOString() throws.
+const MAX_DATE_MS = 8.64e15;
+
 function toNumber(value: unknown): number | undefined {
-  if (typeof value === 'number') return value;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
   if (typeof value === 'string' && value.trim() !== '') {
     const n = Number(value);
-    return Number.isNaN(n) ? undefined : n;
+    return Number.isFinite(n) ? n : undefined;
   }
   return undefined;
+}
+
+function toTimestamp(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= MAX_DATE_MS
+    ? value
+    : undefined;
 }
 
 function applyHeatFromMessage(msg: Record<string, unknown>) {
@@ -62,19 +72,20 @@ function broadcastAllClients(wss: WebSocketServer, payload: unknown) {
 
 function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
   const { event, heat, timestamp } = msg;
+  const startTs = toTimestamp(timestamp);
   if (
-    (typeof timestamp === 'number')
+    startTs !== undefined
     && (typeof event === 'string' || typeof event === 'number')
     && (typeof heat === 'string' || typeof heat === 'number')
   ) {
-    logStart(event, heat, timestamp);
+    logStart(event, heat, startTs);
   }
   // Defensive: a starter may send start without a preceding event-heat
   const current = splitTracker.getHeat();
   if (!current || current.event !== toNumber(event) || current.heat !== toNumber(heat)) {
     applyHeatFromMessage(msg);
   }
-  splitTracker.onStart(typeof timestamp === 'number' ? timestamp : undefined);
+  splitTracker.onStart(startTs);
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
@@ -86,18 +97,19 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
 function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
   const lane = toNumber(msg.lane);
   const { timestamp, elapsed_ms } = msg;
-  if (lane === undefined || typeof timestamp !== 'number') {
+  const ts = toTimestamp(timestamp);
+  if (lane === undefined || ts === undefined) {
     // Malformed split: keep legacy behaviour and just relay it
     broadcastAllClients(wss, msg);
     return;
   }
-  const result = splitTracker.onSplit(lane, timestamp);
+  const result = splitTracker.onSplit(lane, ts);
   if (!result.accepted) {
-    logIgnoredSplit(lane, timestamp, result.reason, result.msSinceLast, result.msSinceStart);
+    logIgnoredSplit(lane, ts, result.reason, result.msSinceLast, result.msSinceStart);
     return;
   }
   const { distance, splitNumber, isFinish, ranking } = result;
-  logSplit(lane, timestamp, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
+  logSplit(lane, ts, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
   // Preserve the original client timestamp - don't overwrite with server time
   broadcastAllClients(wss, {
     ...msg,
@@ -116,7 +128,7 @@ function handleEventHeat(msg: Record<string, unknown>, wss: WebSocketServer) {
 }
 
 function handleReset(msg: Record<string, unknown>, wss: WebSocketServer) {
-  const timestamp = typeof msg.timestamp === 'number' ? msg.timestamp : Date.now();
+  const timestamp = toTimestamp(msg.timestamp) ?? Date.now();
   logReset(timestamp);
   splitTracker.onReset();
   // Preserve the original client timestamp - don't overwrite with server time

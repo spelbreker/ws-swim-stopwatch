@@ -19,7 +19,7 @@ services:
       - /opt/swimwatch/uploads:/app/uploads
       - /opt/swimwatch/logs:/app/logs
       - /opt/swimwatch/config:/app/config
-      - /opt/swimwatch/competition.json:/app/public/competition.json
+      - /opt/swimwatch/data:/app/data
     restart: unless-stopped
 
 volumes:

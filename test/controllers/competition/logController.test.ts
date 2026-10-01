@@ -1,10 +1,11 @@
 import request from 'supertest';
 import express from 'express';
 import fs from 'fs';
-import { getCompetitionLog } from '../../../src/controllers/competition/logController';
+import { getCompetitionLog, clearCompetitionLog } from '../../../src/controllers/competition/logController';
 
 const app = express();
 app.get('/logs/competition.log', getCompetitionLog);
+app.delete('/logs/competition.log', clearCompetitionLog);
 
 describe('logController', () => {
   let readSpy: jest.SpyInstance;
@@ -39,5 +40,24 @@ describe('logController', () => {
     mockLog(null);
     const res = await request(app).get('/logs/competition.log');
     expect(res.status).toBe(404);
+  });
+
+  describe('DELETE', () => {
+    let writeSpy: jest.SpyInstance;
+
+    afterEach(() => writeSpy?.mockRestore());
+
+    it('truncates the log file', async () => {
+      writeSpy = jest.spyOn(fs, 'writeFile').mockImplementation(((_p: unknown, _d: unknown, cb: (err: Error | null) => void) => cb(null)) as unknown as typeof fs.writeFile);
+      const res = await request(app).delete('/logs/competition.log');
+      expect(res.status).toBe(204);
+      expect(writeSpy).toHaveBeenCalledWith(expect.stringMatching(/logs[\\/]competition\.log$/), '', expect.any(Function));
+    });
+
+    it('returns 500 when the log cannot be cleared', async () => {
+      writeSpy = jest.spyOn(fs, 'writeFile').mockImplementation(((_p: unknown, _d: unknown, cb: (err: Error | null) => void) => cb(new Error('EACCES'))) as unknown as typeof fs.writeFile);
+      const res = await request(app).delete('/logs/competition.log');
+      expect(res.status).toBe(500);
+    });
   });
 });

@@ -140,4 +140,35 @@ describe('websocket split handling', () => {
     expect(screenMessages).toHaveLength(1);
     expect(screenMessages[0]).not.toHaveProperty('ranking');
   });
+
+  it('relays splits with non-finite or out-of-range timestamps unchanged', async () => {
+    // 1e308 is finite but overflows Date -> toISOString() would throw in the logger
+    await send({ type: 'split', lane: 3, timestamp: 1e308 });
+    // 1e999 parses to Infinity
+    sender.send('{"type":"split","lane":3,"timestamp":1e999}');
+    await flush();
+
+    expect(screenMessages).toHaveLength(2);
+    screenMessages.forEach((m) => expect(m).not.toHaveProperty('ranking'));
+    expect(logger.logSplit).not.toHaveBeenCalled();
+  });
+
+  it('relays splits with non-finite lane values unchanged', async () => {
+    await send({ type: 'split', lane: 'Infinity', timestamp: T0 + 30_000 });
+    expect(screenMessages).toHaveLength(1);
+    expect(screenMessages[0]).not.toHaveProperty('ranking');
+    expect(logger.logSplit).not.toHaveBeenCalled();
+  });
+
+  it('does not log starts with out-of-range timestamps', async () => {
+    await send({ type: 'start', timestamp: 1e308, event: 1, heat: 1 });
+    expect(logger.logStart).not.toHaveBeenCalled();
+  });
+
+  it('falls back to server time for out-of-range reset timestamps', async () => {
+    await send({ type: 'reset', timestamp: 1e308 });
+    expect(logger.logReset).toHaveBeenCalledTimes(1);
+    const ts = (logger.logReset as jest.Mock).mock.calls[0][0] as number;
+    expect(Math.abs(ts)).toBeLessThanOrEqual(8.64e15);
+  });
 });

@@ -10,11 +10,11 @@ const ALLOWED_TUNNEL_ROUTES = [
     // Competition screen and resources
     '/competition/screen.html',
     '/competition/screen.js',
+    '/competition/screen/',
     // Static assets
     '/css/',
     '/image/',
-    '/js/main.js',
-    '/js/timeSync.js',
+    '/js/modules/',
     '/favicon.ico',
     // Read-only APIs for screen
     '/competition/event/',

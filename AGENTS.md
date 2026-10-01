@@ -7,7 +7,7 @@ This guide is for coding agents working in this repository.
 - Build and maintain a swim stopwatch system with:
   - Express API endpoints
   - WebSocket real-time messaging
-  - Static pages in `public/` for remote/screen/training/tunnel views
+  - Static pages in `public/` for remote/screen/tunnel views
 - Keep competition, tunnel, and device flows stable.
 
 ## 2) Stack Summary
@@ -26,6 +26,8 @@ This guide is for coding agents working in this repository.
 - `npm run lint` - run ESLint
 - `npm run build:css` - compile Tailwind CSS output
 - `docker compose up --build` - run production-like container setup
+- `npm test -- --runInBand test/modules/remoteFrontend.test.ts` - run remote lifecycle regressions (highlight cleanup and reconnect ping timers). These tests execute the browser modules with TypeScript transpilation, Node VM, DOM stubs, and Jest fake timers; no browser dependency is required.
+- `npm run lint` only checks `src/` and `test/`; browser JS needs a separate ESLint invocation. The TypeScript build also excludes `public/`.
 
 ## 4) Code Organization
 
@@ -97,6 +99,17 @@ it('should return tunnel status', async () => {
   - Client handlers in `public/js/*.js` and `public/competition/*.js`
 - Preserve backward compatibility unless explicitly told to break it.
 
+### Frontend Module System
+
+The frontend uses native ES modules (`import`/`export`). No build step.
+
+- Shared modules live in `public/js/modules/` (`socket.js`, `timeSync.js`, `format.js`, `wakeLock.js`, `connectionIndicator.js`).
+- Page entry points import from `../js/modules/*.js` and are loaded with `<script type="module">`.
+- The shared WebSocket connection is imported from `js/modules/socket.js` — do **not** set or read `window.socket`.
+- Time formatting is imported from `js/modules/format.js` — do **not** set or read `window.formatLapTime`.
+- Time synchronization is imported from `js/modules/timeSync.js` — do **not** set or read `window.TimeSync`.
+- Use event delegation (`data-*` attributes + `addEventListener`) instead of `onclick` in `innerHTML`.
+
 ## 8) Data And File Safety
 
 - Keep uploads/logs/config volumes and paths stable.
@@ -117,7 +130,7 @@ Before finishing substantial changes, run relevant checks locally.
 
 - Update tests for changed behavior.
 - Keep API error responses explicit (400 vs 404 vs 500).
-- Keep browser JS compatible with current global runtime assumptions (`window.socket`, `window.formatLapTime`).
+- Keep browser JS compatible with the ES module system: import from `js/modules/*`, never use `window.socket`, `window.formatLapTime`, or `window.TimeSync`.
 - Keep docs in `README.md` or `docs/` aligned when behavior changes.
 
 ## 11) Known Vulnerabilities (Accepted)

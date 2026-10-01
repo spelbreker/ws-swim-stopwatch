@@ -29,6 +29,7 @@ function registerRoutes(app, upload) {
     app.get('/competition/delete', competitionController_1.deleteCompetition);
     // Serve the log file securely for the log viewer
     app.get('/logs/competition.log', logController_1.getCompetitionLog);
+    app.delete('/logs/competition.log', logController_1.clearCompetitionLog);
     // Device management routes
     app.get('/devices', devicesController_1.getDevicesList);
     // Application settings (pool length, split cooldown)
