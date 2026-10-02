@@ -19,7 +19,9 @@ LANE;TIME50;TIME100
 4;34.99;
 ```
 
-- `LANE` is mandatory; lanes are sorted ascending.
+- `LANE` is mandatory; lanes are sorted ascending. Lane numbers are written as
+  received from the remote/hardware (0-9), which matches Meet Manager's lane
+  numbering for a 10-lane pool. Do not shift them to 1-10.
 - One `TIME{distance}` column per split distance recorded in the heat, using the
   distance labels from the [SplitTracker](split-aware-timing.md) (every two
   pool lengths, capped at the event distance). A lane that has not reached a
