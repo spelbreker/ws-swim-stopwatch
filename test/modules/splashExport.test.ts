@@ -63,7 +63,7 @@ describe('splashExport', () => {
       expect(heatFilename(7, 3)).toBe('Event7-Heat3.txt');
     });
 
-    it.each([[0, 1], [1, 0], [1.5, 1], [-1, 1], [NaN, 1]])('rejects event=%p heat=%p', (event, heat) => {
+    it.each([[0, 1], [1, 0], [1.5, 1], [-1, 1], [NaN, 1], [1e21, 1], [1, Number.MAX_SAFE_INTEGER + 1]])('rejects event=%p heat=%p', (event, heat) => {
       expect(heatFilename(event, heat)).toBeNull();
     });
   });
@@ -126,6 +126,18 @@ describe('splashExport', () => {
       expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50\r\n3;35.22\r\n');
       exporter.onSplit(3, 100, T0 + 71_220);
       expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50;TIME100\r\n3;35.22;1:11.22\r\n');
+    });
+
+    it('writes via a temp file and rename, leaving no temp file behind', () => {
+      const rename = jest.spyOn(fs, 'renameSync');
+      const exporter = new SplashExporter();
+      exporter.onStart(1, 2, T0);
+      exporter.onSplit(3, 50, T0 + 35_220);
+      expect(rename).toHaveBeenCalledWith(
+        path.join(splashExportDir(), '.Event1-Heat2.txt.tmp'),
+        path.join(splashExportDir(), 'Event1-Heat2.txt'),
+      );
+      expect(fs.readdirSync(splashExportDir())).toEqual(['Event1-Heat2.txt']);
     });
 
     it('does not write without a valid start', () => {

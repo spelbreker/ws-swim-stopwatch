@@ -49,8 +49,9 @@ function formatSplashTime(elapsedMs) {
         ? `${minutes}:${String(seconds).padStart(2, '0')}.${cs}`
         : `${seconds}.${cs}`;
 }
+// Safe integers only: 1e21 is an integer but stringifies as "1e+21"
 function isPositiveInt(value) {
-    return Number.isInteger(value) && value > 0;
+    return Number.isSafeInteger(value) && value > 0;
 }
 /**
  * Meet Manager filename for a heat, or null when event/heat are not positive
@@ -139,7 +140,11 @@ class SplashExporter {
                     console.log(`[SplashExport] Backed up previous ${run.filename} to ${path_1.default.basename(backup)}`);
                 run.needsBackup = false;
             }
-            fs_1.default.writeFileSync(filePath, buildHeatFile(run.lanes));
+            // Write to a temp file and rename, so a reader (Meet Manager over a share)
+            // never sees a half-written file. The dot prefix keeps it out of listings.
+            const tmpPath = path_1.default.join(dir, `.${run.filename}.tmp`);
+            fs_1.default.writeFileSync(tmpPath, buildHeatFile(run.lanes));
+            fs_1.default.renameSync(tmpPath, filePath);
         }
         catch (err) {
             console.error(`[SplashExport] Failed to write ${run.filename}:`, err);

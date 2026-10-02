@@ -38,9 +38,12 @@ LANE;TIME50;TIME100
 | accepted `split` | Records the split and rewrites the heat file. |
 | ignored `split` | Nothing (cooldown, start-cooldown, after-finish). |
 | `reset` | Ends the run; the file stays. |
+| `event-heat` | Ends the run (the tracker restarts its split count); the file stays. |
 
 The file is rewritten on every accepted split, so it is always current, also
-when the next heat is started without a reset.
+when the next heat is started without a reset. Each write goes to a temp file
+(`.Event{B}-Heat{C}.txt.tmp`) that is then renamed, so a reader never sees a
+half-written file.
 
 When a heat is swum again, the first accepted split of the new run renames the
 existing file to `Event{B}-Heat{C}_YYYYMMDD-HHMMSS.txt` (with `-1`, `-2`, ...

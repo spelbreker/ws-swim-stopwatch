@@ -208,6 +208,18 @@ describe('websocket split handling', () => {
       expect(fs.readFileSync(heatFile('Event1-Heat1.txt'), 'utf-8')).toBe('LANE;TIME50\r\n3;30.00\r\n');
     });
 
+    it('stops writing the running heat when event-heat changes before the next start', async () => {
+      await send({ type: 'event-heat', event: 1, heat: 1 });
+      await send({ type: 'start', timestamp: T0, event: 1, heat: 1 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+      await send({ type: 'event-heat', event: 1, heat: 2 });
+      // Tracker restarted its split count: this would otherwise overwrite TIME50 of heat 1
+      await send({ type: 'split', lane: 3, timestamp: T0 + 60_000 });
+
+      expect(fs.readFileSync(heatFile('Event1-Heat1.txt'), 'utf-8')).toBe('LANE;TIME50\r\n3;30.00\r\n');
+      expect(fs.existsSync(heatFile('Event1-Heat2.txt'))).toBe(false);
+    });
+
     it('does not write a file for a start without event and heat', async () => {
       await send({ type: 'start', timestamp: T0 });
       await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });

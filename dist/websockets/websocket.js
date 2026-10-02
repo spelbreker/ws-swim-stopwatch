@@ -148,6 +148,9 @@ function handleSplit(msg, wss) {
 function handleEventHeat(msg, wss) {
     console.log(`[WebSocket] Event/Heat changed: event=${msg.event}, heat=${msg.heat}`);
     applyHeatFromMessage(msg);
+    // The tracker cleared its lane state, so split numbers restart: a running
+    // export must not continue into the old heat file with the old start time.
+    splashExporter.onReset();
     broadcastAllClients(wss, msg);
 }
 function handleReset(msg, wss) {
