@@ -8,6 +8,7 @@ services:
       - ./logs:/app/logs
       - ./config:/app/config
       - ./data:/app/data
+      - ./exports:/app/exports
     environment:
       - NODE_ENV=production
       # Uncomment and set TUNNEL_TOKEN to enable Cloudflare Tunnel

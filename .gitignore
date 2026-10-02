@@ -29,6 +29,9 @@ config/
 # Uploaded competition data (competition.json)
 data/
 
+# Splash Meet Manager heat files
+exports/
+
 # Backup files
 *.backup
 

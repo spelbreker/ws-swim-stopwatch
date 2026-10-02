@@ -29,6 +29,7 @@ graph LR
     Index --> Screen["/competition/screen.html"]
     Index --> Upload["/competition/upload.html"]
     Index --> Log["/competition/log.html"]
+    Index --> Export["/competition/export.html"]
     Index --> Devices["/devices.html"]
     Index --> Tunnel["/tunnel.html"]
     Index --> Settings["/settings.html"]
@@ -41,6 +42,7 @@ graph LR
 | Competition Screen | `/competition/screen.html` | Public display: stopwatch, lane times, arrival order | allowed |
 | Lenex Upload | `/competition/upload.html` | Upload start list, view loaded competition | blocked |
 | Competition Log | `/competition/log.html` | View and download `logs/competition.log` | blocked |
+| Splash Export | `/competition/export.html` | Download heat files for Splash Meet Manager | blocked |
 | Device Manager | `/devices.html` | Register, edit and monitor hardware devices | blocked |
 | Cloudflare Tunnel | `/tunnel.html` | Start/stop tunnel, configure token and flags | blocked |
 | Settings | `/settings.html` | Pool length and split cooldown | blocked |
@@ -237,6 +239,15 @@ All admin pages share a common layout (see [Layout Convention](#layout-conventio
 - "Refresh Log" and "Download Log" buttons.
 - Download triggers `GET /logs/competition.log?download=1`.
 - Script: `public/js/logViewer.js`.
+
+### Splash Export (`/competition/export.html`)
+
+- Table of heat files from `GET /exports/splashme`, grouped by event/heat.
+- Auto-refreshes every 10 seconds; "Show backups" toggles earlier runs.
+- Download link per file (`GET /exports/splashme/:file`).
+- "Delete all" (with confirmation) calls `DELETE /exports/splashme`.
+- Event/heat columns are hidden on narrow screens (they are in the file name).
+- Script: `public/js/splashExport.js`. See [splash-export.md](splash-export.md).
 
 ### Lenex Upload (`/competition/upload.html`)
 

@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import http from 'http';
 import WebSocket from 'ws';
 import { AddressInfo } from 'net';
@@ -5,6 +8,7 @@ import { setupWebSocket, resetSplitTracker } from '../../src/websockets/websocke
 import * as logger from '../../src/websockets/logger';
 import * as settings from '../../src/modules/settings';
 import Competition from '../../src/modules/competition';
+import { splashExportDir } from '../../src/modules/splashExport';
 
 const T0 = 1_718_000_000_000;
 
@@ -36,8 +40,11 @@ describe('websocket split handling', () => {
   let screen: WebSocket;
   let screenMessages: Msg[];
   const spies: jest.SpyInstance[] = [];
+  const originalExportDir = process.env.EXPORT_DIR;
 
   beforeAll(async () => {
+    // Accepted splits write Splash heat files; keep them out of the repo
+    process.env.EXPORT_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-splash-'));
     server = http.createServer();
     setupWebSocket(server);
     await new Promise<void>((r) => server.listen(0, r));
@@ -46,10 +53,14 @@ describe('websocket split handling', () => {
 
   afterAll(async () => {
     await new Promise<void>((r) => server.close(() => r()));
+    fs.rmSync(process.env.EXPORT_DIR!, { recursive: true, force: true });
+    if (originalExportDir === undefined) delete process.env.EXPORT_DIR;
+    else process.env.EXPORT_DIR = originalExportDir;
   });
 
   beforeEach(async () => {
     resetSplitTracker();
+    fs.rmSync(splashExportDir(), { recursive: true, force: true });
     spies.push(
       jest.spyOn(settings, 'loadSettings').mockReturnValue({ poolLength: 25, splitCooldownSec: 12 }),
       jest.spyOn(logger, 'logSplit').mockImplementation(() => {}),
@@ -170,5 +181,45 @@ describe('websocket split handling', () => {
     expect(logger.logReset).toHaveBeenCalledTimes(1);
     const ts = (logger.logReset as jest.Mock).mock.calls[0][0] as number;
     expect(Math.abs(ts)).toBeLessThanOrEqual(8.64e15);
+  });
+
+  describe('Splash Meet Manager export', () => {
+    const heatFile = (name: string) => path.join(splashExportDir(), name);
+
+    it('writes accepted splits with their distance to the heat file', async () => {
+      await send({ type: 'event-heat', event: 1, heat: 2, session: 1 });
+      await send({ type: 'start', timestamp: T0, event: 1, heat: 2 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 5_000 }); // start-cooldown: ignored
+      await send({ type: 'split', lane: 3, timestamp: T0 + 35_220 });
+      await send({ type: 'split', lane: 4, timestamp: T0 + 34_990 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 35_500 }); // cooldown: ignored
+      await send({ type: 'split', lane: 3, timestamp: T0 + 71_220 });
+
+      expect(fs.readFileSync(heatFile('Event1-Heat2.txt'), 'utf-8'))
+        .toBe('LANE;TIME50;TIME100\r\n3;35.22;1:11.22\r\n4;34.99;\r\n');
+    });
+
+    it('stops writing after reset', async () => {
+      await send({ type: 'start', timestamp: T0, event: 1, heat: 1 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+      await send({ type: 'reset', timestamp: T0 + 40_000 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 60_000 });
+
+      expect(fs.readFileSync(heatFile('Event1-Heat1.txt'), 'utf-8')).toBe('LANE;TIME50\r\n3;30.00\r\n');
+    });
+
+    it('does not write a file for a start without event and heat', async () => {
+      await send({ type: 'start', timestamp: T0 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+
+      expect(fs.existsSync(splashExportDir())).toBe(false);
+    });
+
+    it('ignores event/heat values that are not positive integers', async () => {
+      await send({ type: 'start', timestamp: T0, event: '../../etc', heat: 1 });
+      await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+
+      expect(fs.existsSync(splashExportDir())).toBe(false);
+    });
   });
 });

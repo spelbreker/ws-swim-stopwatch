@@ -220,6 +220,9 @@ The backend follows a strict three-layer separation:
 - **`splitTracker.ts`** — Per-heat state machine: cooldown filtering, distance
   labelling, finish detection, arrival ranking. Reads settings live via an
   injected loader.
+- **`splashExport.ts`** — Records accepted splits of the running heat and
+  rewrites its Splash Meet Manager heat file (`exports/splashme/`) on every
+  split; lists, serves and clears heat files. See [splash-export.md](splash-export.md).
 - **`settings.ts`** — Loads/saves `config/app.json` (pool length, split
   cooldown). Cached in memory with per-field fallback to defaults.
 - **`tunnel.ts`** — Spawns and manages the `cloudflared` process, persists
@@ -293,8 +296,9 @@ All persistent state lives outside the source tree so Docker can bind-mount it:
 | `config/tunnel.json` | `CONFIG_DIR` | Cloudflare tunnel token and flags. |
 | `logs/competition.log` | — | Append-only log of starts, resets, splits and ignored splits. |
 | `uploads/` | — | Temporary storage for uploaded Lenex files (deleted after processing). |
+| `exports/splashme/` | `EXPORT_DIR` | Splash Meet Manager heat files and backups. |
 
-`config/`, `data/`, `logs/` and `uploads/` are gitignored.
+`config/`, `data/`, `exports/`, `logs/` and `uploads/` are gitignored.
 
 ## Configuration
 
@@ -308,6 +312,7 @@ graph LR
     subgraph Env vars
         DATA[DATA_DIR]
         CFG[CONFIG_DIR]
+        EXP[EXPORT_DIR]
         TUNNEL_TOK[TUNNEL_TOKEN]
         NODE_ENV[NODE_ENV]
     end
@@ -317,6 +322,7 @@ graph LR
     DATA -->|used by| CompetitionMod[competition.ts]
     CFG -->|used by| SettingsMod
     CFG -->|used by| TunnelMod
+    EXP -->|used by| SplashMod[splashExport.ts]
     TUNNEL_TOK -->|docker-entrypoint.sh| Cloudflared
 ```
 
@@ -324,6 +330,7 @@ graph LR
 |----------|---------|---------|
 | `DATA_DIR` | `./data` | `competition.ts` (location of `competition.json`) |
 | `CONFIG_DIR` | `./config` | `settings.ts`, `tunnel.ts` |
+| `EXPORT_DIR` | `./exports` | `splashExport.ts` (heat files in `<EXPORT_DIR>/splashme/`) |
 | `TUNNEL_TOKEN` | — | `docker-entrypoint.sh` starts cloudflared on boot if set |
 | `NODE_ENV` | — | Express / Docker |
 

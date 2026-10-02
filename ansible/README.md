@@ -60,5 +60,7 @@ The Pi is configured as an NTP server for the `192.168.8.0/24` network. Devices 
 │   └── competition.json
 ├── uploads/
 ├── logs/
-└── config/
+├── config/
+└── exports/
+    └── splashme/       # Splash Meet Manager heat files
 ```

@@ -9,6 +9,7 @@ import {
 } from './logger';
 import { loadSettings } from '../modules/settings';
 import { SplitTracker, computeHeatInfo } from '../modules/splitTracker';
+import { SplashExporter } from '../modules/splashExport';
 
 // Store device information
 const devices = new Map<string, DeviceInfo>();
@@ -20,8 +21,12 @@ export function getSplitTracker(): SplitTracker {
   return splitTracker;
 }
 
+// Writes the running heat to a Splash Meet Manager heat file
+let splashExporter = new SplashExporter();
+
 export function resetSplitTracker() {
   splitTracker = new SplitTracker(loadSettings);
+  splashExporter = new SplashExporter();
 }
 
 // Largest timestamp that still produces a valid Date; beyond this
@@ -86,6 +91,8 @@ function handleStart(msg: Record<string, unknown>, wss: WebSocketServer) {
     applyHeatFromMessage(msg);
   }
   splitTracker.onStart(startTs);
+  const heatInfo = splitTracker.getHeat();
+  splashExporter.onStart(heatInfo?.event, heatInfo?.heat, startTs);
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
@@ -110,6 +117,7 @@ function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
   }
   const { distance, splitNumber, isFinish, ranking } = result;
   logSplit(lane, ts, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
+  splashExporter.onSplit(lane, distance, ts);
   // Preserve the original client timestamp - don't overwrite with server time
   broadcastAllClients(wss, {
     ...msg,
@@ -131,6 +139,7 @@ function handleReset(msg: Record<string, unknown>, wss: WebSocketServer) {
   const timestamp = toTimestamp(msg.timestamp) ?? Date.now();
   logReset(timestamp);
   splitTracker.onReset();
+  splashExporter.onReset();
   // Preserve the original client timestamp - don't overwrite with server time
   const payload = {
     ...msg,
