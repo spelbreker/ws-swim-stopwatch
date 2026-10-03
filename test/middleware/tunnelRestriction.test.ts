@@ -318,6 +318,22 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockNext).not.toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(403);
     });
+
+    it.each(['/competition/export.html', '/exports/splashme', '/exports/splashme/Event1-Heat1.txt'])(
+      'should block Splash export %s via Cloudflare',
+      (route) => {
+        mockRequest = createMockRequest(route, '1.2.3.4');
+
+        tunnelRestrictionMiddleware(
+          mockRequest as Request,
+          mockResponse as Response,
+          mockNext
+        );
+
+        expect(mockNext).not.toHaveBeenCalled();
+        expect(mockResponse.status).toHaveBeenCalledWith(403);
+      },
+    );
   });
 
   describe('Edge cases', () => {

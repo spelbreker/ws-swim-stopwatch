@@ -19,6 +19,7 @@
     - logs
     - config
     - data
+    - exports
 
 - name: Check for legacy competition.json at old location
   ansible.builtin.stat:

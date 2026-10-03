@@ -13,6 +13,7 @@ from localhost / private IPs.
 - [Tunnel](#tunnel)
 - [Devices](#devices)
 - [Logs](#logs)
+- [Splash Export](#splash-export)
 - [Static Pages](#static-pages)
 - [Status Codes](#status-codes)
 
@@ -307,6 +308,39 @@ curl http://localhost:8080/logs/competition.log
 curl -OJ "http://localhost:8080/logs/competition.log?download=1"
 ```
 
+## Splash Export
+
+Heat files for Splash Meet Manager, see [splash-export.md](splash-export.md).
+All routes are **tunnel-blocked**.
+
+### `GET /exports/splashme`
+
+Lists heat files and backups in `<EXPORT_DIR>/splashme/`, most recently
+modified first. Other files in the directory are ignored.
+
+- **200:**
+  ```json
+  [
+    { "name": "Event1-Heat2.txt", "event": 1, "heat": 2, "backup": false, "size": 42, "modified": "2026-10-02T13:36:41.083Z" },
+    { "name": "Event1-Heat2_20261002-153640.txt", "event": 1, "heat": 2, "backup": true, "size": 55, "modified": "2026-10-02T13:36:40.508Z" }
+  ]
+  ```
+- **500:** directory could not be read
+
+### `GET /exports/splashme/:file`
+
+Downloads one heat file as attachment.
+
+- **400:** `file` is not a heat file name (`Event{B}-Heat{C}.txt` or a backup of it)
+- **404:** heat file not found
+
+### `DELETE /exports/splashme`
+
+Deletes all heat files and backups.
+
+- **200:** `{ "deleted": 3 }`
+- **500:** a file could not be deleted
+
 ## Static Pages
 
 All files under `public/` are served by `express.static`. The following HTML
@@ -319,6 +353,7 @@ pages are the main entry points:
 | `/competition/screen.html` | Competition Screen | allowed |
 | `/competition/upload.html` | Lenex Upload | blocked |
 | `/competition/log.html` | Competition Log | blocked |
+| `/competition/export.html` | Splash Export | blocked |
 | `/devices.html` | Device Manager | blocked |
 | `/tunnel.html` | Cloudflare Tunnel | blocked |
 | `/settings.html` | Settings | blocked |

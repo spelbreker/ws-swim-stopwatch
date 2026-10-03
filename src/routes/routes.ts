@@ -18,6 +18,11 @@ import {
   deleteTunnelConfig,
 } from '../controllers/tunnelController';
 import { getSettings, postSettings } from '../controllers/settingsController';
+import {
+  getSplashExports,
+  downloadSplashExport,
+  deleteSplashExports,
+} from '../controllers/splashExportController';
 
 // Register all competition-related routes
 export function registerRoutes(app: Express, upload: multer.Multer) {
@@ -49,4 +54,9 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
   // Application settings (pool length, split cooldown)
   app.get('/settings', getSettings);
   app.post('/settings', json(), postSettings);
+
+  // Splash Meet Manager heat files (local only: not in the tunnel allow-list)
+  app.get('/exports/splashme', getSplashExports);
+  app.get('/exports/splashme/:file', downloadSplashExport);
+  app.delete('/exports/splashme', deleteSplashExports);
 }

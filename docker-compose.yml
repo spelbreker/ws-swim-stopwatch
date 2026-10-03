@@ -8,8 +8,11 @@ services:
       - ./logs:/app/logs
       - ./config:/app/config
       - ./data:/app/data
+      - ./exports:/app/exports
     environment:
       - NODE_ENV=production
+      # Local time for Splash backup file names (Event1-Heat1_YYYYMMDD-HHMMSS.txt)
+      - TZ=Europe/Amsterdam
       # Uncomment and set TUNNEL_TOKEN to enable Cloudflare Tunnel
       # Get your token from: cloudflared tunnel token <tunnel-name>
       # - TUNNEL_TOKEN=your-tunnel-token-here
@@ -26,5 +29,6 @@ services:
       - "8080:8080"
     environment:
       - NODE_ENV=development
+      - TZ=Europe/Amsterdam
     profiles:
       - dev

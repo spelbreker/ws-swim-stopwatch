@@ -41,6 +41,7 @@ const ws_1 = __importStar(require("ws"));
 const logger_1 = require("./logger");
 const settings_1 = require("../modules/settings");
 const splitTracker_1 = require("../modules/splitTracker");
+const splashExport_1 = require("../modules/splashExport");
 // Store device information
 const devices = new Map();
 // Per-heat split state (cooldown, distance labels, ranking)
@@ -48,8 +49,11 @@ let splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
 function getSplitTracker() {
     return splitTracker;
 }
+// Writes the tracker's running heat to a Splash Meet Manager heat file
+let splashExporter = new splashExport_1.SplashExporter();
 function resetSplitTracker() {
     splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
+    splashExporter = new splashExport_1.SplashExporter();
 }
 // Largest timestamp that still produces a valid Date; beyond this
 // new Date() yields "Invalid Date" and toISOString() throws.
@@ -137,6 +141,8 @@ function handleSplit(msg, wss) {
         isFinish,
         ranking,
     });
+    // After the broadcast, so disk I/O does not delay the screens
+    splashExporter.write(splitTracker.getRun());
 }
 function handleEventHeat(msg, wss) {
     console.log(`[WebSocket] Event/Heat changed: event=${msg.event}, heat=${msg.heat}`);

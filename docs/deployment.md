@@ -121,12 +121,14 @@ docker run -d \
 |----------|---------|---------|-------------|
 | `DATA_DIR` | `./data` | `competition.ts` | Directory for `competition.json` |
 | `CONFIG_DIR` | `./config` | `settings.ts`, `tunnel.ts` | Directory for `app.json` and `tunnel.json` |
+| `EXPORT_DIR` | `./exports` | `splashExport.ts` | Base directory for Splash heat files (`<EXPORT_DIR>/splashme/`) |
+| `TZ` | `Europe/Amsterdam` (Compose/Ansible) | Node | Local time for Splash backup file names |
 | `TUNNEL_TOKEN` | — | `docker-entrypoint.sh` | Starts cloudflared on boot if set |
 | `NODE_ENV` | — | Express, Docker | Standard Node environment |
 
 ## Persistent Volumes
 
-The Docker Compose file bind-mounts four host directories so data survives
+The Docker Compose file bind-mounts five host directories so data survives
 container rebuilds:
 
 ```yaml
@@ -135,6 +137,7 @@ volumes:
   - ./logs:/app/logs          # competition log
   - ./config:/app/config      # app.json + tunnel.json
   - ./data:/app/data          # competition.json
+  - ./exports:/app/exports    # Splash Meet Manager heat files
 ```
 
 | Host path | Container path | Purpose |
@@ -143,8 +146,9 @@ volumes:
 | `./logs/` | `/app/logs` | `competition.log` (append-only) |
 | `./config/` | `/app/config` | `app.json` (settings), `tunnel.json` (tunnel config) |
 | `./data/` | `/app/data` | `competition.json` (processed Lenex data) |
+| `./exports/` | `/app/exports` | `splashme/` heat files for Splash Meet Manager |
 
-All four directories are gitignored. Docker creates them on first run if they
+All five directories are gitignored. Docker creates them on first run if they
 do not exist.
 
 ## Cloudflare Tunnel
@@ -210,6 +214,13 @@ See [cloudflare-tunnel.md](cloudflare-tunnel.md) for the full guide.
 - Open `http://localhost:8080/competition/log.html` and click "Download Log".
 - Or: `curl -OJ "http://localhost:8080/logs/competition.log?download=1"`
 - Filename format: `competition-YYYY-MM-DD-HH-MM-SS.log`
+
+### Importing results in Splash Meet Manager
+
+1. In Meet Manager select the timing system "Generic Txt heat files" and a data directory.
+2. Open `http://localhost:8080/competition/export.html`, download the heat file and save it
+   in that directory, then click "read results". See [splash-export.md](splash-export.md).
+3. Before a new meet, click "Delete all" so old heat files cannot be read by mistake.
 
 ### Managing devices
 

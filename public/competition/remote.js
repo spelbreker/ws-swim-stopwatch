@@ -117,7 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
   });
 
-  const controlElements = [eventSelect, heatSelect, document.getElementById('increment-event'), document.getElementById('increment-heat')];
+  // Locked while running: changing session sends event-heat, which ends the running heat
+  const controlElements = [
+    eventSelect,
+    heatSelect,
+    document.getElementById('increment-event'),
+    document.getElementById('increment-heat'),
+    document.getElementById('session-menu-button'),
+  ];
 
   function updateStartButtonUI(isRunning) {
     if (!startButton) return;
