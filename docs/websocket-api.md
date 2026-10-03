@@ -133,7 +133,7 @@ covers two lengths: `splitDistance = 2 * poolLength` (50m in a 25m pool, 100m in
 labels still work but `isFinish` is never set.
 
 **State lifecycle:**
-- `event-heat`: heat info is (re)loaded from `competition.json`, all lane state is cleared.
+- `event-heat`: heat info is (re)loaded from `competition.json`, all lane state and the start time are cleared. An `event-heat` without a valid `event`/`heat` is broadcast but does not change the tracker.
 - `start`: lane state is cleared; if the message carries a different `event`/`heat` the heat info is reloaded.
 - `reset`: lane state and heat info are cleared.
 

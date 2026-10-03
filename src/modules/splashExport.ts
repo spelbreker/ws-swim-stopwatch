@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import type { HeatRun } from './splitTracker';
 
 /**
  * Export of heat results for Splash Meet Manager's "Generic Txt heat files"
@@ -12,8 +13,14 @@ import path from 'path';
  *   4;34.99;1:09.21
  */
 
-const HEAT_FILE_PATTERN = /^Event\d+-Heat\d+(_\d{8}-\d{6}(-\d+)?)?\.txt$/;
-const HEAT_FILE_PARTS = /^Event(\d+)-Heat(\d+)(_.+)?\.txt$/;
+/** Heat file or a backup of it (Event1-Heat2_20261002-153045[-1].txt). */
+const HEAT_FILE = /^Event(\d+)-Heat(\d+)(_\d{8}-\d{6}(?:-\d+)?)?\.txt$/;
+/** Temp file used while writing a heat file. */
+const TEMP_FILE = /^\.Event\d+-Heat\d+\.txt\.tmp$/;
+
+/** Lanes the system knows (remote buttons and screen rows 0-9, as in Meet Manager). */
+export const MIN_LANE = 0;
+export const MAX_LANE = 9;
 
 /**
  * Directory the heat files are written to (default ./exports/splashme,
@@ -44,6 +51,10 @@ function isPositiveInt(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
+function isExportLane(lane: number): boolean {
+  return Number.isSafeInteger(lane) && lane >= MIN_LANE && lane <= MAX_LANE;
+}
+
 /**
  * Meet Manager filename for a heat, or null when event/heat are not positive
  * integers. Event numbers are unique within a Splash meet, so the session
@@ -54,8 +65,11 @@ export function heatFilename(event: number, heat: number): string | null {
   return `Event${event}-Heat${heat}.txt`;
 }
 
-export function isHeatFilename(name: string): boolean {
-  return HEAT_FILE_PATTERN.test(name);
+/** Parse a heat file name; null for anything else. */
+export function parseHeatFilename(name: string): { event: number; heat: number; backup: boolean } | null {
+  const match = HEAT_FILE.exec(name);
+  if (!match) return null;
+  return { event: Number(match[1]), heat: Number(match[2]), backup: match[3] !== undefined };
 }
 
 /** Elapsed times per lane, keyed by split distance in meters. */
@@ -71,13 +85,27 @@ export function buildHeatFile(lanes: LaneTimes): string {
   const columns = Array.from(distances).sort((a, b) => a - b);
 
   const lines = [['LANE', ...columns.map((d) => `TIME${d}`)].join(';')];
-  Array.from(lanes.keys()).sort((a, b) => a - b).forEach((lane) => {
-    const times = lanes.get(lane)!;
-    const cells = columns.map((d) => (times.has(d) ? formatSplashTime(times.get(d)!) : ''));
+  Array.from(lanes.entries()).sort(([a], [b]) => a - b).forEach(([lane, times]) => {
+    const cells = columns.map((d) => {
+      const elapsed = times.get(d);
+      return elapsed === undefined ? '' : formatSplashTime(elapsed);
+    });
     lines.push([String(lane), ...cells].join(';'));
   });
   // Meet Manager runs on Windows
   return `${lines.join('\r\n')}\r\n`;
+}
+
+/** Elapsed times of the run's exportable lanes (integer lanes 0-9). */
+export function runLaneTimes(run: HeatRun): LaneTimes {
+  const lanes: LaneTimes = new Map();
+  run.lanes.forEach((splits, lane) => {
+    if (!isExportLane(lane)) return;
+    const times = new Map<number, number>();
+    splits.forEach((timestamp, distance) => times.set(distance, timestamp - run.startTime));
+    lanes.set(lane, times);
+  });
+  return lanes;
 }
 
 function backupStamp(now: Date): string {
@@ -87,8 +115,9 @@ function backupStamp(now: Date): string {
 }
 
 /**
- * Rename an existing heat file to Event1-Heat1_YYYYMMDD-HHMMSS.txt so a
- * re-swum heat does not silently overwrite earlier results.
+ * Rename an existing heat file to Event1-Heat1_YYYYMMDD-HHMMSS.txt (server
+ * local time, set TZ in Docker) so a re-swum heat does not silently overwrite
+ * earlier results.
  */
 export function backupHeatFile(filePath: string, now = new Date()): string | null {
   if (!fs.existsSync(filePath)) return null;
@@ -100,58 +129,37 @@ export function backupHeatFile(filePath: string, now = new Date()): string | nul
   return target;
 }
 
-interface HeatRun {
-  filename: string;
-  startTime: number;
-  lanes: LaneTimes;
-  /** True until the first write of this run, which backs up an older file. */
-  needsBackup: boolean;
-}
-
 /**
- * Records accepted splits of the running heat and rewrites its heat file on
- * every split, so the file is always current even when no reset follows.
+ * Writes the running heat of the SplitTracker to its heat file. The tracker
+ * owns the heat lifecycle; the exporter only remembers which run it wrote last,
+ * so the first write of a new run backs up the file of an earlier run.
  */
 export class SplashExporter {
-  private run: HeatRun | null = null;
+  private writtenRunId: number | null = null;
 
-  onStart(event: number | undefined, heat: number | undefined, startTime: number | undefined) {
-    const filename = event !== undefined && heat !== undefined ? heatFilename(event, heat) : null;
-    this.run = filename && startTime !== undefined
-      ? { filename, startTime, lanes: new Map(), needsBackup: true }
-      : null;
-  }
+  write(run: HeatRun | null) {
+    if (!run) return;
+    const filename = heatFilename(run.event, run.heat);
+    const lanes = runLaneTimes(run);
+    if (!filename || lanes.size === 0) return;
 
-  onSplit(lane: number, distance: number, timestamp: number) {
-    if (!this.run) return;
-    const times = this.run.lanes.get(lane) ?? new Map<number, number>();
-    times.set(distance, timestamp - this.run.startTime);
-    this.run.lanes.set(lane, times);
-    this.write();
-  }
-
-  onReset() {
-    this.run = null;
-  }
-
-  private write() {
-    const run = this.run!;
+    const dir = splashExportDir();
+    const filePath = path.join(dir, filename);
+    const tmpPath = path.join(dir, `.${filename}.tmp`);
     try {
-      const dir = splashExportDir();
       fs.mkdirSync(dir, { recursive: true });
-      const filePath = path.join(dir, run.filename);
-      if (run.needsBackup) {
+      if (this.writtenRunId !== run.runId) {
         const backup = backupHeatFile(filePath);
-        if (backup) console.log(`[SplashExport] Backed up previous ${run.filename} to ${path.basename(backup)}`);
-        run.needsBackup = false;
+        if (backup) console.log(`[SplashExport] Backed up previous ${filename} to ${path.basename(backup)}`);
+        this.writtenRunId = run.runId;
       }
       // Write to a temp file and rename, so a reader (Meet Manager over a share)
       // never sees a half-written file. The dot prefix keeps it out of listings.
-      const tmpPath = path.join(dir, `.${run.filename}.tmp`);
-      fs.writeFileSync(tmpPath, buildHeatFile(run.lanes));
+      fs.writeFileSync(tmpPath, buildHeatFile(lanes));
       fs.renameSync(tmpPath, filePath);
     } catch (err) {
-      console.error(`[SplashExport] Failed to write ${run.filename}:`, err);
+      console.error(`[SplashExport] Failed to write ${filename}:`, err);
+      fs.rmSync(tmpPath, { force: true });
     }
   }
 }
@@ -166,35 +174,41 @@ export interface HeatFileInfo {
   modified: string;
 }
 
+function readExportDir(): string[] {
+  const dir = splashExportDir();
+  return fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+}
+
 /** Heat files in the export directory, most recently modified first. */
 export function listHeatFiles(): HeatFileInfo[] {
   const dir = splashExportDir();
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
-    .filter(isHeatFilename)
-    .map((name) => {
-      const stat = fs.statSync(path.join(dir, name));
-      const [, event, heat, suffix] = HEAT_FILE_PARTS.exec(name)!;
-      return {
-        name,
-        event: Number(event),
-        heat: Number(heat),
-        backup: suffix !== undefined,
-        size: stat.size,
-        modified: stat.mtime.toISOString(),
-      };
-    })
-    .sort((a, b) => b.modified.localeCompare(a.modified));
+  const files: HeatFileInfo[] = [];
+  readExportDir().forEach((name) => {
+    const parsed = parseHeatFilename(name);
+    if (!parsed) return;
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(path.join(dir, name));
+    } catch (err) {
+      // Renamed (backup) or deleted between readdir and stat
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw err;
+    }
+    files.push({ name, ...parsed, size: stat.size, modified: stat.mtime.toISOString() });
+  });
+  return files.sort((a, b) => b.modified.localeCompare(a.modified));
 }
 
-/** Absolute path of a heat file, or null for names that are not heat files. */
-export function heatFilePath(name: string): string | null {
-  return isHeatFilename(name) ? path.join(splashExportDir(), name) : null;
-}
-
-/** Delete all heat files (and backups); returns the number removed. */
+/** Delete all heat files, backups and leftover temp files; returns the number of heat files removed. */
 export function clearHeatFiles(): number {
-  const files = listHeatFiles();
-  files.forEach(({ name }) => fs.unlinkSync(path.join(splashExportDir(), name)));
-  return files.length;
+  const dir = splashExportDir();
+  let deleted = 0;
+  readExportDir().forEach((name) => {
+    const isHeatFile = parseHeatFilename(name) !== null;
+    if (!isHeatFile && !TEMP_FILE.test(name)) return;
+    // force: a file renamed or removed meanwhile is not an error
+    fs.rmSync(path.join(dir, name), { force: true });
+    if (isHeatFile) deleted += 1;
+  });
+  return deleted;
 }

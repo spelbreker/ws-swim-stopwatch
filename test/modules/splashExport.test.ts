@@ -7,12 +7,14 @@ import {
   buildHeatFile,
   clearHeatFiles,
   formatSplashTime,
-  heatFilePath,
   heatFilename,
   listHeatFiles,
+  parseHeatFilename,
+  runLaneTimes,
   splashExportDir,
   LaneTimes,
 } from '../../src/modules/splashExport';
+import type { HeatRun } from '../../src/modules/splitTracker';
 
 const T0 = 1_718_000_000_000;
 
@@ -21,6 +23,16 @@ function lanes(entries: Record<number, Record<number, number>>): LaneTimes {
     Number(lane),
     new Map(Object.entries(times).map(([d, ms]) => [Number(d), ms])),
   ]));
+}
+
+/** A tracker run; splits are elapsed ms per lane and distance, offset from T0. */
+function run(splits: Record<number, Record<number, number>>, opts: Partial<HeatRun> = {}): HeatRun {
+  const startTime = opts.startTime ?? T0;
+  const laneMap = new Map(Object.entries(splits).map(([lane, times]) => [
+    Number(lane),
+    new Map(Object.entries(times).map(([d, ms]) => [Number(d), startTime + ms])),
+  ]));
+  return { event: 1, heat: 2, startTime, runId: 1, lanes: laneMap, ...opts };
 }
 
 describe('splashExport', () => {
@@ -68,17 +80,17 @@ describe('splashExport', () => {
     });
   });
 
-  describe('heatFilePath', () => {
-    it.each(['../Event1-Heat1.txt', 'Event1-Heat1.txt/..', 'competition.json', 'Event1-Heat1.csv', 'Event1-Heat1_x.txt'])(
+  describe('parseHeatFilename', () => {
+    it.each(['../Event1-Heat1.txt', 'Event1-Heat1.txt/..', 'competition.json', 'Event1-Heat1.csv', 'Event1-Heat1_x.txt', '.Event1-Heat1.txt.tmp'])(
       'rejects %p',
       (name) => {
-        expect(heatFilePath(name)).toBeNull();
+        expect(parseHeatFilename(name)).toBeNull();
       },
     );
 
-    it('resolves heat files and backups inside the export directory', () => {
-      expect(heatFilePath('Event1-Heat2.txt')).toBe(path.join(splashExportDir(), 'Event1-Heat2.txt'));
-      expect(heatFilePath('Event1-Heat2_20261002-153045-1.txt')).not.toBeNull();
+    it('parses heat files and backups', () => {
+      expect(parseHeatFilename('Event12-Heat3.txt')).toEqual({ event: 12, heat: 3, backup: false });
+      expect(parseHeatFilename('Event12-Heat3_20261002-153045-1.txt')).toEqual({ event: 12, heat: 3, backup: true });
     });
   });
 
@@ -118,21 +130,29 @@ describe('splashExport', () => {
     });
   });
 
+  describe('runLaneTimes', () => {
+    it('converts split timestamps to elapsed times from the start', () => {
+      expect(runLaneTimes(run({ 3: { 50: 35_220, 100: 71_220 } }))).toEqual(new Map([[3, new Map([[50, 35_220], [100, 71_220]])]]));
+    });
+
+    it('keeps only integer lanes 0-9', () => {
+      const lanes = runLaneTimes(run({ 0: { 50: 1 }, 9: { 50: 1 }, 10: { 50: 1 }, [-1]: { 50: 1 }, 1.5: { 50: 1 } }));
+      expect(Array.from(lanes.keys()).sort()).toEqual([0, 9]);
+    });
+  });
+
   describe('SplashExporter', () => {
-    it('rewrites the heat file on every split', () => {
+    it('rewrites the heat file on every write', () => {
       const exporter = new SplashExporter();
-      exporter.onStart(1, 2, T0);
-      exporter.onSplit(3, 50, T0 + 35_220);
+      exporter.write(run({ 3: { 50: 35_220 } }));
       expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50\r\n3;35.22\r\n');
-      exporter.onSplit(3, 100, T0 + 71_220);
+      exporter.write(run({ 3: { 50: 35_220, 100: 71_220 } }));
       expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50;TIME100\r\n3;35.22;1:11.22\r\n');
     });
 
     it('writes via a temp file and rename, leaving no temp file behind', () => {
       const rename = jest.spyOn(fs, 'renameSync');
-      const exporter = new SplashExporter();
-      exporter.onStart(1, 2, T0);
-      exporter.onSplit(3, 50, T0 + 35_220);
+      new SplashExporter().write(run({ 3: { 50: 35_220 } }));
       expect(rename).toHaveBeenCalledWith(
         path.join(splashExportDir(), '.Event1-Heat2.txt.tmp'),
         path.join(splashExportDir(), 'Event1-Heat2.txt'),
@@ -140,47 +160,49 @@ describe('splashExport', () => {
       expect(fs.readdirSync(splashExportDir())).toEqual(['Event1-Heat2.txt']);
     });
 
-    it('does not write without a valid start', () => {
-      const exporter = new SplashExporter();
-      exporter.onSplit(3, 50, T0);
-      exporter.onStart(undefined, 1, T0);
-      exporter.onSplit(3, 50, T0);
-      exporter.onStart(1, 1, undefined);
-      exporter.onSplit(3, 50, T0);
+    it.each([
+      ['no run', null],
+      ['an invalid event', run({ 3: { 50: 1 } }, { event: 1e21 })],
+      ['only lanes outside 0-9', run({ 12: { 50: 30_000 } })],
+    ])('writes nothing for %s', (_label, heatRun) => {
+      new SplashExporter().write(heatRun);
       expect(fs.existsSync(splashExportDir())).toBe(false);
     });
 
-    it('stops recording after reset', () => {
-      const exporter = new SplashExporter();
-      exporter.onStart(1, 1, T0);
-      exporter.onSplit(3, 50, T0 + 30_000);
-      exporter.onReset();
-      exporter.onSplit(3, 100, T0 + 60_000);
-      expect(read('Event1-Heat1.txt')).toBe('LANE;TIME50\r\n3;30.00\r\n');
+    it('leaves lanes outside 0-9 out of the file', () => {
+      new SplashExporter().write(run({ 3: { 50: 30_000 }, 12: { 50: 31_000 } }));
+      expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50\r\n3;30.00\r\n');
     });
 
-    it('backs up the file of an earlier run once, on the first split of a re-swum heat', () => {
+    it('backs up the file of an earlier run once, on the first write of a new run', () => {
       const exporter = new SplashExporter();
-      exporter.onStart(1, 1, T0);
-      exporter.onSplit(3, 50, T0 + 30_000);
-      exporter.onStart(1, 1, T0 + 100_000); // false start without splits: no backup
-      exporter.onStart(1, 1, T0 + 200_000);
-      exporter.onSplit(3, 50, T0 + 232_000);
-      exporter.onSplit(3, 100, T0 + 264_000);
+      exporter.write(run({ 3: { 50: 30_000 } }, { runId: 1 }));
+      exporter.write(run({ 3: { 50: 32_000 } }, { runId: 3 }));
+      exporter.write(run({ 3: { 50: 32_000, 100: 64_000 } }, { runId: 3 }));
 
       const files = listHeatFiles();
       expect(files.filter((f) => f.backup)).toHaveLength(1);
-      expect(read('Event1-Heat1.txt')).toBe('LANE;TIME50;TIME100\r\n3;32.00;1:04.00\r\n');
+      expect(read('Event1-Heat2.txt')).toBe('LANE;TIME50;TIME100\r\n3;32.00;1:04.00\r\n');
       expect(read(files.find((f) => f.backup)!.name)).toBe('LANE;TIME50\r\n3;30.00\r\n');
     });
 
-    it('logs and swallows write errors', () => {
-      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
-      jest.spyOn(fs, 'writeFileSync').mockImplementation(() => { throw new Error('disk full'); });
+    it('retries the backup on the next write when it failed', () => {
+      jest.spyOn(console, 'error').mockImplementation(() => {});
       const exporter = new SplashExporter();
-      exporter.onStart(1, 1, T0);
-      expect(() => exporter.onSplit(3, 50, T0 + 30_000)).not.toThrow();
+      exporter.write(run({ 3: { 50: 30_000 } }, { runId: 1 }));
+      const rename = jest.spyOn(fs, 'renameSync').mockImplementationOnce(() => { throw new Error('EBUSY'); });
+      exporter.write(run({ 3: { 50: 32_000 } }, { runId: 2 }));
+      rename.mockRestore();
+      exporter.write(run({ 3: { 50: 32_000 } }, { runId: 2 }));
+      expect(listHeatFiles().filter((f) => f.backup)).toHaveLength(1);
+    });
+
+    it('logs write errors and removes the temp file', () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      jest.spyOn(fs, 'renameSync').mockImplementation(() => { throw new Error('disk full'); });
+      expect(() => new SplashExporter().write(run({ 3: { 50: 30_000 } }))).not.toThrow();
       expect(error).toHaveBeenCalled();
+      expect(fs.readdirSync(splashExportDir())).toEqual([]);
     });
   });
 
@@ -207,6 +229,38 @@ describe('splashExport', () => {
 
       expect(clearHeatFiles()).toBe(2);
       expect(fs.readdirSync(dir)).toEqual(['notes.txt']);
+    });
+
+    it('also removes leftover temp files', () => {
+      const dir = splashExportDir();
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, '.Event1-Heat1.txt.tmp'), 'x');
+      expect(listHeatFiles()).toEqual([]);
+      expect(clearHeatFiles()).toBe(0);
+      expect(fs.readdirSync(dir)).toEqual([]);
+    });
+
+    it('skips a file that disappears between readdir and stat', () => {
+      const dir = splashExportDir();
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'Event1-Heat1.txt'), 'x');
+      fs.writeFileSync(path.join(dir, 'Event1-Heat2.txt'), 'x');
+      const realStat = fs.statSync;
+      jest.spyOn(fs, 'statSync').mockImplementation(((p: fs.PathLike) => {
+        if (String(p).endsWith('Event1-Heat1.txt')) {
+          throw Object.assign(new Error('gone'), { code: 'ENOENT' });
+        }
+        return realStat(p);
+      }) as typeof fs.statSync);
+      expect(listHeatFiles().map((f) => f.name)).toEqual(['Event1-Heat2.txt']);
+    });
+
+    it('still fails on other stat errors', () => {
+      const dir = splashExportDir();
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'Event1-Heat1.txt'), 'x');
+      jest.spyOn(fs, 'statSync').mockImplementation(() => { throw Object.assign(new Error('denied'), { code: 'EACCES' }); });
+      expect(() => listHeatFiles()).toThrow('denied');
     });
   });
 });

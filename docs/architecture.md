@@ -182,6 +182,7 @@ sequenceDiagram
             Tracker-->>WS: distance, splitNumber, isFinish, ranking
             WS->>Logger: logSplit
             WS->>Clients: broadcast enriched split + ranking
+            WS->>WS: splashExporter.write(tracker.getRun())
         else ignored (cooldown / after-finish)
             WS->>Logger: logIgnoredSplit
             Note over WS: not broadcast
@@ -220,9 +221,9 @@ The backend follows a strict three-layer separation:
 - **`splitTracker.ts`** — Per-heat state machine: cooldown filtering, distance
   labelling, finish detection, arrival ranking. Reads settings live via an
   injected loader.
-- **`splashExport.ts`** — Records accepted splits of the running heat and
-  rewrites its Splash Meet Manager heat file (`exports/splashme/`) on every
-  split; lists, serves and clears heat files. See [splash-export.md](splash-export.md).
+- **`splashExport.ts`** — Writes the `SplitTracker`'s running heat
+  (`getRun()`) to its Splash Meet Manager heat file (`exports/splashme/`) after
+  every accepted split; lists, serves and clears heat files. See [splash-export.md](splash-export.md).
 - **`settings.ts`** — Loads/saves `config/app.json` (pool length, split
   cooldown). Cached in memory with per-field fallback to defaults.
 - **`tunnel.ts`** — Spawns and manages the `cloudflared` process, persists

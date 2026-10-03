@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
-import path from 'path';
-import { listHeatFiles, heatFilePath, clearHeatFiles } from '../modules/splashExport';
+import {
+  listHeatFiles,
+  parseHeatFilename,
+  splashExportDir,
+  clearHeatFiles,
+} from '../modules/splashExport';
 
 export function getSplashExports(_req: Request, res: Response) {
   try {
@@ -14,17 +17,21 @@ export function getSplashExports(_req: Request, res: Response) {
 
 export function downloadSplashExport(req: Request, res: Response) {
   const name = String(req.params.file);
-  const filePath = heatFilePath(name);
-  if (!filePath) {
+  if (!parseHeatFilename(name)) {
     res.status(400).json({ error: 'Invalid heat file name' });
     return;
   }
-  if (!fs.existsSync(filePath)) {
-    res.status(404).json({ error: 'Heat file not found' });
-    return;
-  }
-  // With root, only the file name is checked for dotfiles, so EXPORT_DIR may live under a dot-directory
-  res.download(path.basename(filePath), name, { root: path.dirname(filePath) });
+  // root keeps the download inside the export directory, also when EXPORT_DIR is under a dot-directory
+  res.download(name, name, { root: splashExportDir() }, (err) => {
+    if (!err || res.headersSent) return;
+    // send reports a missing file as status 404 (code ENOENT)
+    if ((err as { status?: number }).status === 404) {
+      res.status(404).json({ error: 'Heat file not found' });
+    } else {
+      console.error('[SplashExport] Failed to send heat file:', err);
+      res.status(500).json({ error: 'Failed to send heat file' });
+    }
+  });
 }
 
 export function deleteSplashExports(_req: Request, res: Response) {

@@ -34,6 +34,19 @@ interface LaneState {
   splitCount: number;
   lastTimestamp: number;
   finished: boolean;
+  /** Accepted split timestamps keyed by distance in meters. */
+  splits: Map<number, number>;
+}
+
+/** Accepted splits of the heat that is running since the last start. */
+export interface HeatRun {
+  event: number;
+  heat: number;
+  startTime: number;
+  /** Increases on every start, so consumers can tell runs of the same heat apart. */
+  runId: number;
+  /** Accepted split timestamps per lane, keyed by distance in meters. */
+  lanes: Map<number, Map<number, number>>;
 }
 
 export function splitDistanceFor(poolLength: number): number {
@@ -72,6 +85,7 @@ export class SplitTracker {
 
   private heat: HeatInfo | null = null;
   private startTime: number | null = null;
+  private runId = 0;
 
   constructor(private readonly getSettings: () => AppSettings) {}
 
@@ -79,14 +93,17 @@ export class SplitTracker {
     return this.heat;
   }
 
+  /** A new heat invalidates the running start: its splits belong to the old heat. */
   setHeat(info: HeatInfo | null) {
     this.heat = info;
     this.lanes.clear();
+    this.startTime = null;
   }
 
   onStart(timestamp?: number) {
     this.lanes.clear();
     this.startTime = timestamp ?? null;
+    this.runId += 1;
   }
 
   onReset() {
@@ -123,9 +140,28 @@ export class SplitTracker {
     const distance = totalDistance > 0 ? Math.min(rawDistance, totalDistance) : rawDistance;
     const isFinish = expectedSplits > 0 && splitNumber >= expectedSplits;
 
-    this.lanes.set(lane, { splitCount: splitNumber, lastTimestamp: timestamp, finished: isFinish });
+    const splits = state?.splits ?? new Map<number, number>();
+    splits.set(distance, timestamp);
+    this.lanes.set(lane, { splitCount: splitNumber, lastTimestamp: timestamp, finished: isFinish, splits });
 
     return { accepted: true, distance, splitNumber, isFinish, ranking: this.getRanking() };
+  }
+
+  /**
+   * The running heat with its accepted splits, or null when there is no heat
+   * or no start (not started, reset, or heat changed since the start).
+   */
+  getRun(): HeatRun | null {
+    if (!this.heat || this.startTime === null) return null;
+    const lanes = new Map<number, Map<number, number>>();
+    this.lanes.forEach((state, lane) => lanes.set(lane, new Map(state.splits)));
+    return {
+      event: this.heat.event,
+      heat: this.heat.heat,
+      startTime: this.startTime,
+      runId: this.runId,
+      lanes,
+    };
   }
 
   /** Lanes with at least one split, ranked by (splitCount desc, lastTimestamp asc). */

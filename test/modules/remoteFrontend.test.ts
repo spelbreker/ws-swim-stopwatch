@@ -5,9 +5,25 @@ import ts from 'typescript';
 
 type SocketListener = (event: string, socket: undefined, message?: Record<string, unknown>) => void;
 
-function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.resolve(), session = 1, firstEvent = '1' } = {}) {
-  const eventSelect = { id: 'event-select', value: '', options: [{ value: firstEvent }] };
-  const heatSelect = { id: 'heat-select', value: '' };
+function stubControl() {
+  const classes = new Set<string>();
+  return {
+    disabled: false,
+    textContent: '',
+    addEventListener: jest.fn(),
+    classList: {
+      add: (...names: string[]) => names.forEach((n) => classes.add(n)),
+      remove: (...names: string[]) => names.forEach((n) => classes.delete(n)),
+    },
+  };
+}
+
+function setupRemote({
+  sessionsReady = Promise.resolve(), eventsReady = Promise.resolve(), session = 1, firstEvent = '1', withControls = false,
+} = {}) {
+  const noopClassList = { add: jest.fn(), remove: jest.fn() };
+  const eventSelect = { id: 'event-select', value: '', options: [{ value: firstEvent }], classList: noopClassList };
+  const heatSelect = { id: 'heat-select', value: '', classList: noopClassList };
   const fillSelectOptions = jest.fn(async (select: { id: string; value: string }) => {
     if (select.id === 'event-select') await eventsReady;
     select.value = select.id === 'event-select' ? firstEvent : '1';
@@ -23,9 +39,13 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     },
   };
   const laneTime = { textContent: '00:00:00' };
+  // Only stubbed on request, so the other tests keep running without these elements
+  const controls: Record<string, ReturnType<typeof stubControl>> = withControls
+    ? { 'start-button': stubControl(), 'session-menu-button': stubControl() }
+    : {};
   const document = {
     addEventListener: jest.fn(),
-    getElementById: jest.fn(() => null),
+    getElementById: jest.fn((id: string) => controls[id] ?? null),
     querySelector: (selector: string) => selector.startsWith('.lane-time') ? laneTime : button,
     querySelectorAll: (selector: string) => selector === '.lane-button' ? [button] : [laneTime],
   };
@@ -81,6 +101,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
   document.addEventListener.mock.calls.find(([event]) => event === 'DOMContentLoaded')![1]();
   const listener = onSocketEvent.mock.calls[0][0];
   return {
+    controls,
     classes,
     laneTime,
     send,
@@ -179,6 +200,18 @@ describe('competition remote lifecycle', () => {
     expect(remote.heatSelect.value).toBe('4');
     expect(remote.send).not.toHaveBeenCalled();
     expect(jest.getTimerCount()).toBe(2);
+  });
+
+  it('locks the session selector while the stopwatch runs and unlocks it after reset', async () => {
+    const withControls = setupRemote({ withControls: true });
+    await jest.advanceTimersByTimeAsync(0);
+    const sessionButton = withControls.controls['session-menu-button'];
+
+    withControls.emit('message', { type: 'start', timestamp: Date.now(), event: 1, heat: 1 });
+    expect(sessionButton.disabled).toBe(true);
+
+    withControls.emit('message', { type: 'reset', timestamp: Date.now() });
+    expect(sessionButton.disabled).toBe(false);
   });
 
   it('waits for the session before initializing dropdowns, independently of socket opens', async () => {

@@ -49,7 +49,7 @@ let splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
 function getSplitTracker() {
     return splitTracker;
 }
-// Writes the running heat to a Splash Meet Manager heat file
+// Writes the tracker's running heat to a Splash Meet Manager heat file
 let splashExporter = new splashExport_1.SplashExporter();
 function resetSplitTracker() {
     splitTracker = new splitTracker_1.SplitTracker(settings_1.loadSettings);
@@ -109,8 +109,6 @@ function handleStart(msg, wss) {
         applyHeatFromMessage(msg);
     }
     splitTracker.onStart(startTs);
-    const heatInfo = splitTracker.getHeat();
-    splashExporter.onStart(heatInfo?.event, heatInfo?.heat, startTs);
     // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,
@@ -134,7 +132,6 @@ function handleSplit(msg, wss) {
     }
     const { distance, splitNumber, isFinish, ranking } = result;
     (0, logger_1.logSplit)(lane, ts, typeof elapsed_ms === 'number' ? elapsed_ms : undefined, distance, splitNumber);
-    splashExporter.onSplit(lane, distance, ts);
     // Preserve the original client timestamp - don't overwrite with server time
     broadcastAllClients(wss, {
         ...msg,
@@ -144,20 +141,18 @@ function handleSplit(msg, wss) {
         isFinish,
         ranking,
     });
+    // After the broadcast, so disk I/O does not delay the screens
+    splashExporter.write(splitTracker.getRun());
 }
 function handleEventHeat(msg, wss) {
     console.log(`[WebSocket] Event/Heat changed: event=${msg.event}, heat=${msg.heat}`);
     applyHeatFromMessage(msg);
-    // The tracker cleared its lane state, so split numbers restart: a running
-    // export must not continue into the old heat file with the old start time.
-    splashExporter.onReset();
     broadcastAllClients(wss, msg);
 }
 function handleReset(msg, wss) {
     const timestamp = toTimestamp(msg.timestamp) ?? Date.now();
     (0, logger_1.logReset)(timestamp);
     splitTracker.onReset();
-    splashExporter.onReset();
     // Preserve the original client timestamp - don't overwrite with server time
     const payload = {
         ...msg,

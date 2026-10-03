@@ -21,6 +21,9 @@ services:
       - /opt/swimwatch/config:/app/config
       - /opt/swimwatch/data:/app/data
       - /opt/swimwatch/exports:/app/exports
+    environment:
+      # Local time for Splash backup file names (Event1-Heat1_YYYYMMDD-HHMMSS.txt)
+      - TZ=Europe/Amsterdam
     restart: unless-stopped
 
 volumes:

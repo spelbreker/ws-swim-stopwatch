@@ -122,6 +122,7 @@ docker run -d \
 | `DATA_DIR` | `./data` | `competition.ts` | Directory for `competition.json` |
 | `CONFIG_DIR` | `./config` | `settings.ts`, `tunnel.ts` | Directory for `app.json` and `tunnel.json` |
 | `EXPORT_DIR` | `./exports` | `splashExport.ts` | Base directory for Splash heat files (`<EXPORT_DIR>/splashme/`) |
+| `TZ` | `Europe/Amsterdam` (Compose/Ansible) | Node | Local time for Splash backup file names |
 | `TUNNEL_TOKEN` | — | `docker-entrypoint.sh` | Starts cloudflared on boot if set |
 | `NODE_ENV` | — | Express, Docker | Standard Node environment |
 

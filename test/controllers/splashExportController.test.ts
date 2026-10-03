@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import request from 'supertest';
 import express from 'express';
 import {
@@ -13,7 +16,18 @@ app.get('/exports/splashme/:file', downloadSplashExport);
 app.delete('/exports/splashme', deleteSplashExports);
 
 describe('splashExportController', () => {
+  let tmp: string;
+  const originalExportDir = process.env.EXPORT_DIR;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'splash-ctrl-'));
+    process.env.EXPORT_DIR = tmp;
+  });
+
   afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+    if (originalExportDir === undefined) delete process.env.EXPORT_DIR;
+    else process.env.EXPORT_DIR = originalExportDir;
     jest.restoreAllMocks();
   });
 
@@ -37,17 +51,32 @@ describe('splashExportController', () => {
     expect(res.status).toBe(400);
   });
 
+  it('GET /exports/splashme/:file rejects encoded path traversal', async () => {
+    const res = await request(app).get('/exports/splashme/..%2F..%2Fdata%2Fcompetition.json');
+    expect(res.status).toBe(400);
+  });
+
   it('GET /exports/splashme/:file returns 404 for a missing heat file', async () => {
-    jest.spyOn(splashExport, 'heatFilePath').mockReturnValue('/nonexistent/Event1-Heat1.txt');
     const res = await request(app).get('/exports/splashme/Event1-Heat1.txt');
     expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Heat file not found' });
   });
 
   it('GET /exports/splashme/:file downloads the heat file as attachment', async () => {
-    jest.spyOn(splashExport, 'heatFilePath').mockReturnValue(__filename);
+    fs.mkdirSync(splashExport.splashExportDir(), { recursive: true });
+    fs.writeFileSync(path.join(splashExport.splashExportDir(), 'Event1-Heat1.txt'), 'LANE;TIME50\r\n3;30.00\r\n');
     const res = await request(app).get('/exports/splashme/Event1-Heat1.txt');
     expect(res.status).toBe(200);
     expect(res.headers['content-disposition']).toBe('attachment; filename="Event1-Heat1.txt"');
+    expect(res.text).toBe('LANE;TIME50\r\n3;30.00\r\n');
+  });
+
+  it('GET /exports/splashme/:file serves from an export directory under a dot-directory', async () => {
+    process.env.EXPORT_DIR = path.join(tmp, '.hidden');
+    fs.mkdirSync(splashExport.splashExportDir(), { recursive: true });
+    fs.writeFileSync(path.join(splashExport.splashExportDir(), 'Event2-Heat1.txt'), 'x');
+    const res = await request(app).get('/exports/splashme/Event2-Heat1.txt');
+    expect(res.status).toBe(200);
   });
 
   it('DELETE /exports/splashme returns the number of deleted files', async () => {
