@@ -182,7 +182,7 @@ sequenceDiagram
             Tracker-->>WS: distance, splitNumber, isFinish, ranking
             WS->>Logger: logSplit
             WS->>Clients: broadcast enriched split + ranking
-        else ignored (cooldown / after-finish)
+        else ignored (not-running / cooldown / after-finish)
             WS->>Logger: logIgnoredSplit
             Note over WS: not broadcast
         end

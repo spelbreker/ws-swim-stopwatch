@@ -139,6 +139,8 @@ describe('parseLogLine', () => {
       .toMatchObject({ kind: 'IGNORED', text: 'Lane 5 · split ignored within the cooldown of the previous split' });
     expect(parseLogLine(`[${iso}] SPLIT IGNORED - Lane: 5, Reason: after-finish, Time: 00:20.100, Timestamp: 1`))
       .toMatchObject({ text: 'Lane 5 · split ignored after the finish' });
+    expect(parseLogLine(`[${iso}] SPLIT IGNORED - Lane: 5, Reason: not-running, Time: 00:00.339, Timestamp: 1`))
+      .toMatchObject({ text: 'Lane 5 · split ignored because no race is running' });
   });
 
   it('skips separators, blank lines and invalid dates', () => {

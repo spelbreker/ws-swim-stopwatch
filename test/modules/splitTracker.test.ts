@@ -4,9 +4,12 @@ import { AppSettings } from '../../src/modules/settings';
 
 const T0 = 1_718_000_000_000;
 
-function makeTracker(overrides: Partial<AppSettings> = {}) {
+// A started tracker without a start timestamp: splits count and no start cooldown applies.
+function makeTracker(overrides: Partial<AppSettings> = {}, started = true) {
   const settings: AppSettings = { poolLength: 25, splitCooldownSec: 12, ...overrides };
-  return { tracker: new SplitTracker(() => settings), settings };
+  const tracker = new SplitTracker(() => settings);
+  if (started) tracker.onStart();
+  return { tracker, settings };
 }
 
 function heat(totalDistance: number, poolLength = 25): HeatInfo {
@@ -52,6 +55,7 @@ describe('SplitTracker', () => {
     it('reads the cooldown from settings live', () => {
       const settings: AppSettings = { poolLength: 25, splitCooldownSec: 12 };
       const tracker = new SplitTracker(() => settings);
+      tracker.onStart();
       tracker.onSplit(3, T0);
       expect(tracker.onSplit(3, T0 + 5_000).accepted).toBe(false);
       settings.splitCooldownSec = 4;
@@ -207,6 +211,27 @@ describe('SplitTracker', () => {
     it('onStart without timestamp does not apply start-cooldown', () => {
       const { tracker } = makeTracker();
       tracker.onStart();
+      expect(tracker.onSplit(3, T0).accepted).toBe(true);
+    });
+
+    it('ignores splits before the first start', () => {
+      const { tracker } = makeTracker({}, false);
+      expect(tracker.onSplit(3, T0)).toEqual({ accepted: false, reason: 'not-running' });
+      expect(tracker.getRanking()).toEqual([]);
+    });
+
+    it('ignores splits after a reset until the next start', () => {
+      const { tracker } = makeTracker();
+      accepted(tracker.onSplit(3, T0));
+      tracker.onReset();
+      expect(tracker.onSplit(3, T0 + 20_000)).toEqual({ accepted: false, reason: 'not-running' });
+      tracker.onStart();
+      expect(tracker.onSplit(3, T0 + 40_000).accepted).toBe(true);
+    });
+
+    it('keeps running when the event and heat change', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
       expect(tracker.onSplit(3, T0).accepted).toBe(true);
     });
 

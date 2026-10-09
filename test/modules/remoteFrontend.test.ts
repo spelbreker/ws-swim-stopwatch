@@ -175,6 +175,20 @@ describe('competition remote lifecycle', () => {
     expect(remote.refreshLiveLog).toHaveBeenCalledTimes(1);
   });
 
+  it('sends nothing and does not touch the log when a lane is tapped while the stopwatch is not running', async () => {
+    remote.clickRow();
+    await jest.advanceTimersByTimeAsync(300);
+    expect(remote.send).not.toHaveBeenCalled();
+    expect(remote.refreshLiveLog).not.toHaveBeenCalled();
+  });
+
+  it('stops sending taps again after a reset', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    remote.emit('message', { type: 'reset' });
+    remote.clickRow();
+    expect(remote.send).not.toHaveBeenCalled();
+  });
+
   it('sends a split when a free lane row is tapped', () => {
     remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.clickRow();

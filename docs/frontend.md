@@ -185,9 +185,10 @@ Features:
   dimmed while idle ("Not assigned") but stays tappable and follows the same
   timeout rules, because unregistered swimmers sometimes swim there.
 - **Splits** — tapping a lane row or keypad key sends a `split` message with
-  the current synchronized timestamp. The row does **not** update
-  optimistically; it only shows the time when the server broadcasts an
-  accepted split back.
+  the current synchronized timestamp, but only while the remote's stopwatch is
+  running: the server would accept a split without a start and log it with a
+  meaningless time. The row does **not** update optimistically; it only shows
+  the time when the server broadcasts an accepted split back.
 - **Timeout** — the remote mirrors the server's cooldown rules
   (`splitCooldownSec`, fetched from `/settings`): a lane is blocked (amber row,
   countdown bar, disabled key) for the cooldown after its last accepted split,
@@ -195,7 +196,8 @@ Features:
   permanently after the finish. A tap on a blocked lane is still sent: the
   server ignores it and writes `SPLIT IGNORED` to the log, which the live log
   shows (the remote refreshes it 300 ms after every tap, because ignored splits
-  are not broadcast). Only the `Locked` keypad mode stops taps.
+  are not broadcast). Apart from a stopped stopwatch, only the `Locked` keypad
+  mode stops taps.
 - **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
   the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`

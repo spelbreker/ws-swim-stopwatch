@@ -135,7 +135,7 @@ labels still work but `isFinish` is never set.
 **State lifecycle:**
 - `event-heat`: heat info is (re)loaded from `competition.json`, all lane state is cleared.
 - `start`: lane state is cleared; if the message carries a different `event`/`heat` the heat info is reloaded.
-- `reset`: lane state and heat info are cleared.
+- `reset`: lane state and heat info are cleared. Splits that arrive before the first `start` or after a `reset` are ignored (reason `not-running`) and logged.
 
 ## Event and Heat Control
 
