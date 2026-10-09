@@ -11,6 +11,14 @@ function logFilePath(): string {
   return path.join(process.cwd(), 'logs', 'competition.log');
 }
 
+function sendLog(req: Request, res: Response, text: string) {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  if (req.query.download !== undefined) {
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename()}"`);
+  }
+  res.send(text);
+}
+
 const TAIL_CHUNK_BYTES = 64 * 1024;
 
 // Reads only the end of the file: the log is append-only and grows all day, and the remote polls it.
@@ -44,8 +52,7 @@ export function getCompetitionLog(req: Request, res: Response) {
   const tail = parseInt(String(req.query.tail), 10);
   if (tail > 0) {
     readLastLines(logPath, tail).then((text) => {
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.send(text);
+      sendLog(req, res, text);
     }).catch(() => {
       res.status(404).send('Logbestand niet gevonden.');
     });
@@ -56,11 +63,7 @@ export function getCompetitionLog(req: Request, res: Response) {
       res.status(404).send('Logbestand niet gevonden.');
       return;
     }
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    if (req.query.download !== undefined) {
-      res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename()}"`);
-    }
-    res.send(data);
+    sendLog(req, res, data);
   });
 }
 

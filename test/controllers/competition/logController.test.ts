@@ -63,6 +63,13 @@ describe('logController', () => {
       expect(res.text).toBe('c\nd');
     });
 
+    it('sends the tailed log as an attachment when download is also requested', async () => {
+      writeLog('a\nb\nc\n');
+      const res = await request(app).get('/logs/competition.log?tail=2&download=1');
+      expect(res.headers['content-disposition']).toMatch(/^attachment; filename="competition-.*\.log"$/);
+      expect(res.text).toBe('b\nc');
+    });
+
     it('returns everything when the log has fewer lines than tail', async () => {
       writeLog('a\nb');
       const res = await request(app).get('/logs/competition.log?tail=300');
