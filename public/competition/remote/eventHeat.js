@@ -15,6 +15,7 @@ let eventSelect = null;
 let heatSelect = null;
 let heatDisplayedListener = null;
 let infoBarRequest = 0;
+let eventListRequest = 0;
 
 /**
  * Register a listener that runs every time the info bar is refreshed for a heat
@@ -36,11 +37,14 @@ export async function fillSelectOptions(selectElement, maxValue, session) {
   if (!selectElement) return;
 
   if (selectElement.id === 'event-select') {
+    // Only the newest call may change the options: a slower response for an earlier session is dropped.
+    const requestId = ++eventListRequest;
     const sessionParam = session ? `?session=${session}` : '';
     try {
       const res = await fetch(`/competition/event${sessionParam}`);
       if (!res.ok) throw new Error('Failed to fetch event list');
       const events = await res.json();
+      if (requestId !== eventListRequest) return;
       selectElement.innerHTML = '';
       events.forEach((event) => {
         const option = document.createElement('option');
@@ -49,6 +53,7 @@ export async function fillSelectOptions(selectElement, maxValue, session) {
         selectElement.appendChild(option);
       });
     } catch {
+      if (requestId !== eventListRequest) return;
       selectElement.innerHTML = '';
       for (let i = 1; i <= maxValue; i++) {
         const option = document.createElement('option');

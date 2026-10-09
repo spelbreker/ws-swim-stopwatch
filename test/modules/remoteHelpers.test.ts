@@ -361,3 +361,39 @@ describe('setCurrentSession', () => {
     expect(label.textContent).toBe('Session 2');
   });
 });
+
+describe('fillSelectOptions', () => {
+  function option() {
+    return { value: '', textContent: '' };
+  }
+  function setup(fetchImpl: (url: string) => Promise<unknown>) {
+    const document = { createElement: option, getElementById: () => null };
+    const fetch = jest.fn(fetchImpl);
+    const { fillSelectOptions } = loadModule('eventHeat.js', {
+      './eventTitle.js': { formatEventTitle: () => '' },
+    }, { document, fetch }) as unknown as {
+      fillSelectOptions: (select: object, max: number, session: number | null) => Promise<void>;
+    };
+    const options: Array<{ value: string }> = [];
+    const select = {
+      id: 'event-select',
+      set innerHTML(_value: string) { options.length = 0; },
+      appendChild: (item: { value: string }) => options.push(item),
+    };
+    return { fillSelectOptions, select, options };
+  }
+
+  it('lets a slower response for an earlier session not replace the newer event list', async () => {
+    const gate = deferred();
+    const { fillSelectOptions, select, options } = setup(async (url) => {
+      if (url.includes('session=1')) await gate.promise;
+      const events = url.includes('session=1') ? [{ number: 1 }] : [{ number: 301 }];
+      return { ok: true, json: async () => events };
+    });
+    const first = fillSelectOptions(select, 25, 1);
+    await fillSelectOptions(select, 25, 2);
+    gate.release();
+    await first;
+    expect(options.map((item) => item.value)).toEqual([301]);
+  });
+});

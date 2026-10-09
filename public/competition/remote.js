@@ -130,7 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
       fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, session),
       fillSelectOptions(heatSelect, MAX_SELECT_FALLBACK, session),
     ]);
-    updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
+    // The startup fill rebuilt the selects: a selection received meanwhile must stay visible.
+    if (lastReceived) {
+      syncSelection(lastReceived.event, lastReceived.heat, lastReceived.session);
+    } else {
+      updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
+    }
   });
 
   const controlElements = [
@@ -188,10 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectionId = 0;
   let pendingFill = null;
+  let lastReceived = null;
   // Show a selection made elsewhere (another remote or the starter): session,
   // event and heat selects, the heat card and the heat-dependent views.
   async function syncSelection(event, heat, session) {
     const id = ++selectionId;
+    lastReceived = { event, heat, session };
     const sessionNumber = session ? Number(session) : getCurrentSession();
     if (sessionNumber && sessionNumber !== getCurrentSession()) {
       // The event list belongs to the session: load it before selecting the event.

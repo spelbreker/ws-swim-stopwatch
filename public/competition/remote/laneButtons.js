@@ -145,6 +145,8 @@ export async function loadSplitCooldown() {
     const settings = await res.json();
     if (Number.isFinite(settings.splitCooldownSec)) {
       splitCooldownMs = settings.splitCooldownSec * 1000;
+      // Lanes already drawn with the previous cooldown must follow the server's setting.
+      renderAll();
     }
   } catch {
     console.warn('Could not load split cooldown, using default');
@@ -264,9 +266,16 @@ export function resetSplitTimes() {
   renderAll();
 }
 
-/** Clear all lane information: times and timeouts (the roster stays). */
+/**
+ * Clear the shown split times and places (the roster stays). The server keeps its
+ * cooldown and finish state on `clear`, so blocked and finished lanes stay blocked.
+ */
 export function clearLaneInformation() {
-  splits.clear();
+  splits.forEach((split, lane) => {
+    splits.set(lane, {
+      ...split, time: NO_TIME, distance: undefined, place: undefined,
+    });
+  });
   renderAll();
 }
 

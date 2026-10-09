@@ -236,8 +236,10 @@ Features:
 - **Finish marker** — adds a persistent `.finished` CSS class when
   `isFinish` is true.
 - **Highlight** — briefly highlights a lane (2 s) when a split arrives.
-- **Clear** — clears all lane info, split times, arrival orders and finish
-  markers on `clear`, `start`, `reset` and `event-heat`.
+- **Clear** — on `clear` the shown split times, distances and arrival orders
+  are blanked, but a lane's timeout and finish state stays, because the server
+  does not reset its split tracking on `clear`. `start`, `reset` and
+  `event-heat` clear everything.
 
 ## Dashboard
 

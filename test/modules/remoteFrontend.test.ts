@@ -13,6 +13,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     select.value = select.id === 'event-select' ? firstEvent : '1';
   });
   const updateEventHeatInfoBar = jest.fn();
+  const settingsFetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ splitCooldownSec: 12 }) });
   const setCurrentSession = jest.fn((next: number) => { session = next; });
   const laneTime = { textContent: '--:--:--' };
   const laneStatus = { textContent: '' };
@@ -84,10 +85,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
       },
       document,
       console: { log: jest.fn(), warn: jest.fn() },
-      fetch: jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ splitCooldownSec: 12 }),
-      }),
+      fetch: settingsFetch,
       Date,
       setTimeout,
       clearTimeout,
@@ -116,6 +114,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     fillSelectOptions,
     updateEventHeatInfoBar,
     setCurrentSession,
+    settingsFetch,
     setRosterRaw: (entries: unknown) => (imports['./remote/laneButtons.js'] as { setRoster: (e: unknown) => void }).setRoster(entries),
     pressEnter: () => document.addEventListener.mock.calls.find(([event]) => event === 'keydown')![1]({ key: 'Enter' }),
     emit: (event: string, message?: Record<string, unknown>) => listener(event, undefined, message),
@@ -202,7 +201,7 @@ describe('competition remote lifecycle', () => {
     expect(remote.lastRowState()).toBe('finished');
   });
 
-  it.each(['reset', 'event-heat', 'clear'])('clears the timeout and its timer on %s', (type) => {
+  it.each(['reset', 'event-heat'])('clears the timeout and its timer on %s', (type) => {
     remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
     expect(remote.lastRowState()).toBe('timeout');
@@ -211,6 +210,44 @@ describe('competition remote lifecycle', () => {
     expect(remote.lastRowState()).toBe(type === 'reset' ? 'ready' : 'swim');
     expect(remote.laneTime.textContent).toBe('--:--:--');
     expect(jest.getTimerCount()).toBe(type === 'reset' ? 0 : 1);
+  });
+
+  it('blanks the shown time on clear but keeps the timeout, as the server does', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
+    remote.emit('message', { type: 'clear' });
+    expect(remote.lastRowState()).toBe('timeout');
+    expect(remote.laneTime.textContent).toBe('--:--:--');
+  });
+
+  it('keeps a finished lane blocked after clear', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 60_000 });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), splitNumber: 2, isFinish: true, ranking: [{ lane: 1, place: 1, splitNumber: 2 }] });
+    remote.emit('message', { type: 'clear' });
+    expect(remote.lastRowState()).toBe('finished');
+    expect(remote.laneStatus.textContent).toBe('Finish');
+  });
+
+  it('redraws the lanes with the cooldown setting once it arrives', async () => {
+    remote.settingsFetch.mockResolvedValue({ ok: true, json: async () => ({ splitCooldownSec: 30 }) });
+    remote.emit('message', { type: 'start', timestamp: Date.now() });
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.laneStatus.textContent).toBe('Timeout 30.0s');
+    await jest.advanceTimersByTimeAsync(13_000);
+    expect(remote.lastRowState()).toBe('timeout');
+  });
+
+  it('keeps a selection received during startup after the startup fill', async () => {
+    let finishSessions!: () => void;
+    const sessionsReady = new Promise<void>((resolve) => { finishSessions = resolve; });
+    const early = setupRemote({ sessionsReady });
+    early.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+    early.updateEventHeatInfoBar.mockClear();
+    finishSessions();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(early.eventSelect.value).toBe('3');
+    expect(early.heatSelect.value).toBe('4');
+    expect(early.updateEventHeatInfoBar).toHaveBeenLastCalledWith('3', '4', 1);
   });
 
   it('keeps a new timeout for its full cooldown after a reset', () => {
