@@ -162,8 +162,8 @@ entry points.
 
 The remote is the operator's control panel. It sends WebSocket messages and
 displays accepted server broadcasts. The page is dark and phone-first: a
-header with the stopwatch, a heat card, three tabs (Banen, Volgende, Log) and
-a bottom dock with the event/heat steppers, session, Wis, the keypad mode and
+header with the stopwatch, a heat card, three tabs (Lanes, Next, Log) and
+a bottom dock with the event/heat steppers, session, Clear, the keypad mode and
 the start button. From the `lg` breakpoint the three tabs are shown side by
 side and the tab bar is hidden.
 
@@ -179,7 +179,7 @@ Features:
 - **Lane rows** — one row per lane (0-9) with the swimmer name and club of
   the selected heat (`/competition/event/:event/heat/:heat`, relays show the
   club and the swimmers' last names). A lane without a registered swimmer is
-  dimmed while idle ("Niet ingedeeld") but stays tappable and follows the same
+  dimmed while idle ("Not assigned") but stays tappable and follows the same
   timeout rules, because unregistered swimmers sometimes swim there.
 - **Splits** — tapping a lane row or keypad key sends a `split` message with
   the current synchronized timestamp. The row does **not** update
@@ -192,11 +192,11 @@ Features:
   permanently after the finish. A tap on a blocked lane is not sent and is
   written to the live log. Ignored splits from other devices are never
   broadcast by the server, so they do not show up here.
-- **Keypad mode** — `Verborgen` (default; tap the lane rows), `Toetsen` (show
-  the 0-9 keypad) or `Vergrendeld` (rows and keys ignore taps). The choice is
+- **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
+  the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`
   keyboard shortcuts keep working unless locked or the lane is blocked.
-- **Volgende** — the next heat (same event, or the first heat of the next
+- **Next** — the next heat (same event, or the first heat of the next
   event) with swimmers and entry times.
 - **Live log** — newest first, max 100 entries: start/reset, accepted splits,
   blocked taps, event/heat changes, cleared screen, device registrations and

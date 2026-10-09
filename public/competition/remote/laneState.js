@@ -39,7 +39,7 @@ export function describeLane({
   running, finished, splitCount, distance, place, remainingMs, cooldownMs,
 }) {
   if (finished) {
-    return { state: 'finished', status: place ? `Finish · ${place}e` : 'Finish', blocked: true, progress: 0 };
+    return { state: 'finished', status: place ? `Finish · #${place}` : 'Finish', blocked: true, progress: 0 };
   }
   if (running && remainingMs > 0) {
     const progress = Math.max(0, Math.min(100, (remainingMs / cooldownMs) * 100));
@@ -51,8 +51,8 @@ export function describeLane({
     };
   }
   if (running) {
-    const status = splitCount > 0 ? `Split ${splitCount}${distance ? ` · ${distance}m` : ''}` : 'Zwemt';
+    const status = splitCount > 0 ? `Split ${splitCount}${distance ? ` · ${distance}m` : ''}` : 'Swimming';
     return { state: 'swim', status, blocked: false, progress: 0 };
   }
-  return { state: 'ready', status: 'Klaar', blocked: false, progress: 0 };
+  return { state: 'ready', status: 'Ready', blocked: false, progress: 0 };
 }

@@ -30,7 +30,7 @@ export function entryToLane(entry) {
   if (athletes.length > 1) {
     return {
       lane: entry.lane,
-      name: `${entry.club} (estafette)`,
+      name: `${entry.club} (relay)`,
       club: athletes.map((athlete) => athlete.lastname).join(' / '),
       entrytime: entry.entrytime ?? '',
     };
@@ -76,12 +76,12 @@ function renderNextHeat(next, lanes) {
   if (!list) return;
   list.replaceChildren();
   if (!next || !lanes || lanes.length === 0) {
-    if (title) title.textContent = 'Volgende heat';
+    if (title) title.textContent = 'Next heat';
     if (empty) empty.classList.remove('hidden');
     return;
   }
   if (title) {
-    title.textContent = `Volgende heat · event ${next.event} · heat ${next.heat} · ${formatEventTitle(next.eventData)}`;
+    title.textContent = `Next heat · event ${next.event} · heat ${next.heat} · ${formatEventTitle(next.eventData)}`;
   }
   if (empty) empty.classList.add('hidden');
   lanes.forEach((lane) => {

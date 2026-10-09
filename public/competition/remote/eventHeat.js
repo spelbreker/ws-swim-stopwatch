@@ -104,7 +104,7 @@ export async function updateEventHeatInfoBar(eventNr, heatNr, session) {
     infoBar.textContent = formatEventTitle(eventData);
     if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr} / ${maxHeatNr}`;
   } catch {
-    infoBar.textContent = 'Onbekend event/heat';
+    infoBar.textContent = 'Unknown event/heat';
     if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr}`;
   }
 }

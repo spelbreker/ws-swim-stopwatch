@@ -14,8 +14,8 @@ const KIND_CLASSES = {
   SPLIT: 'bg-aqua',
   TIMEOUT: 'bg-amber-deck',
   HEAT: 'bg-violet-300',
-  APPARAAT: 'bg-pool-300',
-  SYSTEEM: 'bg-pool-300',
+  DEVICE: 'bg-pool-300',
+  SYSTEM: 'bg-pool-300',
 };
 
 let listElement = null;
@@ -34,7 +34,7 @@ function updateSummary() {
  * @returns {string}
  */
 export function formatLogTime(timestamp) {
-  return new Date(timestamp).toLocaleTimeString('nl-NL', {
+  return new Date(timestamp).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',

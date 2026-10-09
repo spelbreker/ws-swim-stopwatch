@@ -66,9 +66,9 @@ function disableControls(disable, elements) {
 /** Log line for a tap on a lane that is blocked (timeout or finished). */
 function describeBlockedTap(lane, view) {
   if (view.state === 'timeout') {
-    return `Baan ${lane}: split genegeerd, timeout nog ${(view.remainingMs / 1000).toFixed(1)}s`;
+    return `Lane ${lane}: split ignored, timeout ${(view.remainingMs / 1000).toFixed(1)}s`;
   }
-  return `Baan ${lane}: split genegeerd, al gefinisht`;
+  return `Lane ${lane}: split ignored, already finished`;
 }
 
 function getServerTimeOffset() {
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (liveBadge) liveBadge.classList.toggle('hidden', !isRunning);
     if (!startButton) return;
     if (isRunning) {
-      startButton.textContent = 'Stop en reset';
+      startButton.textContent = 'Stop and reset';
       startButton.classList.remove('bg-emerald-400', 'text-emerald-950', 'hover:bg-emerald-300');
       startButton.classList.add('bg-red-400', 'text-red-950', 'hover:bg-red-300');
       disableControls(true, controlElements);
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onSocketEvent((event, socket, message) => {
     if (event === 'open') {
       stopPingSync();
-      addLogEntry('SYSTEEM', 'Verbonden met server');
+      addLogEntry('SYSTEM', 'Connected to server');
 
       // Start initial fast sync sequence
       let pingCount = 0;
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (event === 'close') {
       stopPingSync();
-      addLogEntry('SYSTEEM', 'Verbinding verbroken');
+      addLogEntry('SYSTEM', 'Connection lost');
       return;
     }
 
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startRace(message.timestamp);
       loadSplitCooldown();
       updateStartButtonUI(true);
-      addLogEntry('START', `Start voor event ${eventSelect.value}, heat ${heatSelect.value}`);
+      addLogEntry('START', `Start for event ${eventSelect.value}, heat ${heatSelect.value}`);
       return;
     }
 
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (message.type === 'reset') {
       resetStopwatch(false);
       cancelAllHighlightTimers();
-      addLogEntry('START', 'Stopwatch gestopt en gereset');
+      addLogEntry('START', 'Stopwatch stopped and reset');
       return;
     }
 
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const swimmer = info.name ? ` · ${info.name}` : '';
         const distance = message.distance ? ` · ${message.distance}m` : '';
         const finish = info.isFinish ? ' · finish' : '';
-        addLogEntry('SPLIT', `Baan ${info.lane}${swimmer} · ${info.time}${distance}${finish}`);
+        addLogEntry('SPLIT', `Lane ${info.lane}${swimmer} · ${info.time}${distance}${finish}`);
       }
       return;
     }
@@ -308,21 +308,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (heatSelect) heatSelect.value = message.heat;
       cancelAllHighlightTimers();
       updateEventHeatInfoBar(message.event, message.heat, message.session ?? getCurrentSession());
-      addLogEntry('HEAT', `Event ${message.event}, heat ${message.heat} geselecteerd`);
+      addLogEntry('HEAT', `Event ${message.event}, heat ${message.heat} selected`);
       return;
     }
 
     /** Clear all lane information */
     if (message.type === 'clear') {
       clearLaneInformation();
-      addLogEntry('SYSTEEM', 'Scherm gewist');
+      addLogEntry('SYSTEM', 'Screen cleared');
       return;
     }
 
     /** A device (starter or lane unit) connected */
     if (message.type === 'device_register') {
-      const who = message.role === 'lane' ? `Baanapparaat ${message.lane ?? '?'}` : 'Starter';
-      addLogEntry('APPARAAT', `${who} verbonden`);
+      const who = message.role === 'lane' ? `Lane device ${message.lane ?? '?'}` : 'Starter';
+      addLogEntry('DEVICE', `${who} connected`);
       return;
     }
 

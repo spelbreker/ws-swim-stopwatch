@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" class="dark">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -28,17 +28,17 @@
         <section class="mx-auto flex w-full max-w-7xl flex-none items-center justify-between gap-3 px-4 py-2.5 lg:py-3">
             <div class="min-w-0">
                 <div id="heat-kicker" class="text-xs font-semibold tracking-[0.12em] text-aqua">EVENT - · HEAT -</div>
-                <div id="event-heat-info-bar" class="truncate text-xl leading-tight font-bold lg:text-2xl">Selecteer event en heat</div>
+                <div id="event-heat-info-bar" class="truncate text-xl leading-tight font-bold lg:text-2xl">Select event and heat</div>
             </div>
             <div class="flex-none text-right text-sm leading-tight text-pool-300">
-                <div id="session-label" class="font-semibold text-slate-100">Sessie 1</div>
+                <div id="session-label" class="font-semibold text-slate-100">Session 1</div>
             </div>
         </section>
 
         <!-- Tabs (small screens); from lg all panels are shown side by side -->
-        <nav id="remote-tabs" class="mx-auto flex w-full max-w-7xl flex-none gap-1.5 px-3 pb-2.5 lg:hidden" role="tablist" aria-label="Weergave">
-            <button type="button" role="tab" class="remote-tab" data-tab-target="lanes" aria-selected="true">Banen</button>
-            <button type="button" role="tab" class="remote-tab" data-tab-target="next" aria-selected="false">Volgende</button>
+        <nav id="remote-tabs" class="mx-auto flex w-full max-w-7xl flex-none gap-1.5 px-3 pb-2.5 lg:hidden" role="tablist" aria-label="View">
+            <button type="button" role="tab" class="remote-tab" data-tab-target="lanes" aria-selected="true">Lanes</button>
+            <button type="button" role="tab" class="remote-tab" data-tab-target="next" aria-selected="false">Next</button>
             <button type="button" role="tab" class="remote-tab" data-tab-target="log" aria-selected="false">Log
                 <span id="log-count" class="rounded-full bg-black/25 px-1.5 font-mono text-[0.6875rem]">0</span>
             </button>
@@ -48,16 +48,16 @@
         <main class="min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
           <div class="mx-auto max-w-7xl gap-4 px-3 pb-3 lg:grid lg:h-full lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:px-4">
             <!-- Lanes -->
-            <section data-tab-panel="lanes" class="flex flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Banen">
-                <div class="remote-panel-title hidden lg:block">Banen</div>
+            <section data-tab-panel="lanes" class="flex flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Lanes">
+                <div class="remote-panel-title hidden lg:block">Lanes</div>
                 <div id="lane-lock-notice" class="hidden items-center gap-2 px-1 pb-1 text-sm text-amber-deck">
                     <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-                    <span>Toetsen vergrendeld: tikken op banen doet niets</span>
+                    <span>Keys locked: tapping lanes does nothing</span>
                 </div>
-                <button type="button" class="lane-row" data-lane="0" data-state="ready" aria-label="Baan 0">
+                <button type="button" class="lane-row" data-lane="0" data-state="ready" aria-label="Lane 0">
                     <span class="lane-number">0</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 0</span>
+                        <span class="lane-name">Lane 0</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -66,10 +66,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="1" data-state="ready" aria-label="Baan 1">
+                <button type="button" class="lane-row" data-lane="1" data-state="ready" aria-label="Lane 1">
                     <span class="lane-number">1</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 1</span>
+                        <span class="lane-name">Lane 1</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -78,10 +78,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="2" data-state="ready" aria-label="Baan 2">
+                <button type="button" class="lane-row" data-lane="2" data-state="ready" aria-label="Lane 2">
                     <span class="lane-number">2</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 2</span>
+                        <span class="lane-name">Lane 2</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -90,10 +90,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="3" data-state="ready" aria-label="Baan 3">
+                <button type="button" class="lane-row" data-lane="3" data-state="ready" aria-label="Lane 3">
                     <span class="lane-number">3</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 3</span>
+                        <span class="lane-name">Lane 3</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -102,10 +102,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="4" data-state="ready" aria-label="Baan 4">
+                <button type="button" class="lane-row" data-lane="4" data-state="ready" aria-label="Lane 4">
                     <span class="lane-number">4</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 4</span>
+                        <span class="lane-name">Lane 4</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -114,10 +114,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="5" data-state="ready" aria-label="Baan 5">
+                <button type="button" class="lane-row" data-lane="5" data-state="ready" aria-label="Lane 5">
                     <span class="lane-number">5</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 5</span>
+                        <span class="lane-name">Lane 5</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -126,10 +126,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="6" data-state="ready" aria-label="Baan 6">
+                <button type="button" class="lane-row" data-lane="6" data-state="ready" aria-label="Lane 6">
                     <span class="lane-number">6</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 6</span>
+                        <span class="lane-name">Lane 6</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -138,10 +138,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="7" data-state="ready" aria-label="Baan 7">
+                <button type="button" class="lane-row" data-lane="7" data-state="ready" aria-label="Lane 7">
                     <span class="lane-number">7</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 7</span>
+                        <span class="lane-name">Lane 7</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -150,10 +150,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="8" data-state="ready" aria-label="Baan 8">
+                <button type="button" class="lane-row" data-lane="8" data-state="ready" aria-label="Lane 8">
                     <span class="lane-number">8</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 8</span>
+                        <span class="lane-name">Lane 8</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -162,10 +162,10 @@
                     </span>
                     <span class="lane-progress"></span>
                 </button>
-                <button type="button" class="lane-row" data-lane="9" data-state="ready" aria-label="Baan 9">
+                <button type="button" class="lane-row" data-lane="9" data-state="ready" aria-label="Lane 9">
                     <span class="lane-number">9</span>
                     <span class="min-w-0">
-                        <span class="lane-name">Baan 9</span>
+                        <span class="lane-name">Lane 9</span>
                         <span class="lane-club"></span>
                     </span>
                     <span class="text-right">
@@ -177,12 +177,12 @@
             </section>
 
             <!-- Next heat and next session -->
-            <section data-tab-panel="next" class="hidden flex-col gap-3 lg:flex lg:overflow-y-auto" aria-label="Volgende">
+            <section data-tab-panel="next" class="hidden flex-col gap-3 lg:flex lg:overflow-y-auto" aria-label="Next">
                 <div>
-                    <div id="next-heat-title" class="remote-panel-title">Volgende heat</div>
+                    <div id="next-heat-title" class="remote-panel-title">Next heat</div>
                     <div class="remote-card px-3 py-1">
                         <ul id="next-heat-list" class="divide-y divide-pool-700"></ul>
-                        <p id="next-heat-empty" class="py-3 text-sm text-pool-300">Geen volgende heat gevonden.</p>
+                        <p id="next-heat-empty" class="py-3 text-sm text-pool-300">No next heat found.</p>
                     </div>
                 </div>
             </section>
@@ -191,10 +191,10 @@
             <section data-tab-panel="log" class="hidden flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Live log">
                 <div class="flex items-center justify-between">
                     <div class="remote-panel-title">Live log</div>
-                    <button type="button" id="log-clear" class="px-1 pb-1 text-xs font-semibold text-pool-300 hover:text-slate-100">Leegmaken</button>
+                    <button type="button" id="log-clear" class="px-1 pb-1 text-xs font-semibold text-pool-300 hover:text-slate-100">Clear</button>
                 </div>
                 <div class="remote-card px-3 py-0.5">
-                    <p id="log-empty" class="py-3 text-sm text-pool-300">Wachten op activiteit...</p>
+                    <p id="log-empty" class="py-3 text-sm text-pool-300">Waiting for activity...</p>
                     <ul id="log-list" class="divide-y divide-pool-700" aria-live="polite"></ul>
                 </div>
             </section>
@@ -206,48 +206,48 @@
             <div class="mx-auto flex max-w-7xl flex-col gap-2 px-3 pt-2.5 pb-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3 lg:px-4">
                 <div id="keypad" class="hidden lg:w-full">
                     <div class="grid grid-cols-3 gap-1.5 lg:mx-auto lg:max-w-2xl lg:grid-cols-10">
-                    <button type="button" class="lane-button lg:order-7" data-lane="7" aria-label="Baan 7">7</button>
-                    <button type="button" class="lane-button lg:order-8" data-lane="8" aria-label="Baan 8">8</button>
-                    <button type="button" class="lane-button lg:order-9" data-lane="9" aria-label="Baan 9">9</button>
-                    <button type="button" class="lane-button lg:order-4" data-lane="4" aria-label="Baan 4">4</button>
-                    <button type="button" class="lane-button lg:order-5" data-lane="5" aria-label="Baan 5">5</button>
-                    <button type="button" class="lane-button lg:order-6" data-lane="6" aria-label="Baan 6">6</button>
-                    <button type="button" class="lane-button lg:order-1" data-lane="1" aria-label="Baan 1">1</button>
-                    <button type="button" class="lane-button lg:order-2" data-lane="2" aria-label="Baan 2">2</button>
-                    <button type="button" class="lane-button lg:order-3" data-lane="3" aria-label="Baan 3">3</button>
-                    <button type="button" class="lane-button col-span-3 lg:col-span-1 lg:order-0" data-lane="0" aria-label="Baan 0">0</button>
+                    <button type="button" class="lane-button lg:order-7" data-lane="7" aria-label="Lane 7">7</button>
+                    <button type="button" class="lane-button lg:order-8" data-lane="8" aria-label="Lane 8">8</button>
+                    <button type="button" class="lane-button lg:order-9" data-lane="9" aria-label="Lane 9">9</button>
+                    <button type="button" class="lane-button lg:order-4" data-lane="4" aria-label="Lane 4">4</button>
+                    <button type="button" class="lane-button lg:order-5" data-lane="5" aria-label="Lane 5">5</button>
+                    <button type="button" class="lane-button lg:order-6" data-lane="6" aria-label="Lane 6">6</button>
+                    <button type="button" class="lane-button lg:order-1" data-lane="1" aria-label="Lane 1">1</button>
+                    <button type="button" class="lane-button lg:order-2" data-lane="2" aria-label="Lane 2">2</button>
+                    <button type="button" class="lane-button lg:order-3" data-lane="3" aria-label="Lane 3">3</button>
+                    <button type="button" class="lane-button col-span-3 lg:col-span-1 lg:order-0" data-lane="0" aria-label="Lane 0">0</button>
                     </div>
                 </div>
 
                 <div class="flex gap-2 lg:min-w-0 lg:flex-1">
                     <div class="remote-stepper" role="group" aria-label="Event">
-                        <button type="button" id="decrement-event" aria-label="Vorig event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                        <button type="button" id="decrement-event" aria-label="Previous event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
                         <div class="flex-1 text-center leading-none">
                             <label for="event-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">EVENT</label>
                             <select id="event-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
                         </div>
-                        <button type="button" id="increment-event" aria-label="Volgend event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                        <button type="button" id="increment-event" aria-label="Next event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
                     </div>
                     <div class="remote-stepper" role="group" aria-label="Heat">
-                        <button type="button" id="decrement-heat" aria-label="Vorige heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                        <button type="button" id="decrement-heat" aria-label="Previous heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
                         <div class="flex-1 text-center leading-none">
                             <label for="heat-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">HEAT</label>
                             <select id="heat-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
                         </div>
-                        <button type="button" id="increment-heat" aria-label="Volgende heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                        <button type="button" id="increment-heat" aria-label="Next heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
                     </div>
-                    <button type="button" id="session-menu-button" class="h-12 w-16 flex-none rounded-xl border border-pool-600 bg-pool-950 leading-none" aria-label="Kies sessie">
-                        <span class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">SESSIE</span>
+                    <button type="button" id="session-menu-button" class="h-12 w-16 flex-none rounded-xl border border-pool-600 bg-pool-950 leading-none" aria-label="Select session">
+                        <span class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">SESSION</span>
                         <span id="session-indicator" class="block font-mono text-lg font-bold">1</span>
                     </button>
                 </div>
 
                 <div class="flex items-stretch gap-2 lg:h-12 lg:min-w-0 lg:flex-1">
-                    <button type="button" id="clear-screen" class="h-10 w-16 flex-none lg:h-auto rounded-xl border border-[#6f5018] text-sm font-bold text-amber-deck hover:bg-[#2b2110]">Wis</button>
-                    <div id="keys-mode" class="flex flex-1 gap-0.5 rounded-xl border border-pool-600 bg-pool-950 p-[3px]" role="group" aria-label="Baan-toetsen">
-                        <button type="button" class="keys-mode-button" data-keys-mode="hidden" aria-pressed="true">Verborgen</button>
-                        <button type="button" class="keys-mode-button" data-keys-mode="shown" aria-pressed="false">Toetsen</button>
-                        <button type="button" class="keys-mode-button" data-keys-mode="locked" aria-pressed="false">Vergrendeld</button>
+                    <button type="button" id="clear-screen" class="h-10 w-16 flex-none lg:h-auto rounded-xl border border-[#6f5018] text-sm font-bold text-amber-deck hover:bg-[#2b2110]">Clear</button>
+                    <div id="keys-mode" class="flex flex-1 gap-0.5 rounded-xl border border-pool-600 bg-pool-950 p-[3px]" role="group" aria-label="Lane keys">
+                        <button type="button" class="keys-mode-button" data-keys-mode="hidden" aria-pressed="true">Hidden</button>
+                        <button type="button" class="keys-mode-button" data-keys-mode="shown" aria-pressed="false">Keys</button>
+                        <button type="button" class="keys-mode-button" data-keys-mode="locked" aria-pressed="false">Locked</button>
                     </div>
                 </div>
 
@@ -263,13 +263,13 @@
     <div id="session-dialog" class="fixed inset-0 z-50 hidden h-full w-full overflow-y-auto bg-black/60">
         <div class="relative top-20 mx-auto w-96 max-w-[92vw] rounded-xl border border-pool-600 bg-pool-800 p-5 shadow-lg">
             <div class="text-center">
-                <h3 class="text-lg font-bold">Kies sessie</h3>
+                <h3 class="text-lg font-bold">Select session</h3>
                 <div class="mt-4 max-h-64 overflow-y-auto">
                     <ul id="session-list" class="space-y-2"></ul>
                 </div>
                 <div class="pt-4">
                     <button id="close-session-dialog" class="w-full rounded-xl bg-pool-600 px-4 py-2 text-base font-bold hover:bg-pool-400">
-                        Annuleren
+                        Cancel
                     </button>
                 </div>
             </div>

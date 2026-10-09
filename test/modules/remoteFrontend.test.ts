@@ -151,7 +151,7 @@ describe('competition remote lifecycle', () => {
     expect(remote.lastRowState()).toBe('timeout');
     remote.clickRow();
     expect(remote.send).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'split' }));
-    expect(remote.addLogEntry).toHaveBeenCalledWith('TIMEOUT', expect.stringContaining('split genegeerd'));
+    expect(remote.addLogEntry).toHaveBeenCalledWith('TIMEOUT', expect.stringContaining('split ignored'));
   });
 
   it('sends a split when a free lane row is tapped', () => {
@@ -175,7 +175,7 @@ describe('competition remote lifecycle', () => {
     remote.emit('message', { type: 'start', timestamp: Date.now() - 60_000 });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), splitNumber: 2, isFinish: true, ranking: [{ lane: 1, place: 1, splitNumber: 2 }] });
     expect(remote.lastRowState()).toBe('finished');
-    expect(remote.laneStatus.textContent).toBe('Finish · 1e');
+    expect(remote.laneStatus.textContent).toBe('Finish · #1');
     jest.advanceTimersByTime(60_000);
     expect(remote.lastRowState()).toBe('finished');
   });
@@ -208,9 +208,9 @@ describe('competition remote lifecycle', () => {
     remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
     remote.emit('message', { type: 'start', timestamp: Date.now() });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() + 30_000 });
-    expect(remote.addLogEntry).toHaveBeenCalledWith('HEAT', 'Event 3, heat 4 geselecteerd');
-    expect(remote.addLogEntry).toHaveBeenCalledWith('START', expect.stringContaining('Start voor event'));
-    expect(remote.addLogEntry).toHaveBeenCalledWith('SPLIT', expect.stringContaining('Baan 1'));
+    expect(remote.addLogEntry).toHaveBeenCalledWith('HEAT', 'Event 3, heat 4 selected');
+    expect(remote.addLogEntry).toHaveBeenCalledWith('START', expect.stringContaining('Start for event'));
+    expect(remote.addLogEntry).toHaveBeenCalledWith('SPLIT', expect.stringContaining('Lane 1'));
   });
 
   it('preserves the selection and info bar across repeated reconnects', async () => {

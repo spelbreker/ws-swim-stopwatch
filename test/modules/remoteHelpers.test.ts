@@ -50,17 +50,17 @@ describe('laneState', () => {
     expect(describeLane({ ...base, splitCount: 2, distance: 100 })).toMatchObject({
       state: 'swim', status: 'Split 2 · 100m', blocked: false,
     });
-    expect(describeLane(base)).toMatchObject({ state: 'swim', status: 'Zwemt' });
+    expect(describeLane(base)).toMatchObject({ state: 'swim', status: 'Swimming' });
   });
 
   it('describes a finished lane with its place', () => {
     expect(describeLane({ ...base, finished: true, place: 2, remainingMs: Infinity })).toMatchObject({
-      state: 'finished', status: 'Finish · 2e', blocked: true,
+      state: 'finished', status: 'Finish · #2', blocked: true,
     });
   });
 
   it('describes an idle lane as ready', () => {
-    expect(describeLane({ ...base, running: false })).toMatchObject({ state: 'ready', status: 'Klaar', blocked: false });
+    expect(describeLane({ ...base, running: false })).toMatchObject({ state: 'ready', status: 'Ready', blocked: false });
   });
 });
 
@@ -71,16 +71,16 @@ describe('formatEventTitle', () => {
 
   it('formats an individual event', () => {
     expect(formatEventTitle({ swimstyle: { distance: 100, relaycount: 1, stroke: 'BREAST' }, gender: 'M' }))
-      .toBe('100m Schoolslag Heren');
+      .toBe('100m Breaststroke Men');
   });
 
   it('formats a relay event', () => {
     expect(formatEventTitle({ swimstyle: { distance: 50, relaycount: 4, stroke: 'MEDLEY' }, gender: 'F' }))
-      .toBe('4x50m Wisselslag Dames');
+      .toBe('4x50m Medley Women');
   });
 
   it('leaves out an unknown gender', () => {
-    expect(formatEventTitle({ swimstyle: { distance: 50, relaycount: 1, stroke: 'FREE' } })).toBe('50m Vrijeslag');
+    expect(formatEventTitle({ swimstyle: { distance: 50, relaycount: 1, stroke: 'FREE' } })).toBe('50m Freestyle');
   });
 });
 
@@ -98,6 +98,6 @@ describe('entryToLane', () => {
   it('maps a relay entry to the club and its swimmers', () => {
     expect(entryToLane({
       lane: 2, club: 'De Dolfijn', athletes: [{ lastname: 'Bakker' }, { lastname: 'Kok' }],
-    })).toMatchObject({ lane: 2, name: 'De Dolfijn (estafette)', club: 'Bakker / Kok' });
+    })).toMatchObject({ lane: 2, name: 'De Dolfijn (relay)', club: 'Bakker / Kok' });
   });
 });

@@ -35,7 +35,7 @@ export function initSessionSelector({ onSessionChanged }) {
   function updateSessionIndicator() {
     if (!currentSession) return;
     if (sessionIndicator) sessionIndicator.textContent = String(currentSession);
-    if (sessionLabel) sessionLabel.textContent = `Sessie ${currentSession}`;
+    if (sessionLabel) sessionLabel.textContent = `Session ${currentSession}`;
   }
 
   async function loadSessions() {
@@ -58,7 +58,7 @@ export function initSessionSelector({ onSessionChanged }) {
         wrapper.className = 'text-left';
         const title = document.createElement('div');
         title.className = 'font-bold';
-        title.textContent = `Sessie ${session.number}`;
+        title.textContent = `Session ${session.number}`;
         const subtitle = document.createElement('div');
         subtitle.className = 'text-sm text-pool-300';
         subtitle.textContent = `${session.date}${sessionTime}`;

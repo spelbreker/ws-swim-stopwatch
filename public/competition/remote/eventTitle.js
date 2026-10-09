@@ -4,21 +4,21 @@
 //   formatEventTitle(eventData)
 
 const STROKES = {
-  FREE: 'Vrijeslag',
-  BACK: 'Rugslag',
-  MEDLEY: 'Wisselslag',
-  BREAST: 'Schoolslag',
-  FLY: 'Vlinderslag',
+  FREE: 'Freestyle',
+  BACK: 'Backstroke',
+  MEDLEY: 'Medley',
+  BREAST: 'Breaststroke',
+  FLY: 'Butterfly',
 };
 
 const GENDERS = {
-  M: 'Heren',
-  F: 'Dames',
-  X: 'Mix',
+  M: 'Men',
+  F: 'Women',
+  X: 'Mixed',
 };
 
 /**
- * Format an event as "100m Schoolslag Heren" (relay: "4x50m Wisselslag Dames").
+ * Format an event as "100m Breaststroke Men" (relay: "4x50m Medley Women").
  * @param {{ swimstyle?: object, gender?: string }} eventData
  * @returns {string}
  */

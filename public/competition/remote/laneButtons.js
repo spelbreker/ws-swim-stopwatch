@@ -85,9 +85,9 @@ function renderLane(lane) {
   row.dataset.locked = String(locked);
   row.dataset.unassigned = String(view.unassigned);
   row.setAttribute('aria-disabled', String(view.blocked || locked));
-  row.setAttribute('aria-label', `Baan ${lane}${view.swimmer ? `, ${view.swimmer.name}` : ''}, ${view.status}`);
+  row.setAttribute('aria-label', `Lane ${lane}${view.swimmer ? `, ${view.swimmer.name}` : ''}, ${view.status}`);
   if (els.name) {
-    els.name.textContent = view.unassigned ? 'Niet ingedeeld' : (view.swimmer?.name || `Baan ${lane}`);
+    els.name.textContent = view.unassigned ? 'Not assigned' : (view.swimmer?.name || `Lane ${lane}`);
   }
   if (els.club) els.club.textContent = view.swimmer?.club || '';
   if (els.time) els.time.textContent = view.split.time;
