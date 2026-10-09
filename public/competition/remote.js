@@ -36,6 +36,9 @@ import {
   setCurrentSession,
 } from './remote/sessionSelector.js';
 
+// Event/heat dropdown size when the competition cannot be read.
+const MAX_SELECT_FALLBACK = 25;
+
 // State
 let startTime = null;
 let stopwatchInterval = null;
@@ -112,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSessionSelector({
     onSessionChanged: (sessionNumber) => {
       // Refresh event list for the new session
-      fillSelectOptions(eventSelect, 25, sessionNumber);
+      fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, sessionNumber);
       setTimeout(() => {
         const firstEvent = eventSelect.options[0]?.value || 1;
         eventSelect.value = firstEvent;
@@ -124,8 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }).then(async () => {
     const session = getCurrentSession();
     await Promise.all([
-      fillSelectOptions(eventSelect, 25, session),
-      fillSelectOptions(heatSelect, 25, session),
+      fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, session),
+      fillSelectOptions(heatSelect, MAX_SELECT_FALLBACK, session),
     ]);
     updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
   });
@@ -184,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let selectionId = 0;
+  let pendingFill = null;
   // Show a selection made elsewhere (another remote or the starter): session,
   // event and heat selects, the heat card and the heat-dependent views.
   async function syncSelection(event, heat, session) {
@@ -192,7 +196,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sessionNumber && sessionNumber !== getCurrentSession()) {
       // The event list belongs to the session: load it before selecting the event.
       setCurrentSession(sessionNumber);
-      await fillSelectOptions(eventSelect, 25, sessionNumber);
+      const fill = fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, sessionNumber);
+      pendingFill = fill;
+      fill.finally(() => {
+        if (pendingFill === fill) pendingFill = null;
+      });
+    }
+    // Also wait when an earlier call is still loading this session's events.
+    if (pendingFill) {
+      await pendingFill;
       if (id !== selectionId) return;
     }
     if (eventSelect && event !== undefined) eventSelect.value = event;

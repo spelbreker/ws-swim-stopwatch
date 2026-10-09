@@ -222,10 +222,10 @@ export function resetRace() {
 
 // Race time of a split. Without a usable start time (page opened mid-race) fall back to elapsed_ms.
 function splitTime(message, startTime) {
-  if (!message.timestamp) return NO_TIME;
   const sinceStart = startTime ? message.timestamp - startTime : -1;
   if (sinceStart >= 0) return formatElapsed(sinceStart);
-  return typeof message.elapsed_ms === 'number' ? formatElapsed(message.elapsed_ms) : INVALID_TIME;
+  const elapsed = message.elapsed_ms;
+  return Number.isFinite(elapsed) && elapsed >= 0 ? formatElapsed(elapsed) : INVALID_TIME;
 }
 
 /**

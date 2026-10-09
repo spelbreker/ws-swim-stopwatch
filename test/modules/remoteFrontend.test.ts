@@ -245,6 +245,29 @@ describe('competition remote lifecycle', () => {
     expect(remote.updateEventHeatInfoBar).toHaveBeenCalledWith('7', '2', 2);
   });
 
+  it('waits for the pending event list before applying a second selection in the same session', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    remote.fillSelectOptions.mockImplementationOnce(async (select: { id: string; value: string }) => {
+      await gate;
+      select.value = 'first';
+    });
+    remote.fillSelectOptions.mockClear();
+    remote.emit('message', { type: 'event-heat', event: '7', heat: '1', session: 2 });
+    remote.emit('message', { type: 'event-heat', event: '8', heat: '2', session: 2 });
+    expect(remote.eventSelect.value).not.toBe('8');
+    release();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.eventSelect.value).toBe('8');
+    expect(remote.heatSelect.value).toBe('2');
+    expect(remote.fillSelectOptions).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a placeholder for a negative elapsed_ms when the start was missed', () => {
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), elapsed_ms: -500 });
+    expect(remote.laneTime.textContent).toBe('---:---:---');
+  });
+
   it('follows the event and heat of a start from another device', async () => {
     remote.updateEventHeatInfoBar.mockClear();
     remote.emit('message', { type: 'start', timestamp: Date.now(), event: 5, heat: 3 });
