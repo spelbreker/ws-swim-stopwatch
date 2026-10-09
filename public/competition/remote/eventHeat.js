@@ -7,9 +7,24 @@
 //   fillSelectOptions(selectElement, maxValue)
 //   sendEventAndHeat(event, heat, send, session)
 //   updateEventHeatInfoBar(eventNr, heatNr, session)
+//   onHeatDisplayed(listener)
+
+import { formatEventTitle } from './eventTitle.js';
 
 let eventSelect = null;
 let heatSelect = null;
+let heatDisplayedListener = null;
+let infoBarRequest = 0;
+let eventListRequest = 0;
+
+/**
+ * Register a listener that runs every time the info bar is refreshed for a heat
+ * (heat roster and next-heat views follow the selection through this).
+ * @param {function} listener - Called with (eventNr, heatNr, session)
+ */
+export function onHeatDisplayed(listener) {
+  heatDisplayedListener = listener;
+}
 
 /**
  * Populate the event select dropdown by fetching the event list from the server.
@@ -22,11 +37,14 @@ export async function fillSelectOptions(selectElement, maxValue, session) {
   if (!selectElement) return;
 
   if (selectElement.id === 'event-select') {
+    // Only the newest call may change the options: a slower response for an earlier session is dropped.
+    const requestId = ++eventListRequest;
     const sessionParam = session ? `?session=${session}` : '';
     try {
       const res = await fetch(`/competition/event${sessionParam}`);
       if (!res.ok) throw new Error('Failed to fetch event list');
       const events = await res.json();
+      if (requestId !== eventListRequest) return;
       selectElement.innerHTML = '';
       events.forEach((event) => {
         const option = document.createElement('option');
@@ -35,6 +53,7 @@ export async function fillSelectOptions(selectElement, maxValue, session) {
         selectElement.appendChild(option);
       });
     } catch {
+      if (requestId !== eventListRequest) return;
       selectElement.innerHTML = '';
       for (let i = 1; i <= maxValue; i++) {
         const option = document.createElement('option');
@@ -71,35 +90,32 @@ export function sendEventAndHeat(event, heat, send, session) {
 }
 
 /**
- * Update the event/heat info bar with formatted swim style info.
+ * Update the heat card with the event title and "EVENT n · HEAT x / y".
  * @param {number|string} eventNr
  * @param {number|string} heatNr
  * @param {number|null} session
  */
 export async function updateEventHeatInfoBar(eventNr, heatNr, session) {
+  if (heatDisplayedListener) heatDisplayedListener(eventNr, heatNr, session);
   const infoBar = document.getElementById('event-heat-info-bar');
+  const kicker = document.getElementById('heat-kicker');
   if (!infoBar) return;
+  // A slower response for an earlier selection must not overwrite the card.
+  const requestId = ++infoBarRequest;
 
   try {
     const sessionParam = session ? `?session=${session}` : '';
     const eventRes = await fetch(`/competition/event/${eventNr}${sessionParam}`);
     if (!eventRes.ok) throw new Error('Event fetch failed');
     const eventData = await eventRes.json();
+    if (requestId !== infoBarRequest) return;
     const maxHeatNr = eventData.heats.length;
-
-    const { distance, relaycount, stroke } = eventData.swimstyle || {};
-    const strokeTranslation = {
-      FREE: 'Vrijeslag',
-      BACK: 'Rugslag',
-      MEDLEY: 'Wisselslag',
-      BREAST: 'Schoolslag',
-      FLY: 'Vlinderslag',
-    };
-    const translatedStroke = strokeTranslation[stroke] || stroke || '';
-    const length = relaycount > 1 ? `${relaycount}x${distance}` : `${distance}`;
-    infoBar.textContent = `${eventNr} - ${length}m ${translatedStroke} - serie ${heatNr}/${maxHeatNr}`;
+    infoBar.textContent = formatEventTitle(eventData);
+    if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr} / ${maxHeatNr}`;
   } catch {
-    infoBar.textContent = 'Onbekend event/serie';
+    if (requestId !== infoBarRequest) return;
+    infoBar.textContent = 'Unknown event/heat';
+    if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr}`;
   }
 }
 
@@ -114,6 +130,27 @@ export function initEventHeat({ send, getCurrentSession }) {
   heatSelect = document.getElementById('heat-select');
   const incrementEventButton = document.getElementById('increment-event');
   const incrementHeatButton = document.getElementById('increment-heat');
+  const decrementEventButton = document.getElementById('decrement-event');
+  const decrementHeatButton = document.getElementById('decrement-heat');
+
+  function decrementEvent() {
+    const currentIndex = eventSelect.selectedIndex;
+    if (currentIndex > 0) {
+      eventSelect.selectedIndex = currentIndex - 1;
+      heatSelect.value = 1;
+      sendEventAndHeat(eventSelect.value, 1, send, getCurrentSession());
+      updateEventHeatInfoBar(eventSelect.value, 1, getCurrentSession());
+    }
+  }
+
+  function decrementHeat() {
+    const currentHeat = parseInt(heatSelect.value, 10);
+    if (currentHeat > 1) {
+      heatSelect.value = currentHeat - 1;
+      sendEventAndHeat(parseInt(eventSelect.value, 10), currentHeat - 1, send, getCurrentSession());
+      updateEventHeatInfoBar(eventSelect.value, currentHeat - 1, getCurrentSession());
+    }
+  }
 
   function incrementEvent() {
     const options = eventSelect.options;
@@ -137,6 +174,8 @@ export function initEventHeat({ send, getCurrentSession }) {
 
   if (incrementEventButton) incrementEventButton.addEventListener('click', incrementEvent);
   if (incrementHeatButton) incrementHeatButton.addEventListener('click', incrementHeat);
+  if (decrementEventButton) decrementEventButton.addEventListener('click', decrementEvent);
+  if (decrementHeatButton) decrementHeatButton.addEventListener('click', decrementHeat);
 
   if (eventSelect) {
     eventSelect.addEventListener('change', () => {
@@ -153,5 +192,7 @@ export function initEventHeat({ send, getCurrentSession }) {
     });
   }
 
-  return { eventSelect, heatSelect, incrementEvent, incrementHeat };
+  return {
+    eventSelect, heatSelect, incrementEvent, incrementHeat, decrementEvent, decrementHeat,
+  };
 }

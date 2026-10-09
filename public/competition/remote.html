@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -8,182 +8,264 @@
     <link href="/css/output.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 font-sans">
-    <!-- Fixed Header -->
-    <header class="bg-cyan-500 dark:bg-cyan-600 text-white shadow-lg text-center p-4 fixed top-0 w-full z-20">
-        <div class="container mx-auto flex justify-between items-center">
-            <div><span id="stopwatch" class="text-2xl font-mono">00:00:00</span></div>
-            <div class="flex items-center">
-                <div id="connection-indicator" class="w-4 h-4 rounded-full bg-red-500"></div>
-                <div id="ping-display" class="ml-2 text-sm">-- ms</div>
+<body class="bg-pool-950 font-sans text-slate-100">
+    <div class="flex h-dvh flex-col">
+        <!-- Header -->
+        <header class="flex-none border-b border-pool-600 bg-pool-900">
+          <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+            <div class="flex items-baseline gap-2.5">
+                <span id="stopwatch" class="font-mono text-2xl font-bold tracking-wide">00:00:00</span>
+                <span id="live-badge" class="hidden rounded bg-emerald-400 px-1.5 py-0.5 text-xs font-bold tracking-widest text-emerald-950">LIVE</span>
             </div>
-        </div>
-    </header>
-
-    <!-- Main scrollable content -->
-    <main class="pt-18 pb-[460px]"> <!-- Padding top for header, padding bottom for fixed footer -->
-        <div id="event-heat-info-bar"
-            class="text-center p-2 bg-white dark:bg-gray-800 dark:text-gray-200 shadow-md mb-4 sticky top-16 z-10">
-            Select Event and Heat
-        </div>
-
-        <!-- Lane Info Section -->
-        <section class="lane-info container mx-auto flex flex-row gap-4 px-2">
-            <!-- Left column: lanes 0-4 -->
-            <div class="flex flex-col flex-1 gap-1">
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 0:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="0">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 1:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="1">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 2:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="2">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 3:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="3">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 4:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="4">---:---:---</span>
-                </div>
+            <div class="flex items-center gap-2 text-sm text-pool-300">
+                <div id="connection-indicator" class="size-2.5 rounded-full bg-red-500"></div>
+                <div id="ping-display" class="font-mono text-xs">-- ms</div>
             </div>
-            <!-- Right column: lanes 5-9 -->
-            <div class="flex flex-col flex-1 gap-1">
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 5:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="5">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 6:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="6">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 7:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="7">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 8:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="8">---:---:---</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow flex justify-between items-center">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">Lane 9:</span>
-                    <span class="lane-time font-mono text-lg text-gray-900 dark:text-gray-100"
-                        data-lane="9">---:---:---</span>
-                </div>
+          </div>
+        </header>
+
+        <!-- Heat card -->
+        <section class="mx-auto flex w-full max-w-7xl flex-none items-center justify-between gap-3 px-4 py-2.5 lg:py-3">
+            <div class="min-w-0">
+                <div id="heat-kicker" class="text-xs font-semibold tracking-[0.12em] text-aqua">EVENT - · HEAT -</div>
+                <div id="event-heat-info-bar" class="truncate text-xl leading-tight font-bold lg:text-2xl">Select event and heat</div>
+            </div>
+            <div class="flex-none text-right text-sm leading-tight text-pool-300">
+                <div id="session-label" class="font-semibold text-slate-100">Session 1</div>
             </div>
         </section>
-    </main>
 
-    <!-- Fixed Bottom Controls -->
-    <footer
-        class="fixed bottom-0 w-full bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 z-20">
-        <div class="container mx-auto max-w-2xl">
-            <!-- Controls Section -->
-            <section class="controls p-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <div class="flex gap-4">
-                    <div class="flex flex-col items-center">
-                        <label for="event-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event</label>
-                        <select id="event-select"
-                            class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <label for="heat-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Heat</label>
-                        <select id="heat-select"
-                            class="bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <button id="session-menu-button" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors" title="Select Session">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                            </svg>
-                        </button>
-                        <span id="session-indicator" class="text-xs text-gray-500 dark:text-gray-400">Session 1</span>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button id="increment-event"
-                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md transition-colors">
-                        +1 Event
-                    </button>
-                    <button id="clear-screen"
-                        class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition-colors">
-                        Clear
-                    </button>
-                    <button id="increment-heat"
-                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md transition-colors">
-                        +1 Heat
-                    </button>
-                </div>
-            </section>
-
-            <!-- Grid Buttons Section -->
-            <section class="grid grid-cols-3 gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700">
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="7">7</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="8">8</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="9">9</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="4">4</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="5">5</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="6">6</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="1">1</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="2">2</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-md transition-colors"
-                    data-lane="3">3</button>
-                <button
-                    class="lane-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 col-span-3 rounded-md transition-colors"
-                    data-lane="0">0</button>
-            </section>
-
-            <!-- Start Button -->
-            <button id="start-button"
-                class="w-full font-bold py-4 text-xl transition-colors duration-200 bg-green-600 hover:bg-green-700 text-white">
-                Start Stopwatch
+        <!-- Tabs (small screens); from lg all panels are shown side by side -->
+        <nav id="remote-tabs" class="mx-auto flex w-full max-w-7xl flex-none gap-1.5 px-3 pb-2.5 lg:hidden" role="tablist" aria-label="View">
+            <button type="button" role="tab" class="remote-tab" data-tab-target="lanes" aria-selected="true">Lanes</button>
+            <button type="button" role="tab" class="remote-tab" data-tab-target="next" aria-selected="false">Next</button>
+            <button type="button" role="tab" class="remote-tab" data-tab-target="log" aria-selected="false">Log
+                <span id="log-count" class="rounded-full bg-black/25 px-1.5 font-mono text-[0.6875rem]">0</span>
             </button>
-        </div>
-    </footer>
+        </nav>
+
+        <!-- Panels -->
+        <main class="min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
+          <div class="mx-auto max-w-7xl gap-4 px-3 pb-3 lg:grid lg:h-full lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:px-4">
+            <!-- Lanes -->
+            <section data-tab-panel="lanes" class="flex flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Lanes">
+                <div class="remote-panel-title hidden lg:block">Lanes</div>
+                <div id="lane-lock-notice" class="hidden items-center gap-2 px-1 pb-1 text-sm text-amber-deck">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                    <span>Keys locked: tapping lanes does nothing</span>
+                </div>
+                <button type="button" class="lane-row" data-lane="0" data-state="ready" aria-label="Lane 0">
+                    <span class="lane-number">0</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 0</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="0">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="1" data-state="ready" aria-label="Lane 1">
+                    <span class="lane-number">1</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 1</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="1">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="2" data-state="ready" aria-label="Lane 2">
+                    <span class="lane-number">2</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 2</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="2">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="3" data-state="ready" aria-label="Lane 3">
+                    <span class="lane-number">3</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 3</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="3">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="4" data-state="ready" aria-label="Lane 4">
+                    <span class="lane-number">4</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 4</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="4">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="5" data-state="ready" aria-label="Lane 5">
+                    <span class="lane-number">5</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 5</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="5">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="6" data-state="ready" aria-label="Lane 6">
+                    <span class="lane-number">6</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 6</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="6">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="7" data-state="ready" aria-label="Lane 7">
+                    <span class="lane-number">7</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 7</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="7">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="8" data-state="ready" aria-label="Lane 8">
+                    <span class="lane-number">8</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 8</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="8">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+                <button type="button" class="lane-row" data-lane="9" data-state="ready" aria-label="Lane 9">
+                    <span class="lane-number">9</span>
+                    <span class="min-w-0">
+                        <span class="lane-name">Lane 9</span>
+                        <span class="lane-club"></span>
+                    </span>
+                    <span class="text-right">
+                        <span class="lane-time" data-lane="9">--:--:--</span>
+                        <span class="lane-status"></span>
+                    </span>
+                    <span class="lane-progress"></span>
+                </button>
+            </section>
+
+            <!-- Next heat and next session -->
+            <section data-tab-panel="next" class="hidden flex-col gap-3 lg:flex lg:overflow-y-auto" aria-label="Next">
+                <div>
+                    <div id="next-heat-title" class="remote-panel-title">Next heat</div>
+                    <div class="remote-card px-3 py-1">
+                        <ul id="next-heat-list" class="divide-y divide-pool-700"></ul>
+                        <p id="next-heat-empty" class="py-3 text-sm text-pool-300">No next heat found.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live log -->
+            <section data-tab-panel="log" class="hidden flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Live log">
+                <div class="remote-panel-title">Live log</div>
+                <div class="remote-card px-3 py-0.5">
+                    <p id="log-empty" class="py-3 text-sm text-pool-300">No activity in the server log yet.</p>
+                    <ul id="log-list" class="divide-y divide-pool-700" aria-live="polite"></ul>
+                </div>
+            </section>
+          </div>
+        </main>
+
+        <!-- Dock: heat controls, keypad, start -->
+        <footer class="flex-none border-t border-pool-600 bg-pool-900">
+            <div class="mx-auto flex max-w-7xl flex-col gap-2 px-3 pt-2.5 pb-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3 lg:px-4">
+                <div id="keypad" class="hidden lg:w-full">
+                    <div class="grid grid-cols-3 gap-1.5 lg:mx-auto lg:max-w-2xl lg:grid-cols-10">
+                    <button type="button" class="lane-button lg:order-7" data-lane="7" aria-label="Lane 7">7</button>
+                    <button type="button" class="lane-button lg:order-8" data-lane="8" aria-label="Lane 8">8</button>
+                    <button type="button" class="lane-button lg:order-9" data-lane="9" aria-label="Lane 9">9</button>
+                    <button type="button" class="lane-button lg:order-4" data-lane="4" aria-label="Lane 4">4</button>
+                    <button type="button" class="lane-button lg:order-5" data-lane="5" aria-label="Lane 5">5</button>
+                    <button type="button" class="lane-button lg:order-6" data-lane="6" aria-label="Lane 6">6</button>
+                    <button type="button" class="lane-button lg:order-1" data-lane="1" aria-label="Lane 1">1</button>
+                    <button type="button" class="lane-button lg:order-2" data-lane="2" aria-label="Lane 2">2</button>
+                    <button type="button" class="lane-button lg:order-3" data-lane="3" aria-label="Lane 3">3</button>
+                    <button type="button" class="lane-button col-span-3 lg:col-span-1 lg:order-0" data-lane="0" aria-label="Lane 0">0</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 lg:min-w-0 lg:flex-1">
+                    <div class="remote-stepper" role="group" aria-label="Event">
+                        <button type="button" id="decrement-event" aria-label="Previous event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                        <div class="flex-1 text-center leading-none">
+                            <label for="event-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">EVENT</label>
+                            <select id="event-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
+                        </div>
+                        <button type="button" id="increment-event" aria-label="Next event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                    </div>
+                    <div class="remote-stepper" role="group" aria-label="Heat">
+                        <button type="button" id="decrement-heat" aria-label="Previous heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                        <div class="flex-1 text-center leading-none">
+                            <label for="heat-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">HEAT</label>
+                            <select id="heat-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
+                        </div>
+                        <button type="button" id="increment-heat" aria-label="Next heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                    </div>
+                    <button type="button" id="session-menu-button" class="h-12 w-16 flex-none rounded-xl border border-pool-600 bg-pool-950 leading-none" aria-label="Select session">
+                        <span class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">SESSION</span>
+                        <span id="session-indicator" class="block font-mono text-lg font-bold">1</span>
+                    </button>
+                </div>
+
+                <div class="flex items-stretch gap-2 lg:h-12 lg:min-w-0 lg:flex-1">
+                    <button type="button" id="clear-screen" class="h-10 w-16 flex-none lg:h-auto rounded-xl border border-[#6f5018] text-sm font-bold text-amber-deck hover:bg-[#2b2110]">Clear</button>
+                    <div id="keys-mode" class="flex flex-1 gap-0.5 rounded-xl border border-pool-600 bg-pool-950 p-[3px]" role="group" aria-label="Lane keys">
+                        <button type="button" class="keys-mode-button" data-keys-mode="hidden" aria-pressed="true">Hidden</button>
+                        <button type="button" class="keys-mode-button" data-keys-mode="shown" aria-pressed="false">Keys</button>
+                        <button type="button" class="keys-mode-button" data-keys-mode="locked" aria-pressed="false">Locked</button>
+                    </div>
+                </div>
+
+                <button type="button" id="start-button"
+                    class="h-13 rounded-xl bg-emerald-400 text-lg font-bold tracking-wide text-emerald-950 transition-colors hover:bg-emerald-300 lg:w-60 lg:flex-none">
+                    Start stopwatch
+                </button>
+            </div>
+        </footer>
+    </div>
 
     <!-- Session Selector Dialog -->
-    <div id="session-dialog" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Select Session</h3>
+    <div id="session-dialog" class="fixed inset-0 z-50 hidden h-full w-full overflow-y-auto bg-black/60">
+        <div class="relative top-20 mx-auto w-96 max-w-[92vw] rounded-xl border border-pool-600 bg-pool-800 p-5 shadow-lg">
+            <div class="text-center">
+                <h3 class="text-lg font-bold">Select session</h3>
                 <div class="mt-4 max-h-64 overflow-y-auto">
-                    <ul id="session-list" class="space-y-2">
-                        <!-- Sessions will be populated here -->
-                    </ul>
+                    <ul id="session-list" class="space-y-2"></ul>
                 </div>
-                <div class="items-center px-4 py-3">
-                    <button id="close-session-dialog" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                <div class="pt-4">
+                    <button id="close-session-dialog" class="w-full rounded-xl bg-pool-600 px-4 py-2 text-base font-bold hover:bg-pool-400">
                         Cancel
                     </button>
                 </div>

@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import Competition from '../../../modules/competition';
 
 export function getHeat(req: Request, res: Response) {
-  const eventNumber = parseInt(req.params.event, 10);
-  const heatNumber = parseInt(req.params.heat, 10);
+  const eventNumber = parseInt(String(req.params.event), 10);
+  const heatNumber = parseInt(String(req.params.heat), 10);
   const meetIndex = req.query.meet ? parseInt(req.query.meet as string, 10) : 0;
   const sessionNumber = req.query.session ? parseInt(req.query.session as string, 10) : undefined;
   if (!eventNumber || !heatNumber) {

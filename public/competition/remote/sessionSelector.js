@@ -14,9 +14,22 @@ export function getCurrentSession() {
   return currentSession;
 }
 
-/** @param {number} sessionNumber */
+function renderSession() {
+  if (!currentSession) return;
+  const sessionIndicator = document.getElementById('session-indicator');
+  const sessionLabel = document.getElementById('session-label');
+  if (sessionIndicator) sessionIndicator.textContent = String(currentSession);
+  if (sessionLabel) sessionLabel.textContent = `Session ${currentSession}`;
+}
+
+/**
+ * Switch the current session and its label without opening the dialog or
+ * calling onSessionChanged (used when another client changed the session).
+ * @param {number} sessionNumber
+ */
 export function setCurrentSession(sessionNumber) {
   currentSession = sessionNumber;
+  renderSession();
 }
 
 /**
@@ -29,13 +42,6 @@ export function initSessionSelector({ onSessionChanged }) {
   const sessionDialog = document.getElementById('session-dialog');
   const sessionList = document.getElementById('session-list');
   const closeSessionDialog = document.getElementById('close-session-dialog');
-  const sessionIndicator = document.getElementById('session-indicator');
-
-  function updateSessionIndicator() {
-    if (sessionIndicator && currentSession) {
-      sessionIndicator.textContent = `Session ${currentSession}`;
-    }
-  }
 
   async function loadSessions() {
     try {
@@ -47,7 +53,7 @@ export function initSessionSelector({ onSessionChanged }) {
       sessions.forEach((session) => {
         const listItem = document.createElement('li');
         listItem.className =
-          'cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors';
+          'cursor-pointer rounded-lg px-4 py-2 transition-colors hover:bg-pool-700';
 
         const sessionTime = session.daytime ? ` ${session.daytime}` : '';
 
@@ -56,10 +62,10 @@ export function initSessionSelector({ onSessionChanged }) {
         const wrapper = document.createElement('div');
         wrapper.className = 'text-left';
         const title = document.createElement('div');
-        title.className = 'font-medium text-gray-900 dark:text-gray-100';
+        title.className = 'font-bold';
         title.textContent = `Session ${session.number}`;
         const subtitle = document.createElement('div');
-        subtitle.className = 'text-sm text-gray-500 dark:text-gray-400';
+        subtitle.className = 'text-sm text-pool-300';
         subtitle.textContent = `${session.date}${sessionTime}`;
         wrapper.append(title, subtitle);
         listItem.appendChild(wrapper);
@@ -69,20 +75,20 @@ export function initSessionSelector({ onSessionChanged }) {
 
       if (!currentSession && sessions.length > 0) {
         currentSession = sessions[0].number;
-        updateSessionIndicator();
+        renderSession();
       }
     } catch (error) {
       console.error('Error loading sessions:', error);
       if (!currentSession) {
         currentSession = 1;
-        updateSessionIndicator();
+        renderSession();
       }
     }
   }
 
   function selectSession(sessionNumber) {
     currentSession = sessionNumber;
-    updateSessionIndicator();
+    renderSession();
     if (sessionDialog) sessionDialog.classList.add('hidden');
     if (onSessionChanged) onSessionChanged(sessionNumber);
   }

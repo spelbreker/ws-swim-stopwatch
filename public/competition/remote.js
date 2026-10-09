@@ -5,15 +5,17 @@
 
 import { send, onSocketEvent } from '../js/modules/socket.js';
 import { TimeSync } from '../js/modules/timeSync.js';
-import { formatLapTime, pad } from '../js/modules/format.js';
+import { pad } from '../js/modules/format.js';
 import { setupConnectionIndicator } from '../js/modules/connectionIndicator.js';
 import { requestWakeLock } from '../js/modules/wakeLock.js';
 import {
   initLaneButtons,
-  updateLaneInfo,
-  resetSplitTimes,
+  setRoster,
+  setLocked,
+  startRace,
+  resetRace,
+  applySplit,
   clearLaneInformation,
-  highlightLaneButton,
   cancelAllHighlightTimers,
   loadSplitCooldown,
 } from './remote/laneButtons.js';
@@ -22,11 +24,20 @@ import {
   fillSelectOptions,
   sendEventAndHeat,
   updateEventHeatInfoBar,
+  onHeatDisplayed,
 } from './remote/eventHeat.js';
+import { loadHeatViews } from './remote/upcoming.js';
+import { initLiveLog, refreshLiveLog } from './remote/liveLog.js';
+import { initKeysMode } from './remote/keysMode.js';
+import { initTabs } from './remote/tabs.js';
 import {
   initSessionSelector,
   getCurrentSession,
+  setCurrentSession,
 } from './remote/sessionSelector.js';
+
+// Event/heat dropdown size when the competition cannot be read.
+const MAX_SELECT_FALLBACK = 25;
 
 // State
 let startTime = null;
@@ -53,17 +64,11 @@ function disableControls(disable, elements) {
   elements.forEach((element) => {
     if (!element) return;
     element.disabled = disable;
-    const classAction = disable ? 'add' : 'remove';
-    element.classList[classAction]('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
   });
 }
 
 function getServerTimeOffset() {
   return serverTimeOffset;
-}
-
-function getStartTime() {
-  return startTime;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,6 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
   requestWakeLock();
   setupConnectionIndicator(onSocketEvent);
   loadSplitCooldown();
+  initTabs();
+  initLiveLog();
+  initKeysMode({ onChange: (mode) => setLocked(mode === 'locked') });
+  onHeatDisplayed((event, heat, session) => {
+    loadHeatViews(event, heat, session, { onRoster: setRoster });
+  });
 
   // Initialize TimeSync
   timeSync = new TimeSync({
@@ -95,11 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
     send,
     getCurrentSession,
   });
-  initLaneButtons({ send, getStartTime, getServerTimeOffset });
+  initLaneButtons({
+    send,
+    getServerTimeOffset,
+    // An ignored split is logged by the server but not broadcast: pick it up from the log.
+    onSplitSent: () => setTimeout(refreshLiveLog, 300),
+  });
   initSessionSelector({
     onSessionChanged: (sessionNumber) => {
       // Refresh event list for the new session
-      fillSelectOptions(eventSelect, 25, sessionNumber);
+      fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, sessionNumber);
       setTimeout(() => {
         const firstEvent = eventSelect.options[0]?.value || 1;
         eventSelect.value = firstEvent;
@@ -111,25 +127,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }).then(async () => {
     const session = getCurrentSession();
     await Promise.all([
-      fillSelectOptions(eventSelect, 25, session),
-      fillSelectOptions(heatSelect, 25, session),
+      fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, session),
+      fillSelectOptions(heatSelect, MAX_SELECT_FALLBACK, session),
     ]);
-    updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
+    // The startup fill rebuilt the selects: a selection received meanwhile must stay visible.
+    if (lastReceived) {
+      syncSelection(lastReceived.event, lastReceived.heat, lastReceived.session);
+    } else {
+      updateEventHeatInfoBar(eventSelect.value || 1, heatSelect.value || 1, session);
+    }
   });
 
-  const controlElements = [eventSelect, heatSelect, document.getElementById('increment-event'), document.getElementById('increment-heat')];
+  const controlElements = [
+    eventSelect,
+    heatSelect,
+    document.getElementById('increment-event'),
+    document.getElementById('increment-heat'),
+    document.getElementById('decrement-event'),
+    document.getElementById('decrement-heat'),
+  ];
+  const liveBadge = document.getElementById('live-badge');
 
   function updateStartButtonUI(isRunning) {
+    if (liveBadge) liveBadge.classList.toggle('hidden', !isRunning);
     if (!startButton) return;
     if (isRunning) {
-      startButton.textContent = 'Stop stopwatch';
-      startButton.classList.remove('bg-green-600', 'hover:bg-green-700');
-      startButton.classList.add('bg-red-600', 'hover:bg-red-700');
+      startButton.textContent = 'Stop and reset';
+      startButton.classList.remove('bg-emerald-400', 'text-emerald-950', 'hover:bg-emerald-300');
+      startButton.classList.add('bg-red-400', 'text-red-950', 'hover:bg-red-300');
       disableControls(true, controlElements);
     } else {
       startButton.textContent = 'Start stopwatch';
-      startButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-      startButton.classList.add('bg-green-600', 'hover:bg-green-700');
+      startButton.classList.remove('bg-red-400', 'text-red-950', 'hover:bg-red-300');
+      startButton.classList.add('bg-emerald-400', 'text-emerald-950', 'hover:bg-emerald-300');
       disableControls(false, controlElements);
     }
   }
@@ -142,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startTime = Date.now() + serverTimeOffset;
     }
     stopwatchInterval = setInterval(updateStopwatch, 10);
-    resetSplitTimes();
+    startRace(startTime);
     if (sendSocket) {
       send({ type: 'start', timestamp: startTime, heat: heatSelect.value, event: eventSelect.value });
     }
@@ -154,10 +184,45 @@ document.addEventListener('DOMContentLoaded', () => {
     stopwatchInterval = null;
     startTime = null;
     if (stopwatchElement) stopwatchElement.textContent = '00:00:00';
+    resetRace();
     if (sendSocket) {
       send({ type: 'reset' });
     }
     updateStartButtonUI(false);
+  }
+
+  let selectionId = 0;
+  let pendingFill = null;
+  let lastReceived = null;
+  // Show a selection made elsewhere (another remote or the starter): session,
+  // event and heat selects, the heat card and the heat-dependent views.
+  async function syncSelection(event, heat, session) {
+    const id = ++selectionId;
+    lastReceived = { event, heat, session };
+    const sessionNumber = session ? Number(session) : getCurrentSession();
+    if (sessionNumber && sessionNumber !== getCurrentSession()) {
+      // The event list belongs to the session: load it before selecting the event.
+      setCurrentSession(sessionNumber);
+      const fill = fillSelectOptions(eventSelect, MAX_SELECT_FALLBACK, sessionNumber);
+      pendingFill = fill;
+      fill.finally(() => {
+        if (pendingFill === fill) pendingFill = null;
+      });
+    }
+    // Also wait when an earlier call is still loading this session's events.
+    if (pendingFill) {
+      await pendingFill;
+      if (id !== selectionId) return;
+    }
+    if (eventSelect && event !== undefined) eventSelect.value = event;
+    if (heatSelect && heat !== undefined) heatSelect.value = heat;
+    updateEventHeatInfoBar(event ?? eventSelect?.value, heat ?? heatSelect?.value, sessionNumber);
+  }
+
+  function isOtherSelection(message) {
+    return String(message.event) !== eventSelect?.value
+      || String(message.heat) !== heatSelect?.value
+      || (Boolean(message.session) && Number(message.session) !== getCurrentSession());
   }
 
   // Button event listeners
@@ -244,11 +309,14 @@ document.addEventListener('DOMContentLoaded', () => {
       startTime = message.timestamp;
       if (stopwatchInterval) clearInterval(stopwatchInterval);
       stopwatchInterval = setInterval(updateStopwatch, 10);
-      for (let i = 0; i <= 9; i++) {
-        updateLaneInfo(i, '---:---:---');
-      }
+      startRace(message.timestamp);
       loadSplitCooldown();
       updateStartButtonUI(true);
+      refreshLiveLog();
+      // A starter can start another heat than the one shown: the server switches to it too.
+      if (message.event !== undefined && message.heat !== undefined && isOtherSelection(message)) {
+        syncSelection(message.event, message.heat, message.session);
+      }
       return;
     }
 
@@ -256,27 +324,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (message.type === 'reset') {
       resetStopwatch(false);
       cancelAllHighlightTimers();
+      refreshLiveLog();
       return;
     }
 
     /** Update lane information */
     if (message.type === 'split') {
-      const lane = message.lane;
-      if (message.timestamp) {
-        updateLaneInfo(lane, formatLapTime(message.timestamp, startTime || 0), message.distance);
-      }
-      const button = document.querySelector(`.lane-button[data-lane="${lane}"]`);
-      if (button) highlightLaneButton(button);
+      applySplit(message, startTime);
+      refreshLiveLog();
       return;
     }
 
     /** Change event and heat information */
     if (message.type === 'event-heat') {
-      if (eventSelect) eventSelect.value = message.event;
-      if (heatSelect) heatSelect.value = message.heat;
-      resetSplitTimes();
       cancelAllHighlightTimers();
-      updateEventHeatInfoBar(message.event, message.heat, message.session ?? getCurrentSession());
+      syncSelection(message.event, message.heat, message.session);
       return;
     }
 

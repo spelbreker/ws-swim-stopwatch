@@ -62,6 +62,12 @@ graph BT
         LaneButtons[competition/remote/laneButtons.js]
         EventHeat[competition/remote/eventHeat.js]
         SessionSel[competition/remote/sessionSelector.js]
+        LaneState[competition/remote/laneState.js]
+        Upcoming[competition/remote/upcoming.js]
+        LiveLog[competition/remote/liveLog.js]
+        KeysMode[competition/remote/keysMode.js]
+        Tabs[competition/remote/tabs.js]
+        EventTitle[competition/remote/eventTitle.js]
     end
 
     subgraph Screen[Competition Screen]
@@ -146,10 +152,20 @@ entry points.
 **Files:** `public/competition/remote.html`, `public/competition/remote.js`,
 `public/competition/remote/laneButtons.js`,
 `public/competition/remote/eventHeat.js`,
-`public/competition/remote/sessionSelector.js`
+`public/competition/remote/sessionSelector.js`,
+`public/competition/remote/laneState.js`,
+`public/competition/remote/upcoming.js`,
+`public/competition/remote/liveLog.js`,
+`public/competition/remote/keysMode.js`,
+`public/competition/remote/tabs.js`,
+`public/competition/remote/eventTitle.js`
 
 The remote is the operator's control panel. It sends WebSocket messages and
-displays accepted server broadcasts.
+displays accepted server broadcasts. The page is dark and phone-first: a
+header with the stopwatch, a heat card, three tabs (Lanes, Next, Log) and
+a bottom dock with the event/heat steppers, session, Clear, the keypad mode and
+the start button. From the `lg` breakpoint the three tabs are shown side by
+side and the tab bar is hidden.
 
 Features:
 
@@ -158,16 +174,44 @@ Features:
   Initialization runs once per page, independently of WebSocket connections;
   reconnects preserve the selection and do not send `event-heat` messages.
   Explicit operator selection still sends `event-heat` messages. Missed race
-  messages are not replayed after reconnect.
+  messages are not replayed after reconnect. An `event-heat` from another
+  client, or a `start` that carries another event and heat (a starter), updates
+  the session label, the event list of that session, the selects, the heat card
+  and the swimmer and next-heat views.
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
-- **Lane buttons** — clicking a lane button sends a `split` message with the
-  current synchronized timestamp. The button does **not** update optimistically;
-  it only turns green when the server broadcasts an accepted split back.
-- **Green highlight** — the lane button stays green for exactly
-  `splitCooldownSec * 1000` ms (fetched from `/settings`). An ignored split
-  does not restart the timer.
-- **Distance labels** — displays `50m 00:30:12` when the server provides a
-  `distance` field.
+- **Lane rows** — one row per lane (0-9) with the swimmer name and club of
+  the selected heat (`/competition/event/:event/heat/:heat`, relays show the
+  club and the swimmers' last names). A lane without a registered swimmer is
+  dimmed while idle ("Not assigned") but stays tappable and follows the same
+  timeout rules, because unregistered swimmers sometimes swim there.
+- **Splits** — tapping a lane row or keypad key sends a `split` message with
+  the current synchronized timestamp. The row does **not** update
+  optimistically; it only shows the time when the server broadcasts an
+  accepted split back.
+- **Timeout** — the remote mirrors the server's cooldown rules
+  (`splitCooldownSec`, fetched from `/settings`): a lane is blocked (amber row,
+  countdown bar, disabled key) for the cooldown after its last accepted split,
+  for the cooldown after the start for a lane without a split yet, and
+  permanently after the finish. A tap on a blocked lane is still sent: the
+  server ignores it and writes `SPLIT IGNORED` to the log, which the live log
+  shows (the remote refreshes it 300 ms after every tap, because ignored splits
+  are not broadcast). Only the `Locked` keypad mode stops taps.
+- **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
+  the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
+  stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`
+  keyboard shortcuts keep working unless locked; like a tap, they are still
+  sent for a blocked lane.
+- **Next** — the next heat (same event, or the first heat of the next
+  event) with swimmers and entry times.
+- **Live log** — shows the server's `logs/competition.log` (polled every 3 s
+  through `GET /logs/competition.log?tail=300`, and refreshed right after a
+  `start`, `split` or `reset` message), newest first, max 100 entries. Because
+  it is the server log, it lists everything the external clocks and other
+  devices did, including splits the server ignored (cooldown, after the
+  finish), and it survives a page reload. Entries: START, RESET, SPLIT and
+  IGNORED. Clearing the log is done on the log page.
+- **Distance labels** — the lane status shows `Split 2 · 100m` when the
+  server provides a `distance` field.
 - **Time sync** — runs the initial rapid ping sequence and ongoing pings.
 
 ## Competition Screen
@@ -192,8 +236,10 @@ Features:
 - **Finish marker** — adds a persistent `.finished` CSS class when
   `isFinish` is true.
 - **Highlight** — briefly highlights a lane (2 s) when a split arrives.
-- **Clear** — clears all lane info, split times, arrival orders and finish
-  markers on `clear`, `start`, `reset` and `event-heat`.
+- **Clear** — on `clear` the shown split times, distances and arrival orders
+  are blanked, but a lane's timeout and finish state stays, because the server
+  does not reset its split tracking on `clear`. `start`, `reset` and
+  `event-heat` clear everything.
 
 ## Dashboard
 
