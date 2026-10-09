@@ -112,6 +112,20 @@ Key properties:
   elapsed (or when no start timestamp was recorded).
 - Cooldown is per-lane; one lane's cooldown does not affect another.
 
+## No Race Running
+
+A split is only valid between a `start` and the next `reset`. Before the first
+`start` and after a `reset` the tracker ignores every split:
+
+```
+if not running:
+    → ignored (reason: "not-running")
+```
+
+The split is logged (`SPLIT IGNORED ... Reason: not-running`) and not
+broadcast. A server restart during a race also puts the tracker in this state
+until the next `start`.
+
 ## Finish Detection
 
 When `expectedSplits > 0` and `splitNumber >= expectedSplits`, the split is
@@ -166,6 +180,8 @@ stateDiagram-v2
     HeatLoaded --> Racing: start (clear lanes)
     Racing --> Racing: split accepted (update lane, ranking)
     Racing --> Racing: split ignored (cooldown / start-cooldown / after-finish, logged)
+    NoHeat --> NoHeat: split ignored (not-running, logged)
+    HeatLoaded --> HeatLoaded: split ignored (not-running, logged)
     NoHeat --> Racing: start (defensive heat load)
     Racing --> NoHeat: reset (clear lanes + heat)
     HeatLoaded --> NoHeat: reset

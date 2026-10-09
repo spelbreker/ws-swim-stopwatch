@@ -25,6 +25,7 @@ const IGNORED_REASONS = {
   cooldown: 'within the cooldown of the previous split',
   'start-cooldown': 'within the cooldown after the start',
   'after-finish': 'after the finish',
+  'not-running': 'because no race is running',
 };
 
 let listElement = null;

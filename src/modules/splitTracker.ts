@@ -73,6 +73,9 @@ export class SplitTracker {
   private heat: HeatInfo | null = null;
   private startTime: number | null = null;
 
+  /** True from a `start` until the next `reset`: a split outside a race is not a split. */
+  private running = false;
+
   constructor(private readonly getSettings: () => AppSettings) {}
 
   getHeat(): HeatInfo | null {
@@ -87,18 +90,23 @@ export class SplitTracker {
   onStart(timestamp?: number) {
     this.lanes.clear();
     this.startTime = timestamp ?? null;
+    this.running = true;
   }
 
   onReset() {
     this.lanes.clear();
     this.heat = null;
     this.startTime = null;
+    this.running = false;
   }
 
   onSplit(lane: number, timestamp: number): SplitResult {
     const { poolLength, splitCooldownSec } = this.getSettings();
     const state = this.lanes.get(lane);
 
+    if (!this.running) {
+      return { accepted: false, reason: 'not-running' };
+    }
     if (state?.finished) {
       return { accepted: false, reason: 'after-finish' };
     }

@@ -135,6 +135,21 @@ describe('websocket split handling', () => {
     expect(screenMessages[1]).toMatchObject({ splitNumber: 1, ranking: [{ lane: 3, place: 1, splitNumber: 1 }] });
   });
 
+  it('ignores and logs a split when no race is running', async () => {
+    await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+    expect(screenMessages).toHaveLength(0);
+    expect(logger.logSplit).not.toHaveBeenCalled();
+    expect(logger.logIgnoredSplit).toHaveBeenCalledWith(3, T0 + 30_000, 'not-running', undefined, undefined);
+  });
+
+  it('ignores splits again after a reset', async () => {
+    await send({ type: 'start', timestamp: T0 });
+    await send({ type: 'reset' });
+    await send({ type: 'split', lane: 3, timestamp: T0 + 30_000 });
+    expect(screenMessages).toHaveLength(0);
+    expect(logger.logIgnoredSplit).toHaveBeenCalledWith(3, T0 + 30_000, 'not-running', undefined, undefined);
+  });
+
   it('relays malformed splits unchanged', async () => {
     await send({ type: 'split', lane: 'x' });
     expect(screenMessages).toHaveLength(1);

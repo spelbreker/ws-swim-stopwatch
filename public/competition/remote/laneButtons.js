@@ -128,8 +128,9 @@ function renderAll() {
 
 // A blocked lane (timeout, finished) is still sent: the server decides and logs an
 // ignored split, which keeps the live log complete and does not depend on this clock.
+// Nothing is sent while the stopwatch is not running: the server would accept and log it as a split.
 function trySplit(lane) {
-  if (locked) return;
+  if (locked || !running) return;
   sendSplit({ type: 'split', lane, timestamp: now() });
   onSplitSent(lane);
 }

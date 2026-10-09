@@ -61,7 +61,7 @@ export function logSplit(
   appendLog(splitMsg);
 }
 
-export type IgnoredSplitReason = 'cooldown' | 'after-finish' | 'start-cooldown';
+export type IgnoredSplitReason = 'cooldown' | 'after-finish' | 'start-cooldown' | 'not-running';
 
 export function logIgnoredSplit(
   lane: string | number,
