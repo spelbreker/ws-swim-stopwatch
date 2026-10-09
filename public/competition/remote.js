@@ -63,13 +63,12 @@ function disableControls(disable, elements) {
   });
 }
 
-/** Log line for a tap on a lane that is blocked (timeout, finished, no swimmer). */
+/** Log line for a tap on a lane that is blocked (timeout or finished). */
 function describeBlockedTap(lane, view) {
   if (view.state === 'timeout') {
     return `Baan ${lane}: split genegeerd, timeout nog ${(view.remainingMs / 1000).toFixed(1)}s`;
   }
-  if (view.state === 'finished') return `Baan ${lane}: split genegeerd, al gefinisht`;
-  return `Baan ${lane}: split genegeerd, geen zwemmer ingedeeld`;
+  return `Baan ${lane}: split genegeerd, al gefinisht`;
 }
 
 function getServerTimeOffset() {

@@ -37,7 +37,7 @@
   .lane-row[aria-disabled='true'] {
     @apply cursor-not-allowed;
   }
-  .lane-row[data-state='empty'] {
+  .lane-row[data-unassigned='true'][data-state='ready'] {
     @apply min-h-8 border-dashed bg-transparent py-0.5 text-pool-400;
   }
   .lane-row[data-state='timeout'] {
@@ -46,19 +46,19 @@
   .lane-row[data-state='finished'] {
     @apply border-emerald-700 bg-emerald-950;
   }
-  .lane-row[data-locked='true']:not([data-state='empty']) {
+  .lane-row[data-locked='true']:not([data-unassigned='true'][data-state='ready']) {
     @apply opacity-60;
   }
   .lane-number {
     @apply grid size-9 place-items-center rounded-lg bg-aqua font-mono text-lg font-bold text-pool-950;
   }
-  .lane-row[data-state='empty'] .lane-name {
+  .lane-row[data-unassigned='true'][data-state='ready'] .lane-name {
     @apply text-sm font-normal;
   }
-  .lane-row[data-state='empty'] .lane-time {
+  .lane-row[data-unassigned='true'][data-state='ready'] .lane-time {
     @apply hidden;
   }
-  .lane-row[data-state='empty'] .lane-number {
+  .lane-row[data-unassigned='true'][data-state='ready'] .lane-number {
     @apply size-6 bg-transparent text-base text-pool-400;
   }
   .lane-row[data-state='timeout'] .lane-number {
@@ -76,8 +76,7 @@
   .lane-time {
     @apply block font-mono text-lg font-bold;
   }
-  .lane-row[data-state='ready'] .lane-time,
-  .lane-row[data-state='empty'] .lane-time {
+  .lane-row[data-state='ready'] .lane-time {
     @apply text-pool-400;
   }
   .lane-row[data-state='timeout'] .lane-time {

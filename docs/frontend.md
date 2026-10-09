@@ -178,8 +178,9 @@ Features:
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
 - **Lane rows** — one row per lane (0-9) with the swimmer name and club of
   the selected heat (`/competition/event/:event/heat/:heat`, relays show the
-  club and the swimmers' last names). A lane without a swimmer is dimmed and
-  not tappable; without a loaded competition every lane stays usable.
+  club and the swimmers' last names). A lane without a registered swimmer is
+  dimmed while idle ("Niet ingedeeld") but stays tappable and follows the same
+  timeout rules, because unregistered swimmers sometimes swim there.
 - **Splits** — tapping a lane row or keypad key sends a `split` message with
   the current synchronized timestamp. The row does **not** update
   optimistically; it only shows the time when the server broadcasts an

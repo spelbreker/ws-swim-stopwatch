@@ -27,7 +27,7 @@ describe('laneState', () => {
     describeLane: (lane: object) => { state: string; status: string; blocked: boolean; progress: number };
   };
   const base = {
-    usable: true, running: true, finished: false, splitCount: 0, remainingMs: 0, cooldownMs: 12000,
+    running: true, finished: false, splitCount: 0, remainingMs: 0, cooldownMs: 12000,
   };
 
   it('blocks until the cooldown after the last split, else after the start', () => {
@@ -38,10 +38,6 @@ describe('laneState', () => {
 
   it('blocks forever after the finish', () => {
     expect(blockedUntil({ finished: true, lastSplitTs: 1000, startTs: 0, cooldownMs: 12000 })).toBe(Infinity);
-  });
-
-  it('describes a lane without a swimmer as empty and blocked', () => {
-    expect(describeLane({ ...base, usable: false })).toMatchObject({ state: 'empty', blocked: true });
   });
 
   it('describes a lane in timeout with a countdown and progress', () => {

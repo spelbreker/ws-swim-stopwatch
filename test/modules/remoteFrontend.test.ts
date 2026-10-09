@@ -100,6 +100,8 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
   const listener = onSocketEvent.mock.calls[0][0];
   return {
     lastRowState,
+    rowDataset: row.dataset,
+    setRoster: (entries: unknown) => (imports['./remote/laneButtons.js'] as { setRoster: (e: unknown) => void }).setRoster(entries),
     addLogEntry,
     clickRow: () => clicks.forEach((handler) => handler()),
     laneTime,
@@ -156,6 +158,17 @@ describe('competition remote lifecycle', () => {
     remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.clickRow();
     expect(remote.send).toHaveBeenCalledWith({ type: 'split', lane: 1, timestamp: Date.now() });
+  });
+
+  it('keeps a lane without a registered swimmer usable', () => {
+    remote.setRoster([{ lane: 2, name: 'Sem Bakker', club: 'De Dolfijn' }]);
+    expect(remote.rowDataset.unassigned).toBe('true');
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    expect(remote.lastRowState()).toBe('swim');
+    remote.clickRow();
+    expect(remote.send).toHaveBeenCalledWith({ type: 'split', lane: 1, timestamp: Date.now() });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
+    expect(remote.lastRowState()).toBe('timeout');
   });
 
   it('marks a lane finished and keeps it blocked', () => {

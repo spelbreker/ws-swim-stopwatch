@@ -1,8 +1,8 @@
 // Lane logic for the competition remote.
 // Owns the per-lane state (swimmer, last split, timeout) and renders the lane
 // rows and keypad keys. Rows and keys both send a split when tapped, unless the
-// lane is blocked (no swimmer, timeout after a split or the start, finished) or
-// the keys are locked.
+// lane is blocked (timeout after a split or the start, finished) or the keys are
+// locked. Lanes without a registered swimmer are not blocked.
 //
 // Exports:
 //   initLaneButtons({ send, getServerTimeOffset, onBlocked })
@@ -53,7 +53,8 @@ function getSplit(lane) {
 function viewFor(lane) {
   const swimmer = swimmers.get(lane);
   const split = getSplit(lane);
-  const usable = !rosterLoaded || Boolean(swimmer);
+  // A lane without a registered swimmer stays usable: unregistered swimmers sometimes swim there.
+  const unassigned = rosterLoaded && !swimmer;
   const until = blockedUntil({
     finished: split.finished,
     lastSplitTs: split.lastTs,
@@ -62,7 +63,6 @@ function viewFor(lane) {
   });
   const remainingMs = running || split.finished ? until - now() : 0;
   const description = describeLane({
-    usable,
     running,
     finished: split.finished,
     splitCount: split.count,
@@ -71,7 +71,9 @@ function viewFor(lane) {
     remainingMs,
     cooldownMs: splitCooldownMs,
   });
-  return { ...description, swimmer, split, remainingMs };
+  return {
+    ...description, swimmer, split, remainingMs, unassigned,
+  };
 }
 
 function renderLane(lane) {
@@ -81,10 +83,11 @@ function renderLane(lane) {
   const { row } = els;
   row.dataset.state = view.state;
   row.dataset.locked = String(locked);
+  row.dataset.unassigned = String(view.unassigned);
   row.setAttribute('aria-disabled', String(view.blocked || locked));
-  row.setAttribute('aria-label', `Baan ${lane}${view.swimmer ? `, ${view.swimmer.name}` : ''}, ${view.status || 'geen zwemmer'}`);
+  row.setAttribute('aria-label', `Baan ${lane}${view.swimmer ? `, ${view.swimmer.name}` : ''}, ${view.status}`);
   if (els.name) {
-    els.name.textContent = view.state === 'empty' ? 'Geen zwemmer ingedeeld' : (view.swimmer?.name || `Baan ${lane}`);
+    els.name.textContent = view.unassigned ? 'Niet ingedeeld' : (view.swimmer?.name || `Baan ${lane}`);
   }
   if (els.club) els.club.textContent = view.swimmer?.club || '';
   if (els.time) els.time.textContent = view.split.time;

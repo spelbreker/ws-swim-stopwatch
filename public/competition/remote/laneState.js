@@ -7,7 +7,7 @@
 //
 // Exports:
 //   blockedUntil({ finished, lastSplitTs, startTs, cooldownMs })
-//   describeLane({ usable, running, finished, splitCount, distance, place, remainingMs, cooldownMs })
+//   describeLane({ running, finished, splitCount, distance, place, remainingMs, cooldownMs })
 
 /**
  * Timestamp (ms) until which a lane does not accept a split.
@@ -26,7 +26,6 @@ export function blockedUntil({ finished, lastSplitTs, startTs, cooldownMs }) {
  * Describe how a lane row looks: state, status text, whether taps are blocked
  * and how much of the timeout is left (0-100) for the progress bar.
  * @param {Object} lane
- * @param {boolean} lane.usable - Lane has a swimmer, or no heat roster is loaded
  * @param {boolean} lane.running - A race is running
  * @param {boolean} lane.finished
  * @param {number} lane.splitCount
@@ -34,12 +33,11 @@ export function blockedUntil({ finished, lastSplitTs, startTs, cooldownMs }) {
  * @param {number} [lane.place]
  * @param {number} lane.remainingMs - Timeout left; Infinity after the finish
  * @param {number} lane.cooldownMs
- * @returns {{ state: 'empty'|'ready'|'swim'|'timeout'|'finished', status: string, blocked: boolean, progress: number }}
+ * @returns {{ state: 'ready'|'swim'|'timeout'|'finished', status: string, blocked: boolean, progress: number }}
  */
 export function describeLane({
-  usable, running, finished, splitCount, distance, place, remainingMs, cooldownMs,
+  running, finished, splitCount, distance, place, remainingMs, cooldownMs,
 }) {
-  if (!usable) return { state: 'empty', status: '', blocked: true, progress: 0 };
   if (finished) {
     return { state: 'finished', status: place ? `Finish · ${place}e` : 'Finish', blocked: true, progress: 0 };
   }
