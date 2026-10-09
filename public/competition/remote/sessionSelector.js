@@ -14,9 +14,22 @@ export function getCurrentSession() {
   return currentSession;
 }
 
-/** @param {number} sessionNumber */
+function renderSession() {
+  if (!currentSession) return;
+  const sessionIndicator = document.getElementById('session-indicator');
+  const sessionLabel = document.getElementById('session-label');
+  if (sessionIndicator) sessionIndicator.textContent = String(currentSession);
+  if (sessionLabel) sessionLabel.textContent = `Session ${currentSession}`;
+}
+
+/**
+ * Switch the current session and its label without opening the dialog or
+ * calling onSessionChanged (used when another client changed the session).
+ * @param {number} sessionNumber
+ */
 export function setCurrentSession(sessionNumber) {
   currentSession = sessionNumber;
+  renderSession();
 }
 
 /**
@@ -29,14 +42,6 @@ export function initSessionSelector({ onSessionChanged }) {
   const sessionDialog = document.getElementById('session-dialog');
   const sessionList = document.getElementById('session-list');
   const closeSessionDialog = document.getElementById('close-session-dialog');
-  const sessionIndicator = document.getElementById('session-indicator');
-  const sessionLabel = document.getElementById('session-label');
-
-  function updateSessionIndicator() {
-    if (!currentSession) return;
-    if (sessionIndicator) sessionIndicator.textContent = String(currentSession);
-    if (sessionLabel) sessionLabel.textContent = `Session ${currentSession}`;
-  }
 
   async function loadSessions() {
     try {
@@ -70,20 +75,20 @@ export function initSessionSelector({ onSessionChanged }) {
 
       if (!currentSession && sessions.length > 0) {
         currentSession = sessions[0].number;
-        updateSessionIndicator();
+        renderSession();
       }
     } catch (error) {
       console.error('Error loading sessions:', error);
       if (!currentSession) {
         currentSession = 1;
-        updateSessionIndicator();
+        renderSession();
       }
     }
   }
 
   function selectSession(sessionNumber) {
     currentSession = sessionNumber;
-    updateSessionIndicator();
+    renderSession();
     if (sessionDialog) sessionDialog.classList.add('hidden');
     if (onSessionChanged) onSessionChanged(sessionNumber);
   }

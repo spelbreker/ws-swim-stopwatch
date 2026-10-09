@@ -186,13 +186,14 @@ export function initLaneButtons({ send, getServerTimeOffset, onSplitSent: afterS
 }
 
 /**
- * Show the swimmers of the selected heat. Pass null (no competition, fetch
- * failed) to treat every lane as usable.
+ * Show the swimmers of the selected heat. An empty array is a loaded heat
+ * without swimmers: every lane is shown as not assigned. Pass null (no
+ * competition, fetch failed) to treat every lane as usable.
  * @param {Array<{lane: number, name: string, club: string}>|null} entries
  */
 export function setRoster(entries) {
   swimmers.clear();
-  rosterLoaded = Array.isArray(entries) && entries.length > 0;
+  rosterLoaded = Array.isArray(entries);
   if (rosterLoaded) entries.forEach((entry) => swimmers.set(entry.lane, entry));
   renderAll();
 }
@@ -235,12 +236,14 @@ function splitTime(message, startTime) {
 export function applySplit(message, startTime) {
   const lane = Number(message.lane);
   if (!Number.isInteger(lane) || lane < 0 || lane > 9) return;
+  // The server relays malformed splits unchanged; only an accepted split has a numeric timestamp.
+  if (typeof message.timestamp !== 'number' || !Number.isFinite(message.timestamp)) return;
   const previous = getSplit(lane);
   const time = splitTime(message, startTime);
   const splitNumber = typeof message.splitNumber === 'number' ? message.splitNumber : previous.count + 1;
   splits.set(lane, {
     count: splitNumber,
-    lastTs: typeof message.timestamp === 'number' ? message.timestamp : now(),
+    lastTs: message.timestamp,
     time,
     distance: message.distance,
     finished: message.isFinish === true,

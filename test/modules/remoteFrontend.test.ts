@@ -13,6 +13,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     select.value = select.id === 'event-select' ? firstEvent : '1';
   });
   const updateEventHeatInfoBar = jest.fn();
+  const setCurrentSession = jest.fn((next: number) => { session = next; });
   const laneTime = { textContent: '--:--:--' };
   const laneStatus = { textContent: '' };
   const clicks: Array<() => void> = [];
@@ -64,6 +65,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     './remote/sessionSelector.js': {
       initSessionSelector: () => sessionsReady,
       getCurrentSession: () => session,
+      setCurrentSession,
     },
   };
 
@@ -113,6 +115,8 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     heatSelect,
     fillSelectOptions,
     updateEventHeatInfoBar,
+    setCurrentSession,
+    setRosterRaw: (entries: unknown) => (imports['./remote/laneButtons.js'] as { setRoster: (e: unknown) => void }).setRoster(entries),
     pressEnter: () => document.addEventListener.mock.calls.find(([event]) => event === 'keydown')![1]({ key: 'Enter' }),
     emit: (event: string, message?: Record<string, unknown>) => listener(event, undefined, message),
   };
@@ -227,6 +231,48 @@ describe('competition remote lifecycle', () => {
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() + 30_000 });
     remote.emit('message', { type: 'reset' });
     expect(remote.refreshLiveLog).toHaveBeenCalledTimes(3);
+  });
+
+  it('switches the session and its events when another client selects a heat in a different session', async () => {
+    remote.fillSelectOptions.mockClear();
+    remote.updateEventHeatInfoBar.mockClear();
+    remote.emit('message', { type: 'event-heat', event: '7', heat: '2', session: 2 });
+    expect(remote.setCurrentSession).toHaveBeenCalledWith(2);
+    expect(remote.fillSelectOptions).toHaveBeenCalledWith(remote.eventSelect, 25, 2);
+    await jest.advanceTimersByTimeAsync(0);
+    expect(remote.eventSelect.value).toBe('7');
+    expect(remote.heatSelect.value).toBe('2');
+    expect(remote.updateEventHeatInfoBar).toHaveBeenCalledWith('7', '2', 2);
+  });
+
+  it('follows the event and heat of a start from another device', async () => {
+    remote.updateEventHeatInfoBar.mockClear();
+    remote.emit('message', { type: 'start', timestamp: Date.now(), event: 5, heat: 3 });
+    expect(remote.eventSelect.value).toBe(5);
+    expect(remote.heatSelect.value).toBe(3);
+    expect(remote.updateEventHeatInfoBar).toHaveBeenCalledWith(5, 3, 1);
+  });
+
+  it('does not reload the heat views when a start carries the shown event and heat', () => {
+    remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+    remote.updateEventHeatInfoBar.mockClear();
+    remote.emit('message', { type: 'start', timestamp: Date.now(), event: '3', heat: '4' });
+    expect(remote.updateEventHeatInfoBar).not.toHaveBeenCalled();
+  });
+
+  it('ignores a split relayed without a valid timestamp', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    remote.emit('message', { type: 'split', lane: 1 });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: '123' });
+    expect(remote.lastRowState()).toBe('swim');
+    expect(remote.laneStatus.textContent).toBe('Swimming');
+  });
+
+  it('shows every lane as not assigned for a loaded heat without swimmers', () => {
+    remote.setRosterRaw([]);
+    expect(remote.rowDataset.unassigned).toBe('true');
+    remote.setRosterRaw(null);
+    expect(remote.rowDataset.unassigned).toBe('false');
   });
 
   it('preserves the selection and info bar across repeated reconnects', async () => {

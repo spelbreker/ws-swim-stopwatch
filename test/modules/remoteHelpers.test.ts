@@ -346,3 +346,18 @@ describe('refreshLiveLog', () => {
     expect(list.replaceChildren).toHaveBeenLastCalledWith();
   });
 });
+
+describe('setCurrentSession', () => {
+  it('updates the session number and label without the dialog', () => {
+    const indicator = { textContent: '1' };
+    const label = { textContent: 'Session 1' };
+    const els: Record<string, object> = { 'session-indicator': indicator, 'session-label': label };
+    const { setCurrentSession, getCurrentSession } = loadModule('sessionSelector.js', {}, {
+      document: { getElementById: (id: string) => els[id] ?? null },
+    }) as unknown as { setCurrentSession: (n: number) => void; getCurrentSession: () => number };
+    setCurrentSession(2);
+    expect(getCurrentSession()).toBe(2);
+    expect(indicator.textContent).toBe('2');
+    expect(label.textContent).toBe('Session 2');
+  });
+});

@@ -174,7 +174,10 @@ Features:
   Initialization runs once per page, independently of WebSocket connections;
   reconnects preserve the selection and do not send `event-heat` messages.
   Explicit operator selection still sends `event-heat` messages. Missed race
-  messages are not replayed after reconnect.
+  messages are not replayed after reconnect. An `event-heat` from another
+  client, or a `start` that carries another event and heat (a starter), updates
+  the session label, the event list of that session, the selects, the heat card
+  and the swimmer and next-heat views.
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
 - **Lane rows** — one row per lane (0-9) with the swimmer name and club of
   the selected heat (`/competition/event/:event/heat/:heat`, relays show the

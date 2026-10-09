@@ -33,6 +33,7 @@ import { initTabs } from './remote/tabs.js';
 import {
   initSessionSelector,
   getCurrentSession,
+  setCurrentSession,
 } from './remote/sessionSelector.js';
 
 // State
@@ -182,6 +183,29 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStartButtonUI(false);
   }
 
+  let selectionId = 0;
+  // Show a selection made elsewhere (another remote or the starter): session,
+  // event and heat selects, the heat card and the heat-dependent views.
+  async function syncSelection(event, heat, session) {
+    const id = ++selectionId;
+    const sessionNumber = session ? Number(session) : getCurrentSession();
+    if (sessionNumber && sessionNumber !== getCurrentSession()) {
+      // The event list belongs to the session: load it before selecting the event.
+      setCurrentSession(sessionNumber);
+      await fillSelectOptions(eventSelect, 25, sessionNumber);
+      if (id !== selectionId) return;
+    }
+    if (eventSelect && event !== undefined) eventSelect.value = event;
+    if (heatSelect && heat !== undefined) heatSelect.value = heat;
+    updateEventHeatInfoBar(event ?? eventSelect?.value, heat ?? heatSelect?.value, sessionNumber);
+  }
+
+  function isOtherSelection(message) {
+    return String(message.event) !== eventSelect?.value
+      || String(message.heat) !== heatSelect?.value
+      || (Boolean(message.session) && Number(message.session) !== getCurrentSession());
+  }
+
   // Button event listeners
   if (clearScreenButton) {
     clearScreenButton.addEventListener('click', () => {
@@ -270,6 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
       loadSplitCooldown();
       updateStartButtonUI(true);
       refreshLiveLog();
+      // A starter can start another heat than the one shown: the server switches to it too.
+      if (message.event !== undefined && message.heat !== undefined && isOtherSelection(message)) {
+        syncSelection(message.event, message.heat, message.session);
+      }
       return;
     }
 
@@ -290,10 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** Change event and heat information */
     if (message.type === 'event-heat') {
-      if (eventSelect) eventSelect.value = message.event;
-      if (heatSelect) heatSelect.value = message.heat;
       cancelAllHighlightTimers();
-      updateEventHeatInfoBar(message.event, message.heat, message.session ?? getCurrentSession());
+      syncSelection(message.event, message.heat, message.session);
       return;
     }
 
