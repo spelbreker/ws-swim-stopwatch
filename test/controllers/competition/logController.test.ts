@@ -97,6 +97,25 @@ describe('logController', () => {
       expect(res.text).toBe(`${line}\n${line}`);
     });
 
+    it('uses only the bytes that were read when the log shrinks during the read', async () => {
+      const openSpy = jest.spyOn(fs.promises, 'open').mockResolvedValue({
+        stat: async () => ({ size: 100 }),
+        read: async () => ({ bytesRead: 0 }),
+        close: async () => undefined,
+      } as unknown as fs.promises.FileHandle);
+      const res = await request(app).get('/logs/competition.log?tail=2');
+      openSpy.mockRestore();
+      expect(res.status).toBe(200);
+      expect(res.text).toBe('');
+    });
+
+    it('returns 500 when the log cannot be read for another reason than missing', async () => {
+      const openSpy = jest.spyOn(fs.promises, 'open').mockRejectedValue(Object.assign(new Error('EACCES'), { code: 'EACCES' }));
+      const res = await request(app).get('/logs/competition.log?tail=2');
+      openSpy.mockRestore();
+      expect(res.status).toBe(500);
+    });
+
     it('returns 404 when the log file is missing', async () => {
       const res = await request(app).get('/logs/competition.log?tail=2');
       expect(res.status).toBe(404);

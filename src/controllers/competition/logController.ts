@@ -30,8 +30,9 @@ async function readLastLines(file: string, count: number): Promise<string> {
     for (;;) {
       const start = Math.max(0, size - chunk);
       const buffer = Buffer.alloc(size - start);
-      await handle.read(buffer, 0, buffer.length, start);
-      let text = buffer.toString('utf8');
+      // The log can shrink (cleared) after stat: use only the bytes that were read.
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, start);
+      let text = buffer.toString('utf8', 0, bytesRead);
       // The chunk usually starts in the middle of a line: drop that partial line.
       if (start > 0) {
         const newline = text.indexOf('\n');
@@ -51,11 +52,13 @@ export function getCompetitionLog(req: Request, res: Response) {
   const logPath = logFilePath();
   const tail = parseInt(String(req.query.tail), 10);
   if (tail > 0) {
-    readLastLines(logPath, tail).then((text) => {
-      sendLog(req, res, text);
-    }).catch(() => {
-      res.status(404).send('Logbestand niet gevonden.');
-    });
+    readLastLines(logPath, tail).then(
+      (text) => sendLog(req, res, text),
+      (err: NodeJS.ErrnoException) => {
+        if (err.code === 'ENOENT') res.status(404).send('Logbestand niet gevonden.');
+        else res.status(500).send('Logbestand kon niet worden gelezen.');
+      },
+    );
     return;
   }
   fs.readFile(logPath, 'utf8', (err, data) => {
