@@ -5,7 +5,7 @@
 // locked. Lanes without a registered swimmer are not blocked.
 //
 // Exports:
-//   initLaneButtons({ send, getServerTimeOffset, onBlocked })
+//   initLaneButtons({ send, getServerTimeOffset })
 //   loadSplitCooldown()
 //   setRoster(entries | null)
 //   setLocked(locked)
@@ -31,7 +31,6 @@ let locked = false;
 let tickTimer = null;
 let sendSplit = () => {};
 let getOffset = () => 0;
-let onBlockedTap = () => {};
 
 /** @type {Map<number, object>} */
 const swimmers = new Map();
@@ -115,11 +114,7 @@ function renderAll() {
 
 function trySplit(lane) {
   if (locked) return;
-  const view = viewFor(lane);
-  if (view.blocked) {
-    onBlockedTap(lane, view);
-    return;
-  }
+  if (viewFor(lane).blocked) return;
   sendSplit({ type: 'split', lane, timestamp: now() });
 }
 
@@ -145,12 +140,10 @@ export async function loadSplitCooldown() {
  * @param {Object} opts
  * @param {function} opts.send - WebSocket send function
  * @param {function} opts.getServerTimeOffset - Returns current server time offset
- * @param {function} [opts.onBlocked] - Called with (lane, view) when a tap hits a blocked lane
  */
-export function initLaneButtons({ send, getServerTimeOffset, onBlocked }) {
+export function initLaneButtons({ send, getServerTimeOffset }) {
   sendSplit = send;
   getOffset = getServerTimeOffset;
-  onBlockedTap = onBlocked ?? (() => {});
   elements.clear();
   document.querySelectorAll('.lane-row').forEach((row) => {
     const lane = Number(row.getAttribute('data-lane'));
@@ -211,11 +204,10 @@ export function resetRace() {
  * Record an accepted split broadcast by the server.
  * @param {Object} message - The `split` message
  * @param {number|null} startTime - Race start time, used for the formatted time
- * @returns {{ lane: number, name: string, time: string, splitNumber: number, isFinish: boolean }|null}
  */
 export function applySplit(message, startTime) {
   const lane = Number(message.lane);
-  if (!Number.isInteger(lane) || lane < 0 || lane > 9) return null;
+  if (!Number.isInteger(lane) || lane < 0 || lane > 9) return;
   const previous = getSplit(lane);
   let time = message.timestamp ? formatLapTime(message.timestamp, startTime || 0) : NO_TIME;
   if (time === '---:---:---' && typeof message.elapsed_ms === 'number') {
@@ -237,13 +229,6 @@ export function applySplit(message, startTime) {
     });
   }
   renderAll();
-  return {
-    lane,
-    name: swimmers.get(lane)?.name ?? '',
-    time,
-    splitNumber,
-    isFinish: message.isFinish === true,
-  };
 }
 
 /** Reset all lane time displays and timeouts. */

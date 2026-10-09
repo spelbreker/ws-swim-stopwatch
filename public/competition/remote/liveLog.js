@@ -1,40 +1,51 @@
-// Live log for the competition remote: a short feed of what happens in the system
-// (start, splits, ignored taps, heat changes, devices). Newest entry first.
+// Live log for the competition remote. It shows the server's competition log
+// (logs/competition.log), so everything the external clocks and other devices
+// did is visible here, including splits the server ignored. Newest entry first.
 //
 // Exports:
 //   initLiveLog()
-//   addLogEntry(kind, text, timestamp)
-//   formatLogTime(timestamp)
+//   refreshLiveLog()
+//   parseLogLine(line)
+//   formatLogTime(isoTimestamp)
 
 const MAX_ENTRIES = 100;
+// The log holds a few separator lines per start/reset next to the entries.
+const TAIL_LINES = 300;
+const POLL_MS = 3000;
 
 // Class names are written out in full so the Tailwind scanner picks them up.
 const KIND_CLASSES = {
   START: 'bg-emerald-400',
   SPLIT: 'bg-aqua',
-  TIMEOUT: 'bg-amber-deck',
-  HEAT: 'bg-violet-300',
-  DEVICE: 'bg-pool-300',
-  SYSTEM: 'bg-pool-300',
+  IGNORED: 'bg-amber-deck',
+  RESET: 'bg-pool-300',
+};
+
+const IGNORED_REASONS = {
+  cooldown: 'within the cooldown of the previous split',
+  'start-cooldown': 'within the cooldown after the start',
+  'after-finish': 'after the finish',
 };
 
 let listElement = null;
 let emptyElement = null;
 let countElement = null;
+let pollTimer = null;
+let lastSnapshot = null;
+let refreshing = false;
 
-function updateSummary() {
-  const count = listElement ? listElement.children.length : 0;
-  if (countElement) countElement.textContent = String(count);
-  if (emptyElement) emptyElement.classList.toggle('hidden', count > 0);
+function field(line, name) {
+  const match = line.match(new RegExp(`${name}: ([^,]+)`));
+  return match ? match[1].trim() : null;
 }
 
 /**
- * Format a timestamp as a local wall-clock time.
- * @param {number} timestamp
+ * Format an ISO timestamp from the log as a local wall-clock time.
+ * @param {string} isoTimestamp
  * @returns {string}
  */
-export function formatLogTime(timestamp) {
-  return new Date(timestamp).toLocaleTimeString('en-GB', {
+export function formatLogTime(isoTimestamp) {
+  return new Date(isoTimestamp).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -42,48 +53,102 @@ export function formatLogTime(timestamp) {
 }
 
 /**
- * Add an entry at the top of the log.
- * @param {keyof typeof KIND_CLASSES} kind
- * @param {string} text
- * @param {number} [timestamp] - Defaults to now
+ * Turn one competition.log line into a log entry, or null for separators and
+ * lines that are not an event.
+ * @param {string} line
+ * @returns {{ time: string, kind: string, text: string }|null}
  */
-export function addLogEntry(kind, text, timestamp = Date.now()) {
-  if (!listElement) return;
-  const item = document.createElement('li');
-  item.className = 'grid grid-cols-[4.5rem_minmax(0,1fr)] items-start gap-2 py-2';
+export function parseLogLine(line) {
+  const match = line.match(/^\[([^\]]+)\] (START|RESET|SPLIT IGNORED|SPLIT)\b(.*)$/);
+  if (!match) return null;
+  const [, iso, type, rest] = match;
+  if (Number.isNaN(new Date(iso).getTime())) return null;
+  const time = formatLogTime(iso);
 
-  const time = document.createElement('span');
-  time.className = 'pt-0.5 font-mono text-xs text-pool-300';
-  time.textContent = formatLogTime(timestamp);
-
-  const body = document.createElement('span');
-  body.className = 'min-w-0 text-sm leading-snug';
-  const chip = document.createElement('span');
-  chip.className = `log-chip ${KIND_CLASSES[kind] ?? KIND_CLASSES.SYSTEEM}`;
-  chip.textContent = kind;
-  const message = document.createElement('span');
-  message.textContent = text;
-  body.append(chip, message);
-
-  item.append(time, body);
-  listElement.prepend(item);
-  while (listElement.children.length > MAX_ENTRIES) {
-    listElement.lastElementChild.remove();
+  if (type === 'START') {
+    return { time, kind: 'START', text: `Event ${field(rest, 'Event')}, heat ${field(rest, 'Heat')}` };
   }
-  updateSummary();
+  if (type === 'RESET') {
+    return { time, kind: 'RESET', text: 'Stopwatch stopped and reset' };
+  }
+
+  const lane = field(rest, 'Lane');
+  const raceTime = field(rest, 'Time');
+  if (type === 'SPLIT IGNORED') {
+    const reason = field(rest, 'Reason');
+    return {
+      time,
+      kind: 'IGNORED',
+      text: `Lane ${lane} · split ignored ${IGNORED_REASONS[reason] ?? reason}`,
+    };
+  }
+  const parts = [`Lane ${lane}`, raceTime];
+  const distance = field(rest, 'Distance');
+  const splitNumber = field(rest, 'Split');
+  if (distance) parts.push(distance);
+  if (splitNumber) parts.push(`split ${splitNumber}`);
+  return { time, kind: 'SPLIT', text: parts.join(' · ') };
 }
 
-/** Look up the log elements and wire the clear button. */
+function render(entries) {
+  if (!listElement) return;
+  const items = entries.map((entry) => {
+    const item = document.createElement('li');
+    item.className = 'grid grid-cols-[4.5rem_minmax(0,1fr)] items-start gap-2 py-2';
+
+    const time = document.createElement('span');
+    time.className = 'pt-0.5 font-mono text-xs text-pool-300';
+    time.textContent = entry.time;
+
+    const body = document.createElement('span');
+    body.className = 'min-w-0 text-sm leading-snug';
+    const chip = document.createElement('span');
+    chip.className = `log-chip ${KIND_CLASSES[entry.kind]}`;
+    chip.textContent = entry.kind;
+    const message = document.createElement('span');
+    message.textContent = entry.text;
+    body.append(chip, message);
+
+    item.append(time, body);
+    return item;
+  });
+  listElement.replaceChildren(...items);
+  if (countElement) countElement.textContent = String(entries.length);
+  if (emptyElement) emptyElement.classList.toggle('hidden', entries.length > 0);
+}
+
+/** Fetch the tail of the server log and show it. Overlapping calls are skipped. */
+export async function refreshLiveLog() {
+  if (refreshing || !listElement) return;
+  refreshing = true;
+  try {
+    const res = await fetch(`/logs/competition.log?tail=${TAIL_LINES}`, { cache: 'no-store' });
+    // A missing log file just means nothing has happened yet.
+    const text = res.ok ? await res.text() : '';
+    if (text === lastSnapshot) return;
+    lastSnapshot = text;
+    const entries = text
+      .split('\n')
+      .map(parseLogLine)
+      .filter(Boolean)
+      .reverse()
+      .slice(0, MAX_ENTRIES);
+    render(entries);
+  } catch {
+    // Network hiccup: keep what is shown and try again on the next poll.
+  } finally {
+    refreshing = false;
+  }
+}
+
+/** Look up the log elements and start polling the server log. */
 export function initLiveLog() {
   listElement = document.getElementById('log-list');
   emptyElement = document.getElementById('log-empty');
   countElement = document.getElementById('log-count');
-  const clearButton = document.getElementById('log-clear');
-  if (clearButton) {
-    clearButton.addEventListener('click', () => {
-      if (listElement) listElement.replaceChildren();
-      updateSummary();
-    });
-  }
-  updateSummary();
+  refreshLiveLog();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(() => {
+    if (!document.hidden) refreshLiveLog();
+  }, POLL_MS);
 }

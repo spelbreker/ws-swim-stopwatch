@@ -40,7 +40,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     },
   };
   const send = jest.fn();
-  const addLogEntry = jest.fn();
+  const refreshLiveLog = jest.fn();
   const onSocketEvent = jest.fn<void, [SocketListener]>();
   const imports: Record<string, object> = {
     '../js/modules/socket.js': { send, onSocketEvent },
@@ -56,7 +56,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
       onHeatDisplayed: jest.fn(),
     },
     './remote/upcoming.js': { loadHeatViews: jest.fn() },
-    './remote/liveLog.js': { initLiveLog: jest.fn(), addLogEntry },
+    './remote/liveLog.js': { initLiveLog: jest.fn(), refreshLiveLog },
     './remote/keysMode.js': { initKeysMode: jest.fn() },
     './remote/tabs.js': { initTabs: jest.fn() },
     './remote/sessionSelector.js': {
@@ -102,7 +102,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     lastRowState,
     rowDataset: row.dataset,
     setRoster: (entries: unknown) => (imports['./remote/laneButtons.js'] as { setRoster: (e: unknown) => void }).setRoster(entries),
-    addLogEntry,
+    refreshLiveLog,
     clickRow: () => clicks.forEach((handler) => handler()),
     laneTime,
     laneStatus,
@@ -151,7 +151,6 @@ describe('competition remote lifecycle', () => {
     expect(remote.lastRowState()).toBe('timeout');
     remote.clickRow();
     expect(remote.send).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'split' }));
-    expect(remote.addLogEntry).toHaveBeenCalledWith('TIMEOUT', expect.stringContaining('split ignored'));
   });
 
   it('sends a split when a free lane row is tapped', () => {
@@ -204,13 +203,11 @@ describe('competition remote lifecycle', () => {
     expect(remote.lastRowState()).toBe('swim');
   });
 
-  it('logs start, split and heat changes', () => {
-    remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+  it('refreshes the live log on start, split and reset', () => {
     remote.emit('message', { type: 'start', timestamp: Date.now() });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() + 30_000 });
-    expect(remote.addLogEntry).toHaveBeenCalledWith('HEAT', 'Event 3, heat 4 selected');
-    expect(remote.addLogEntry).toHaveBeenCalledWith('START', expect.stringContaining('Start for event'));
-    expect(remote.addLogEntry).toHaveBeenCalledWith('SPLIT', expect.stringContaining('Lane 1'));
+    remote.emit('message', { type: 'reset' });
+    expect(remote.refreshLiveLog).toHaveBeenCalledTimes(3);
   });
 
   it('preserves the selection and info bar across repeated reconnects', async () => {

@@ -189,18 +189,22 @@ Features:
   (`splitCooldownSec`, fetched from `/settings`): a lane is blocked (amber row,
   countdown bar, disabled key) for the cooldown after its last accepted split,
   for the cooldown after the start for a lane without a split yet, and
-  permanently after the finish. A tap on a blocked lane is not sent and is
-  written to the live log. Ignored splits from other devices are never
-  broadcast by the server, so they do not show up here.
+  permanently after the finish. A tap on a blocked lane is not sent. Ignored
+  splits from other devices are never broadcast by the server; they show up in
+  the live log.
 - **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
   the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`
   keyboard shortcuts keep working unless locked or the lane is blocked.
 - **Next** — the next heat (same event, or the first heat of the next
   event) with swimmers and entry times.
-- **Live log** — newest first, max 100 entries: start/reset, accepted splits,
-  blocked taps, event/heat changes, cleared screen, device registrations and
-  connection changes. It lives in the page only and is empty after a reload.
+- **Live log** — shows the server's `logs/competition.log` (polled every 3 s
+  through `GET /logs/competition.log?tail=300`, and refreshed right after a
+  `start`, `split` or `reset` message), newest first, max 100 entries. Because
+  it is the server log, it lists everything the external clocks and other
+  devices did, including splits the server ignored (cooldown, after the
+  finish), and it survives a page reload. Entries: START, RESET, SPLIT and
+  IGNORED. Clearing the log is done on the log page.
 - **Distance labels** — the lane status shows `Split 2 · 100m` when the
   server provides a `distance` field.
 - **Time sync** — runs the initial rapid ping sequence and ongoing pings.

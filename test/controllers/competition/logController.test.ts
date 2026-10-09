@@ -36,6 +36,19 @@ describe('logController', () => {
     expect(res.text).toBe('line 1');
   });
 
+  it('returns only the last lines when tail is given', async () => {
+    mockLog('a\nb\nc\nd\n');
+    const res = await request(app).get('/logs/competition.log?tail=2');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe('c\nd');
+  });
+
+  it('returns the whole log when tail is not a positive number', async () => {
+    mockLog('a\nb\n');
+    const res = await request(app).get('/logs/competition.log?tail=abc');
+    expect(res.text).toBe('a\nb\n');
+  });
+
   it('returns 404 when the log file is missing', async () => {
     mockLog(null);
     const res = await request(app).get('/logs/competition.log');

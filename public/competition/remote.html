@@ -189,12 +189,9 @@
 
             <!-- Live log -->
             <section data-tab-panel="log" class="hidden flex-col gap-1.5 lg:flex lg:overflow-y-auto" aria-label="Live log">
-                <div class="flex items-center justify-between">
-                    <div class="remote-panel-title">Live log</div>
-                    <button type="button" id="log-clear" class="px-1 pb-1 text-xs font-semibold text-pool-300 hover:text-slate-100">Clear</button>
-                </div>
+                <div class="remote-panel-title">Live log</div>
                 <div class="remote-card px-3 py-0.5">
-                    <p id="log-empty" class="py-3 text-sm text-pool-300">Waiting for activity...</p>
+                    <p id="log-empty" class="py-3 text-sm text-pool-300">No activity in the server log yet.</p>
                     <ul id="log-list" class="divide-y divide-pool-700" aria-live="polite"></ul>
                 </div>
             </section>

@@ -27,7 +27,7 @@ import {
   onHeatDisplayed,
 } from './remote/eventHeat.js';
 import { loadHeatViews } from './remote/upcoming.js';
-import { initLiveLog, addLogEntry } from './remote/liveLog.js';
+import { initLiveLog, refreshLiveLog } from './remote/liveLog.js';
 import { initKeysMode } from './remote/keysMode.js';
 import { initTabs } from './remote/tabs.js';
 import {
@@ -61,14 +61,6 @@ function disableControls(disable, elements) {
     if (!element) return;
     element.disabled = disable;
   });
-}
-
-/** Log line for a tap on a lane that is blocked (timeout or finished). */
-function describeBlockedTap(lane, view) {
-  if (view.state === 'timeout') {
-    return `Lane ${lane}: split ignored, timeout ${(view.remainingMs / 1000).toFixed(1)}s`;
-  }
-  return `Lane ${lane}: split ignored, already finished`;
 }
 
 function getServerTimeOffset() {
@@ -110,11 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     send,
     getCurrentSession,
   });
-  initLaneButtons({
-    send,
-    getServerTimeOffset,
-    onBlocked: (lane, view) => addLogEntry('TIMEOUT', describeBlockedTap(lane, view)),
-  });
+  initLaneButtons({ send, getServerTimeOffset });
   initSessionSelector({
     onSessionChanged: (sessionNumber) => {
       // Refresh event list for the new session
@@ -241,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
   onSocketEvent((event, socket, message) => {
     if (event === 'open') {
       stopPingSync();
-      addLogEntry('SYSTEM', 'Connected to server');
 
       // Start initial fast sync sequence
       let pingCount = 0;
@@ -264,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (event === 'close') {
       stopPingSync();
-      addLogEntry('SYSTEM', 'Connection lost');
       return;
     }
 
@@ -278,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startRace(message.timestamp);
       loadSplitCooldown();
       updateStartButtonUI(true);
-      addLogEntry('START', `Start for event ${eventSelect.value}, heat ${heatSelect.value}`);
+      refreshLiveLog();
       return;
     }
 
@@ -286,19 +272,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (message.type === 'reset') {
       resetStopwatch(false);
       cancelAllHighlightTimers();
-      addLogEntry('START', 'Stopwatch stopped and reset');
+      refreshLiveLog();
       return;
     }
 
     /** Update lane information */
     if (message.type === 'split') {
-      const info = applySplit(message, startTime);
-      if (info) {
-        const swimmer = info.name ? ` · ${info.name}` : '';
-        const distance = message.distance ? ` · ${message.distance}m` : '';
-        const finish = info.isFinish ? ' · finish' : '';
-        addLogEntry('SPLIT', `Lane ${info.lane}${swimmer} · ${info.time}${distance}${finish}`);
-      }
+      applySplit(message, startTime);
+      refreshLiveLog();
       return;
     }
 
@@ -308,21 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (heatSelect) heatSelect.value = message.heat;
       cancelAllHighlightTimers();
       updateEventHeatInfoBar(message.event, message.heat, message.session ?? getCurrentSession());
-      addLogEntry('HEAT', `Event ${message.event}, heat ${message.heat} selected`);
       return;
     }
 
     /** Clear all lane information */
     if (message.type === 'clear') {
       clearLaneInformation();
-      addLogEntry('SYSTEM', 'Screen cleared');
-      return;
-    }
-
-    /** A device (starter or lane unit) connected */
-    if (message.type === 'device_register') {
-      const who = message.role === 'lane' ? `Lane device ${message.lane ?? '?'}` : 'Starter';
-      addLogEntry('DEVICE', `${who} connected`);
       return;
     }
 

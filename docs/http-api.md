@@ -296,6 +296,8 @@ Returns the raw competition log file as `text/plain`.
 - **Query params:**
   - `download` — if present (any value), adds
     `Content-Disposition: attachment; filename="competition-YYYY-MM-DD-HH-MM-SS.log"`
+  - `tail` — positive integer; return only the last `tail` lines (the remote's
+    live log polls with this)
 - **200:** log file contents
 - **404:** log file not found
 

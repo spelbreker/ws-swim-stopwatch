@@ -101,3 +101,43 @@ describe('entryToLane', () => {
     })).toMatchObject({ lane: 2, name: 'De Dolfijn (relay)', club: 'Bakker / Kok' });
   });
 });
+
+describe('parseLogLine', () => {
+  const { parseLogLine } = loadModule('liveLog.js') as unknown as {
+    parseLogLine: (line: string) => { time: string; kind: string; text: string } | null;
+  };
+  const iso = '2025-06-01T10:00:02.345Z';
+
+  it('parses a start', () => {
+    expect(parseLogLine(`[${iso}] START - Event: 12, Heat: 3, Timestamp: 1748772002345`))
+      .toMatchObject({ kind: 'START', text: 'Event 12, heat 3' });
+  });
+
+  it('parses a reset', () => {
+    expect(parseLogLine(`[${iso}] RESET - Timestamp: 1748772002345`))
+      .toMatchObject({ kind: 'RESET', text: 'Stopwatch stopped and reset' });
+  });
+
+  it('parses a split with distance and split number', () => {
+    expect(parseLogLine(`[${iso}] SPLIT - Lane: 3, Time: 00:18.190, Timestamp: 1, Elapsed: 18190ms, Distance: 50m, Split: 1`))
+      .toMatchObject({ kind: 'SPLIT', text: 'Lane 3 · 00:18.190 · 50m · split 1' });
+  });
+
+  it('parses a split without distance', () => {
+    expect(parseLogLine(`[${iso}] SPLIT - Lane: 3, Time: 00:18.190, Timestamp: 1`))
+      .toMatchObject({ kind: 'SPLIT', text: 'Lane 3 · 00:18.190' });
+  });
+
+  it('parses an ignored split with its reason', () => {
+    expect(parseLogLine(`[${iso}] SPLIT IGNORED - Lane: 5, Reason: cooldown, Time: 00:20.100, Timestamp: 1, Since last: 500ms`))
+      .toMatchObject({ kind: 'IGNORED', text: 'Lane 5 · split ignored within the cooldown of the previous split' });
+    expect(parseLogLine(`[${iso}] SPLIT IGNORED - Lane: 5, Reason: after-finish, Time: 00:20.100, Timestamp: 1`))
+      .toMatchObject({ text: 'Lane 5 · split ignored after the finish' });
+  });
+
+  it('skips separators, blank lines and invalid dates', () => {
+    expect(parseLogLine('=====================')).toBeNull();
+    expect(parseLogLine('')).toBeNull();
+    expect(parseLogLine('[not a date] SPLIT - Lane: 1')).toBeNull();
+  });
+});

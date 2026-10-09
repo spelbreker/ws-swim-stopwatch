@@ -19,6 +19,14 @@ export function getCompetitionLog(req: Request, res: Response) {
       return;
     }
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    const tail = parseInt(String(req.query.tail), 10);
+    if (tail > 0) {
+      // Only the last lines: the remote polls the log and does not need the whole file.
+      const lines = data.split('\n');
+      if (lines[lines.length - 1] === '') lines.pop();
+      res.send(lines.slice(-tail).join('\n'));
+      return;
+    }
     if (req.query.download !== undefined) {
       res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename()}"`);
     }
