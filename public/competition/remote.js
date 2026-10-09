@@ -102,7 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     send,
     getCurrentSession,
   });
-  initLaneButtons({ send, getServerTimeOffset });
+  initLaneButtons({
+    send,
+    getServerTimeOffset,
+    // An ignored split is logged by the server but not broadcast: pick it up from the log.
+    onSplitSent: () => setTimeout(refreshLiveLog, 300),
+  });
   initSessionSelector({
     onSessionChanged: (sessionNumber) => {
       // Refresh event list for the new session

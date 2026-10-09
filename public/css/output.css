@@ -842,9 +842,6 @@
   .bg-violet-100 {
     background-color: var(--color-violet-100);
   }
-  .bg-violet-300 {
-    background-color: var(--color-violet-300);
-  }
   .bg-white {
     background-color: var(--color-white);
   }
@@ -1279,9 +1276,6 @@
     }
     .hover\:text-cyan-900:hover {
       color: var(--color-cyan-900);
-    }
-    .hover\:text-slate-100:hover {
-      color: var(--color-slate-100);
     }
     .hover\:underline:hover {
       text-decoration-line: underline;
@@ -1874,7 +1868,7 @@
       height: calc(var(--spacing) * 9);
     }
   }
-  .lane-button:disabled {
+  .lane-button:disabled, .lane-button[aria-disabled='true'] {
     cursor: not-allowed;
     background-color: var(--color-pool-700);
     color: var(--color-pool-400);

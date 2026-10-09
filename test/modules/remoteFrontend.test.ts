@@ -27,7 +27,9 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
       return { textContent: '', style: {} };
     },
   };
-  const key = { getAttribute: () => '1', addEventListener: jest.fn(), disabled: false };
+  const key = {
+    getAttribute: () => '1', addEventListener: jest.fn(), setAttribute: jest.fn(), disabled: false,
+  };
   const lastRowState = () => row.dataset.state;
   const document = {
     addEventListener: jest.fn(),
@@ -146,11 +148,18 @@ describe('competition remote lifecycle', () => {
     expect(remote.laneStatus.textContent).toBe('Split 1 · 50m');
   });
 
-  it('blocks every lane for the cooldown right after the start, like the server does', () => {
+  it('shows every lane in timeout right after the start, like the server does', () => {
     remote.emit('message', { type: 'start', timestamp: Date.now() });
     expect(remote.lastRowState()).toBe('timeout');
+  });
+
+  it('still sends a tap on a lane in timeout so the server logs it as ignored, then refreshes the log', async () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() });
+    remote.refreshLiveLog.mockClear();
     remote.clickRow();
-    expect(remote.send).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'split' }));
+    expect(remote.send).toHaveBeenCalledWith({ type: 'split', lane: 1, timestamp: Date.now() });
+    await jest.advanceTimersByTimeAsync(300);
+    expect(remote.refreshLiveLog).toHaveBeenCalledTimes(1);
   });
 
   it('sends a split when a free lane row is tapped', () => {

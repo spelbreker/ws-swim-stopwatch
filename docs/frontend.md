@@ -189,9 +189,10 @@ Features:
   (`splitCooldownSec`, fetched from `/settings`): a lane is blocked (amber row,
   countdown bar, disabled key) for the cooldown after its last accepted split,
   for the cooldown after the start for a lane without a split yet, and
-  permanently after the finish. A tap on a blocked lane is not sent. Ignored
-  splits from other devices are never broadcast by the server; they show up in
-  the live log.
+  permanently after the finish. A tap on a blocked lane is still sent: the
+  server ignores it and writes `SPLIT IGNORED` to the log, which the live log
+  shows (the remote refreshes it 300 ms after every tap, because ignored splits
+  are not broadcast). Only the `Locked` keypad mode stops taps.
 - **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
   the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`

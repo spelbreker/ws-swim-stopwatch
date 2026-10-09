@@ -1,11 +1,12 @@
 // Lane logic for the competition remote.
 // Owns the per-lane state (swimmer, last split, timeout) and renders the lane
 // rows and keypad keys. Rows and keys both send a split when tapped, unless the
-// lane is blocked (timeout after a split or the start, finished) or the keys are
-// locked. Lanes without a registered swimmer are not blocked.
+// keys are locked. A lane in timeout or finished is shown as blocked but a tap is
+// still sent: the server ignores and logs it. Lanes without a registered swimmer
+// are not blocked.
 //
 // Exports:
-//   initLaneButtons({ send, getServerTimeOffset })
+//   initLaneButtons({ send, getServerTimeOffset, onSplitSent })
 //   loadSplitCooldown()
 //   setRoster(entries | null)
 //   setLocked(locked)
@@ -30,6 +31,7 @@ let rosterLoaded = false;
 let locked = false;
 let tickTimer = null;
 let sendSplit = () => {};
+let onSplitSent = () => {};
 let getOffset = () => 0;
 
 /** @type {Map<number, object>} */
@@ -93,7 +95,8 @@ function renderLane(lane) {
   if (els.status) els.status.textContent = view.status;
   if (els.progress) els.progress.style.width = view.state === 'timeout' ? `${view.progress}%` : '0%';
   els.keys.forEach((key) => {
-    key.disabled = view.blocked || locked;
+    key.disabled = locked;
+    key.setAttribute('aria-disabled', String(view.blocked || locked));
   });
   return view;
 }
@@ -112,10 +115,12 @@ function renderAll() {
   }
 }
 
+// A blocked lane (timeout, finished) is still sent: the server decides and logs an
+// ignored split, which keeps the live log complete and does not depend on this clock.
 function trySplit(lane) {
   if (locked) return;
-  if (viewFor(lane).blocked) return;
   sendSplit({ type: 'split', lane, timestamp: now() });
+  onSplitSent(lane);
 }
 
 /**
@@ -140,10 +145,12 @@ export async function loadSplitCooldown() {
  * @param {Object} opts
  * @param {function} opts.send - WebSocket send function
  * @param {function} opts.getServerTimeOffset - Returns current server time offset
+ * @param {function} [opts.onSplitSent] - Called with (lane) after a split was sent
  */
-export function initLaneButtons({ send, getServerTimeOffset }) {
+export function initLaneButtons({ send, getServerTimeOffset, onSplitSent: afterSend }) {
   sendSplit = send;
   getOffset = getServerTimeOffset;
+  onSplitSent = afterSend ?? (() => {});
   elements.clear();
   document.querySelectorAll('.lane-row').forEach((row) => {
     const lane = Number(row.getAttribute('data-lane'));
