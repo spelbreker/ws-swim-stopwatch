@@ -196,8 +196,7 @@ Features:
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`
   keyboard shortcuts keep working unless locked or the lane is blocked.
 - **Volgende** — the next heat (same event, or the first heat of the next
-  event) with swimmers and entry times, and a summary of the next session
-  (`/competition/session/:session/summary`: swimmers, events, heats).
+  event) with swimmers and entry times.
 - **Live log** — newest first, max 100 entries: start/reset, accepted splits,
   blocked taps, event/heat changes, cleared screen, device registrations and
   connection changes. It lives in the page only and is empty after a reload.

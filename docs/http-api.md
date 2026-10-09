@@ -72,33 +72,6 @@ Returns all sessions for a meet.
 ]
 ```
 
-### `GET /competition/session/:session/summary`
-
-Returns counts for one session, used by the remote to preview the next session.
-
-- **Tunnel-blocked.**
-- **Path params:** `session` — session number (1-based)
-- **Query params:** `meet` (optional, default `0`)
-- **200 response:**
-
-```json
-{
-  "number": 2,
-  "date": "2025-06-14",
-  "startTime": "13:30",
-  "eventCount": 14,
-  "heatCount": 58,
-  "swimmerCount": 412
-}
-```
-
-`swimmerCount` is the number of distinct athletes with an entry in the session
-(relay members included). `startTime` is the first heat's `daytime`, or `null`.
-
-- **400:** session is not a number
-- **404:** session not found
-- **500:** no competition loaded or error reading data
-
 ### `GET /competition/event`
 
 Returns all events in a session.

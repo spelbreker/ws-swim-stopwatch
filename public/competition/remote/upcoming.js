@@ -1,6 +1,6 @@
-// Heat roster and "next" preview for the competition remote.
-// Loads the swimmers of the selected heat (shown on the lane rows), the next
-// heat and the summary of the next session. Stale responses are dropped.
+// Heat roster and "next heat" preview for the competition remote.
+// Loads the swimmers of the selected heat (shown on the lane rows) and the
+// next heat. Stale responses are dropped.
 //
 // Exports:
 //   entryToLane(entry)
@@ -107,37 +107,6 @@ function renderNextHeat(next, lanes) {
   });
 }
 
-function renderNextSession(summary) {
-  const body = document.getElementById('next-session-body');
-  const empty = document.getElementById('next-session-empty');
-  if (!body) return;
-  if (!summary) {
-    body.classList.add('hidden');
-    if (empty) empty.classList.remove('hidden');
-    return;
-  }
-  const set = (id, value) => {
-    const element = document.getElementById(id);
-    if (element) element.textContent = String(value);
-  };
-  set('next-session-name', `Sessie ${summary.number}`);
-  set('next-session-when', [summary.date, summary.startTime].filter(Boolean).join(' '));
-  set('next-session-swimmers', summary.swimmerCount);
-  set('next-session-events', summary.eventCount);
-  set('next-session-heats', summary.heatCount);
-  body.classList.remove('hidden');
-  if (empty) empty.classList.add('hidden');
-}
-
-async function loadNextSession(session) {
-  const sessions = await getJson('/competition/sessions');
-  if (!Array.isArray(sessions)) return null;
-  const index = sessions.findIndex((candidate) => candidate.number === session);
-  const next = index >= 0 ? sessions[index + 1] : null;
-  if (!next) return null;
-  return getJson(`/competition/session/${next.number}/summary`);
-}
-
 /**
  * Load everything that depends on the selected heat.
  * @param {number|string} event
@@ -157,7 +126,7 @@ export async function loadHeatViews(event, heat, session, { onRoster }) {
     return;
   }
 
-  const [roster, next, nextSession] = await Promise.all([
+  const [roster, next] = await Promise.all([
     getJson(`/competition/event/${eventNumber}/heat/${heatNumber}${sessionParam}`),
     findNextHeat(eventNumber, heatNumber, sessionNumber).then(async (found) => {
       if (!found) return null;
@@ -166,11 +135,9 @@ export async function loadHeatViews(event, heat, session, { onRoster }) {
       );
       return { next: found, lanes: toLanes(entries) };
     }),
-    sessionNumber ? loadNextSession(sessionNumber) : Promise.resolve(null),
   ]);
   if (id !== requestId) return;
 
   onRoster(toLanes(roster));
   renderNextHeat(next?.next ?? null, next?.lanes ?? null);
-  renderNextSession(nextSession);
 }

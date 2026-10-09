@@ -59,52 +59,6 @@ class Competition {
   }
 
   /**
-   * Returns counts for one session: events, heats and distinct swimmers.
-   * Relay members count as swimmers too. Used by the remote to preview the next session.
-   * @param meetIndex - Index of the meet
-   * @param sessionNumber - Session number (1-based, not index)
-   * @throws Error if the meet or session does not exist
-   */
-  public static getSessionSummary(meetIndex: number, sessionNumber: number): {
-    number: number;
-    date: string;
-    startTime: string | null;
-    eventCount: number;
-    heatCount: number;
-    swimmerCount: number;
-  } {
-    const data = Competition.readCompetitionDataFromDisk();
-    const sessionIndex = Competition.findSessionIndexByNumber(data, meetIndex, sessionNumber);
-    const meet = data.meets[meetIndex];
-    const session = meet.sessions[sessionIndex];
-    const heatIds = new Set<string>();
-    session.events.forEach((event: CompetitionEvent) => {
-      event.heats.forEach((heat: CompetitionHeat) => heatIds.add(heat.heatid));
-    });
-    const swimmers = new Set<number>();
-    meet.clubs.forEach((club: CompetitionClub) => {
-      (club.athletes ?? []).forEach((athlete: CompetitionAthlete) => {
-        if ((athlete.entries ?? []).some((entry: CompetitionEntry) => heatIds.has(entry.heatid))) {
-          swimmers.add(athlete.athleteid);
-        }
-      });
-      (club.relays ?? []).forEach((relay) => {
-        relay.entries
-          .filter((entry) => heatIds.has(entry.heatid))
-          .forEach((entry) => entry.relaypositions.forEach((position) => swimmers.add(position.athleteid)));
-      });
-    });
-    return {
-      number: session.number,
-      date: session.date,
-      startTime: session.events[0]?.heats[0]?.daytime ?? null,
-      eventCount: session.events.length,
-      heatCount: heatIds.size,
-      swimmerCount: swimmers.size,
-    };
-  }
-
-  /**
    * Helper to find session index by session number.
    * @param data - Competition data object
    * @param meetIndex - Index of the meet
