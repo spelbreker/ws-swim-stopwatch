@@ -13,35 +13,52 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     select.value = select.id === 'event-select' ? firstEvent : '1';
   });
   const updateEventHeatInfoBar = jest.fn();
-  const classes = new Set(['bg-blue-500']);
-  const button = {
+  const laneTime = { textContent: '--:--:--' };
+  const laneStatus = { textContent: '' };
+  const clicks: Array<() => void> = [];
+  const row = {
+    dataset: {} as Record<string, string>,
     getAttribute: () => '1',
-    addEventListener: jest.fn(),
-    classList: {
-      add: (name: string) => classes.add(name),
-      remove: (name: string) => classes.delete(name),
+    setAttribute: jest.fn(),
+    addEventListener: (_event: string, handler: () => void) => clicks.push(handler),
+    querySelector: (selector: string) => {
+      if (selector === '.lane-time') return laneTime;
+      if (selector === '.lane-status') return laneStatus;
+      return { textContent: '', style: {} };
     },
   };
-  const laneTime = { textContent: '00:00:00' };
+  const key = { getAttribute: () => '1', addEventListener: jest.fn(), disabled: false };
+  const lastRowState = () => row.dataset.state;
   const document = {
     addEventListener: jest.fn(),
     getElementById: jest.fn(() => null),
-    querySelector: (selector: string) => selector.startsWith('.lane-time') ? laneTime : button,
-    querySelectorAll: (selector: string) => selector === '.lane-button' ? [button] : [laneTime],
+    querySelector: () => null,
+    querySelectorAll: (selector: string) => {
+      if (selector === '.lane-row') return [row];
+      if (selector === '.lane-button') return [key];
+      return [];
+    },
   };
   const send = jest.fn();
+  const addLogEntry = jest.fn();
   const onSocketEvent = jest.fn<void, [SocketListener]>();
   const imports: Record<string, object> = {
     '../js/modules/socket.js': { send, onSocketEvent },
     '../js/modules/timeSync.js': { TimeSync: jest.fn() },
-    '../js/modules/format.js': { formatLapTime: () => '00:31:00' },
+    '../js/modules/format.js': { formatLapTime: () => '00:31:00', pad: (n: number) => String(n).padStart(2, '0') },
+    '../../js/modules/format.js': { formatLapTime: () => '00:31:00' },
     '../js/modules/connectionIndicator.js': { setupConnectionIndicator: jest.fn() },
     '../js/modules/wakeLock.js': { requestWakeLock: jest.fn() },
     './remote/eventHeat.js': {
       initEventHeat: () => ({ eventSelect, heatSelect }),
       fillSelectOptions,
       updateEventHeatInfoBar,
+      onHeatDisplayed: jest.fn(),
     },
+    './remote/upcoming.js': { loadHeatViews: jest.fn() },
+    './remote/liveLog.js': { initLiveLog: jest.fn(), addLogEntry },
+    './remote/keysMode.js': { initKeysMode: jest.fn() },
+    './remote/tabs.js': { initTabs: jest.fn() },
     './remote/sessionSelector.js': {
       initSessionSelector: () => sessionsReady,
       getCurrentSession: () => session,
@@ -76,13 +93,17 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     return exports;
   }
 
+  imports['./laneState.js'] = loadScript('remote/laneState.js');
   imports['./remote/laneButtons.js'] = loadScript('remote/laneButtons.js');
   loadScript('remote.js');
   document.addEventListener.mock.calls.find(([event]) => event === 'DOMContentLoaded')![1]();
   const listener = onSocketEvent.mock.calls[0][0];
   return {
-    classes,
+    lastRowState,
+    addLogEntry,
+    clickRow: () => clicks.forEach((handler) => handler()),
     laneTime,
+    laneStatus,
     send,
     eventSelect,
     heatSelect,
@@ -107,34 +128,76 @@ describe('competition remote lifecycle', () => {
     jest.useRealTimers();
   });
 
-  it.each(['reset', 'event-heat', 'clear'])('clears the highlight and timer on %s', (type) => {
+  it('blocks a lane in timeout after a split and frees it after the cooldown', async () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    expect(remote.lastRowState()).toBe('swim');
+
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), splitNumber: 1, distance: 50 });
+    expect(remote.lastRowState()).toBe('timeout');
+    expect(remote.laneTime.textContent).toBe('00:31:00');
+    expect(remote.laneStatus.textContent).toMatch(/^Timeout 12\.0s$/);
+
+    await jest.advanceTimersByTimeAsync(11_900);
+    expect(remote.lastRowState()).toBe('timeout');
+    await jest.advanceTimersByTimeAsync(200);
+    expect(remote.lastRowState()).toBe('swim');
+    expect(remote.laneStatus.textContent).toBe('Split 1 · 50m');
+  });
+
+  it('blocks every lane for the cooldown right after the start, like the server does', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() });
+    expect(remote.lastRowState()).toBe('timeout');
+    remote.clickRow();
+    expect(remote.send).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'split' }));
+    expect(remote.addLogEntry).toHaveBeenCalledWith('TIMEOUT', expect.stringContaining('split genegeerd'));
+  });
+
+  it('sends a split when a free lane row is tapped', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
+    remote.clickRow();
+    expect(remote.send).toHaveBeenCalledWith({ type: 'split', lane: 1, timestamp: Date.now() });
+  });
+
+  it('marks a lane finished and keeps it blocked', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 60_000 });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), splitNumber: 2, isFinish: true, ranking: [{ lane: 1, place: 1, splitNumber: 2 }] });
+    expect(remote.lastRowState()).toBe('finished');
+    expect(remote.laneStatus.textContent).toBe('Finish · 1e');
+    jest.advanceTimersByTime(60_000);
+    expect(remote.lastRowState()).toBe('finished');
+  });
+
+  it.each(['reset', 'event-heat', 'clear'])('clears the timeout and its timer on %s', (type) => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
-    expect(remote.classes.has('bg-green-500')).toBe(true);
+    expect(remote.lastRowState()).toBe('timeout');
 
     remote.emit('message', { type, event: 3, heat: 4 });
-    expect(remote.classes.has('bg-green-500')).toBe(false);
-    expect(remote.classes.has('bg-blue-500')).toBe(true);
-    expect(jest.getTimerCount()).toBe(0);
-    jest.advanceTimersByTime(12_000);
-    expect(remote.classes.has('bg-blue-500')).toBe(true);
+    expect(remote.lastRowState()).toBe(type === 'reset' ? 'ready' : 'swim');
+    expect(remote.laneTime.textContent).toBe('--:--:--');
+    expect(jest.getTimerCount()).toBe(type === 'reset' ? 0 : 1);
   });
 
-  it('does not erase split text when resetting the highlight', () => {
-    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
-    remote.emit('message', { type: 'reset' });
-    expect(remote.laneTime.textContent).toBe('00:31:00');
-  });
-
-  it('keeps a new highlight for its full cooldown after a reset', () => {
+  it('keeps a new timeout for its full cooldown after a reset', () => {
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
     jest.advanceTimersByTime(1000);
     remote.emit('message', { type: 'reset' });
+    remote.emit('message', { type: 'start', timestamp: Date.now() - 30_000 });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
     jest.advanceTimersByTime(11_000);
-    expect(remote.classes.has('bg-green-500')).toBe(true);
+    expect(remote.lastRowState()).toBe('timeout');
     jest.advanceTimersByTime(1000);
-    expect(remote.classes.has('bg-green-500')).toBe(false);
-    expect(remote.classes.has('bg-blue-500')).toBe(true);
+    expect(remote.lastRowState()).toBe('swim');
+  });
+
+  it('logs start, split and heat changes', () => {
+    remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
+    remote.emit('message', { type: 'start', timestamp: Date.now() });
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() + 30_000 });
+    expect(remote.addLogEntry).toHaveBeenCalledWith('SERIE', 'Event 3, serie 4 geselecteerd');
+    expect(remote.addLogEntry).toHaveBeenCalledWith('START', expect.stringContaining('Start voor event'));
+    expect(remote.addLogEntry).toHaveBeenCalledWith('SPLIT', expect.stringContaining('Baan 1'));
   });
 
   it('preserves the selection and info bar across repeated reconnects', async () => {
@@ -178,7 +241,8 @@ describe('competition remote lifecycle', () => {
     expect(remote.eventSelect.value).toBe('3');
     expect(remote.heatSelect.value).toBe('4');
     expect(remote.send).not.toHaveBeenCalled();
-    expect(jest.getTimerCount()).toBe(2);
+    // stopwatch, ping interval and the start-timeout countdown of the lane row
+    expect(jest.getTimerCount()).toBe(3);
   });
 
   it('waits for the session before initializing dropdowns, independently of socket opens', async () => {

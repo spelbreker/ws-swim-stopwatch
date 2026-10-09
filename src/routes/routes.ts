@@ -7,7 +7,7 @@ import {
 } from '../controllers/competition/competitionController';
 import { getEvents, getEvent } from '../controllers/competition/event/eventController';
 import { getHeat } from '../controllers/competition/heat/heatController';
-import { getSessions } from '../controllers/competition/sessionController';
+import { getSessions, getSessionSummary } from '../controllers/competition/sessionController';
 import { getCompetitionLog, clearCompetitionLog } from '../controllers/competition/logController';
 import { getDevicesList } from '../controllers/devicesController';
 import {
@@ -34,6 +34,7 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
   app.post('/competition/upload', upload.single('lenexFile'), uploadCompetition);
   app.get('/competition/summary', getCompetitionSummary);
   app.get('/competition/sessions', getSessions);
+  app.get('/competition/session/:session/summary', getSessionSummary);
   app.get('/competition/event', getEvents);
   app.get('/competition/event/:event', getEvent);
   app.get('/competition/event/:event/heat/:heat', getHeat);

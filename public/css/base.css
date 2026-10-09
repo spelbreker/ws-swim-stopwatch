@@ -4,3 +4,131 @@
   - Add custom styles below the Tailwind directives
 */
 @import "tailwindcss";
+
+/*
+  Remote control (public/competition/remote.html)
+  Dark "pool deck" palette plus the component classes the remote modules toggle through data attributes.
+*/
+@theme {
+  --color-pool-950: #0b1220;
+  --color-pool-900: #101a2d;
+  --color-pool-800: #131c2e;
+  --color-pool-700: #1b2740;
+  --color-pool-600: #25324d;
+  --color-pool-400: #6b7a94;
+  --color-pool-300: #9aa8c0;
+  --color-aqua: #3dd6c6;
+  --color-amber-deck: #f5b74a;
+}
+
+@layer components {
+  .remote-panel-title {
+    @apply px-1 pb-1 text-xs font-semibold tracking-[0.12em] text-pool-300 uppercase;
+  }
+
+  .remote-card {
+    @apply rounded-xl border border-pool-600 bg-pool-800;
+  }
+
+  /* Lane row: one per lane, shows swimmer, club, last split and timeout state */
+  .lane-row {
+    @apply relative grid min-h-12 w-full grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-xl border border-pool-600 bg-pool-800 px-3 py-1.5 text-left text-slate-100 transition-colors;
+  }
+  .lane-row[aria-disabled='true'] {
+    @apply cursor-not-allowed;
+  }
+  .lane-row[data-state='empty'] {
+    @apply min-h-8 border-dashed bg-transparent py-0.5 text-pool-400;
+  }
+  .lane-row[data-state='timeout'] {
+    @apply border-[#6f5018] bg-[#2b2110];
+  }
+  .lane-row[data-state='finished'] {
+    @apply border-emerald-700 bg-emerald-950;
+  }
+  .lane-row[data-locked='true']:not([data-state='empty']) {
+    @apply opacity-60;
+  }
+  .lane-number {
+    @apply grid size-9 place-items-center rounded-lg bg-aqua font-mono text-lg font-bold text-pool-950;
+  }
+  .lane-row[data-state='empty'] .lane-name {
+    @apply text-sm font-normal;
+  }
+  .lane-row[data-state='empty'] .lane-time {
+    @apply hidden;
+  }
+  .lane-row[data-state='empty'] .lane-number {
+    @apply size-6 bg-transparent text-base text-pool-400;
+  }
+  .lane-row[data-state='timeout'] .lane-number {
+    @apply bg-amber-deck;
+  }
+  .lane-row[data-state='finished'] .lane-number {
+    @apply bg-emerald-400;
+  }
+  .lane-name {
+    @apply block truncate text-base leading-tight font-bold;
+  }
+  .lane-club {
+    @apply block truncate text-sm leading-tight text-pool-300;
+  }
+  .lane-time {
+    @apply block font-mono text-lg font-bold;
+  }
+  .lane-row[data-state='ready'] .lane-time,
+  .lane-row[data-state='empty'] .lane-time {
+    @apply text-pool-400;
+  }
+  .lane-row[data-state='timeout'] .lane-time {
+    @apply text-amber-deck;
+  }
+  .lane-status {
+    @apply block text-xs font-semibold tracking-wide text-pool-300;
+  }
+  .lane-row[data-state='swim'] .lane-status {
+    @apply text-emerald-400;
+  }
+  .lane-row[data-state='timeout'] .lane-status {
+    @apply text-amber-deck;
+  }
+  .lane-row[data-state='finished'] .lane-status {
+    @apply text-emerald-400;
+  }
+  .lane-progress {
+    @apply absolute bottom-0 left-0 h-[3px] w-0 rounded-r-sm bg-amber-deck;
+  }
+
+  /* Keypad key (0-9) */
+  .lane-button {
+    @apply h-11 rounded-lg bg-aqua lg:h-9 font-mono text-lg font-bold text-pool-950 transition-colors hover:brightness-110;
+  }
+  .lane-button:disabled {
+    @apply cursor-not-allowed bg-pool-700 text-pool-400 hover:brightness-100;
+  }
+
+  .remote-tab {
+    @apply flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-pool-600 text-sm font-bold text-slate-100;
+  }
+  .remote-tab[aria-selected='true'] {
+    @apply border-aqua bg-aqua text-pool-950;
+  }
+
+  .remote-stepper {
+    @apply flex h-12 flex-1 items-center rounded-xl border border-pool-600 bg-pool-950;
+  }
+  .remote-stepper button {
+    @apply grid h-full w-10 place-items-center text-slate-100 disabled:cursor-not-allowed disabled:text-pool-400;
+  }
+
+  .keys-mode-button {
+    @apply min-w-0 flex-1 rounded-lg px-1 text-sm font-bold text-pool-300;
+  }
+  .keys-mode-button[aria-pressed='true'] {
+    @apply bg-pool-600 text-slate-100 ring-1 ring-aqua;
+  }
+
+  .log-chip {
+    @apply mr-1.5 inline-block rounded px-1.5 py-px text-[0.6875rem] font-bold tracking-wider text-pool-950;
+  }
+}

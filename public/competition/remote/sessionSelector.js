@@ -30,11 +30,12 @@ export function initSessionSelector({ onSessionChanged }) {
   const sessionList = document.getElementById('session-list');
   const closeSessionDialog = document.getElementById('close-session-dialog');
   const sessionIndicator = document.getElementById('session-indicator');
+  const sessionLabel = document.getElementById('session-label');
 
   function updateSessionIndicator() {
-    if (sessionIndicator && currentSession) {
-      sessionIndicator.textContent = `Session ${currentSession}`;
-    }
+    if (!currentSession) return;
+    if (sessionIndicator) sessionIndicator.textContent = String(currentSession);
+    if (sessionLabel) sessionLabel.textContent = `Sessie ${currentSession}`;
   }
 
   async function loadSessions() {
@@ -47,7 +48,7 @@ export function initSessionSelector({ onSessionChanged }) {
       sessions.forEach((session) => {
         const listItem = document.createElement('li');
         listItem.className =
-          'cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors';
+          'cursor-pointer rounded-lg px-4 py-2 transition-colors hover:bg-pool-700';
 
         const sessionTime = session.daytime ? ` ${session.daytime}` : '';
 
@@ -56,10 +57,10 @@ export function initSessionSelector({ onSessionChanged }) {
         const wrapper = document.createElement('div');
         wrapper.className = 'text-left';
         const title = document.createElement('div');
-        title.className = 'font-medium text-gray-900 dark:text-gray-100';
-        title.textContent = `Session ${session.number}`;
+        title.className = 'font-bold';
+        title.textContent = `Sessie ${session.number}`;
         const subtitle = document.createElement('div');
-        subtitle.className = 'text-sm text-gray-500 dark:text-gray-400';
+        subtitle.className = 'text-sm text-pool-300';
         subtitle.textContent = `${session.date}${sessionTime}`;
         wrapper.append(title, subtitle);
         listItem.appendChild(wrapper);

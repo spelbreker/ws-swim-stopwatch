@@ -264,6 +264,31 @@ describe('Competition class', () => {
     expect(sessions[1].date).toBe('2025-06-02');
   });
 
+  test('getSessionSummary counts events, heats and distinct swimmers of a session', () => {
+    expect(Competition.getSessionSummary(0, 1)).toEqual({
+      number: 1,
+      date: '2025-06-01',
+      startTime: '10:00',
+      eventCount: 2,
+      heatCount: 2,
+      // John (individual entry) and Jane (relay member only), each counted once
+      swimmerCount: 2,
+    });
+  });
+
+  test('getSessionSummary only counts entries that belong to the session', () => {
+    expect(Competition.getSessionSummary(0, 2)).toMatchObject({
+      eventCount: 1,
+      heatCount: 1,
+      swimmerCount: 2,
+    });
+  });
+
+  test('getSessionSummary throws for an unknown session or meet', () => {
+    expect(() => Competition.getSessionSummary(0, 9)).toThrow('not found');
+    expect(() => Competition.getSessionSummary(5, 1)).toThrow('Invalid meetIndex');
+  });
+
   test('getSessions throws error for invalid meet index', () => {
     expect(() => Competition.getSessions(1)).toThrow('Invalid meetIndex');
   });
