@@ -27,8 +27,8 @@
         <!-- Heat card -->
         <section class="mx-auto flex w-full max-w-7xl flex-none items-center justify-between gap-3 px-4 py-2.5 lg:py-3">
             <div class="min-w-0">
-                <div id="heat-kicker" class="text-xs font-semibold tracking-[0.12em] text-aqua">EVENT - · SERIE -</div>
-                <div id="event-heat-info-bar" class="truncate text-xl leading-tight font-bold lg:text-2xl">Selecteer event en serie</div>
+                <div id="heat-kicker" class="text-xs font-semibold tracking-[0.12em] text-aqua">EVENT - · HEAT -</div>
+                <div id="event-heat-info-bar" class="truncate text-xl leading-tight font-bold lg:text-2xl">Selecteer event en heat</div>
             </div>
             <div class="flex-none text-right text-sm leading-tight text-pool-300">
                 <div id="session-label" class="font-semibold text-slate-100">Sessie 1</div>
@@ -179,10 +179,10 @@
             <!-- Next heat and next session -->
             <section data-tab-panel="next" class="hidden flex-col gap-3 lg:flex lg:overflow-y-auto" aria-label="Volgende">
                 <div>
-                    <div id="next-heat-title" class="remote-panel-title">Volgende serie</div>
+                    <div id="next-heat-title" class="remote-panel-title">Volgende heat</div>
                     <div class="remote-card px-3 py-1">
                         <ul id="next-heat-list" class="divide-y divide-pool-700"></ul>
-                        <p id="next-heat-empty" class="py-3 text-sm text-pool-300">Geen volgende serie gevonden.</p>
+                        <p id="next-heat-empty" class="py-3 text-sm text-pool-300">Geen volgende heat gevonden.</p>
                     </div>
                 </div>
             </section>
@@ -228,13 +228,13 @@
                         </div>
                         <button type="button" id="increment-event" aria-label="Volgend event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
                     </div>
-                    <div class="remote-stepper" role="group" aria-label="Serie">
-                        <button type="button" id="decrement-heat" aria-label="Vorige serie"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                    <div class="remote-stepper" role="group" aria-label="Heat">
+                        <button type="button" id="decrement-heat" aria-label="Vorige heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
                         <div class="flex-1 text-center leading-none">
-                            <label for="heat-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">SERIE</label>
+                            <label for="heat-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">HEAT</label>
                             <select id="heat-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
                         </div>
-                        <button type="button" id="increment-heat" aria-label="Volgende serie"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                        <button type="button" id="increment-heat" aria-label="Volgende heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
                     </div>
                     <button type="button" id="session-menu-button" class="h-12 w-16 flex-none rounded-xl border border-pool-600 bg-pool-950 leading-none" aria-label="Kies sessie">
                         <span class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">SESSIE</span>

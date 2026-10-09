@@ -208,7 +208,7 @@ describe('competition remote lifecycle', () => {
     remote.emit('message', { type: 'event-heat', event: '3', heat: '4' });
     remote.emit('message', { type: 'start', timestamp: Date.now() });
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() + 30_000 });
-    expect(remote.addLogEntry).toHaveBeenCalledWith('SERIE', 'Event 3, serie 4 geselecteerd');
+    expect(remote.addLogEntry).toHaveBeenCalledWith('HEAT', 'Event 3, heat 4 geselecteerd');
     expect(remote.addLogEntry).toHaveBeenCalledWith('START', expect.stringContaining('Start voor event'));
     expect(remote.addLogEntry).toHaveBeenCalledWith('SPLIT', expect.stringContaining('Baan 1'));
   });

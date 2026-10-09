@@ -84,7 +84,7 @@ export function sendEventAndHeat(event, heat, send, session) {
 }
 
 /**
- * Update the heat card with the event title and "EVENT n · SERIE x / y".
+ * Update the heat card with the event title and "EVENT n · HEAT x / y".
  * @param {number|string} eventNr
  * @param {number|string} heatNr
  * @param {number|null} session
@@ -102,10 +102,10 @@ export async function updateEventHeatInfoBar(eventNr, heatNr, session) {
     const eventData = await eventRes.json();
     const maxHeatNr = eventData.heats.length;
     infoBar.textContent = formatEventTitle(eventData);
-    if (kicker) kicker.textContent = `EVENT ${eventNr} · SERIE ${heatNr} / ${maxHeatNr}`;
+    if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr} / ${maxHeatNr}`;
   } catch {
-    infoBar.textContent = 'Onbekend event/serie';
-    if (kicker) kicker.textContent = `EVENT ${eventNr} · SERIE ${heatNr}`;
+    infoBar.textContent = 'Onbekend event/heat';
+    if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr}`;
   }
 }
 

@@ -76,12 +76,12 @@ function renderNextHeat(next, lanes) {
   if (!list) return;
   list.replaceChildren();
   if (!next || !lanes || lanes.length === 0) {
-    if (title) title.textContent = 'Volgende serie';
+    if (title) title.textContent = 'Volgende heat';
     if (empty) empty.classList.remove('hidden');
     return;
   }
   if (title) {
-    title.textContent = `Volgende serie · event ${next.event} · serie ${next.heat} · ${formatEventTitle(next.eventData)}`;
+    title.textContent = `Volgende heat · event ${next.event} · heat ${next.heat} · ${formatEventTitle(next.eventData)}`;
   }
   if (empty) empty.classList.add('hidden');
   lanes.forEach((lane) => {

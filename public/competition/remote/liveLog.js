@@ -13,7 +13,7 @@ const KIND_CLASSES = {
   START: 'bg-emerald-400',
   SPLIT: 'bg-aqua',
   TIMEOUT: 'bg-amber-deck',
-  SERIE: 'bg-violet-300',
+  HEAT: 'bg-violet-300',
   APPARAAT: 'bg-pool-300',
   SYSTEEM: 'bg-pool-300',
 };

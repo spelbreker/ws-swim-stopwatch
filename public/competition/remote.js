@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startRace(message.timestamp);
       loadSplitCooldown();
       updateStartButtonUI(true);
-      addLogEntry('START', `Start voor event ${eventSelect.value}, serie ${heatSelect.value}`);
+      addLogEntry('START', `Start voor event ${eventSelect.value}, heat ${heatSelect.value}`);
       return;
     }
 
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (heatSelect) heatSelect.value = message.heat;
       cancelAllHighlightTimers();
       updateEventHeatInfoBar(message.event, message.heat, message.session ?? getCurrentSession());
-      addLogEntry('SERIE', `Event ${message.event}, serie ${message.heat} geselecteerd`);
+      addLogEntry('HEAT', `Event ${message.event}, heat ${message.heat} geselecteerd`);
       return;
     }
 
