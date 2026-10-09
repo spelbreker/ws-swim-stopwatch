@@ -1,6 +1,8 @@
 import request from 'supertest';
 import express from 'express';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { getCompetitionLog, clearCompetitionLog } from '../../../src/controllers/competition/logController';
 
 const app = express();
@@ -36,11 +38,62 @@ describe('logController', () => {
     expect(res.text).toBe('line 1');
   });
 
-  it('returns only the last lines when tail is given', async () => {
-    mockLog('a\nb\nc\nd\n');
-    const res = await request(app).get('/logs/competition.log?tail=2');
-    expect(res.status).toBe(200);
-    expect(res.text).toBe('c\nd');
+  describe('tail', () => {
+    let dir: string;
+    let cwdSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      dir = fs.mkdtempSync(path.join(os.tmpdir(), 'logtail-'));
+      fs.mkdirSync(path.join(dir, 'logs'));
+      cwdSpy = jest.spyOn(process, 'cwd').mockReturnValue(dir);
+    });
+
+    afterEach(() => {
+      cwdSpy.mockRestore();
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    const writeLog = (content: string) => fs.writeFileSync(path.join(dir, 'logs', 'competition.log'), content);
+
+    it('returns only the last lines when tail is given', async () => {
+      writeLog('a\nb\nc\nd\n');
+      const res = await request(app).get('/logs/competition.log?tail=2');
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toMatch(/text\/plain/);
+      expect(res.text).toBe('c\nd');
+    });
+
+    it('returns everything when the log has fewer lines than tail', async () => {
+      writeLog('a\nb');
+      const res = await request(app).get('/logs/competition.log?tail=300');
+      expect(res.text).toBe('a\nb');
+    });
+
+    it('returns an empty body for an empty log', async () => {
+      writeLog('');
+      const res = await request(app).get('/logs/competition.log?tail=5');
+      expect(res.status).toBe(200);
+      expect(res.text).toBe('');
+    });
+
+    it('reads past the first chunk when the last lines are longer than it', async () => {
+      const long = (c: string) => c.repeat(40 * 1024);
+      writeLog(`first\n${long('x')}\n${long('y')}\n${long('z')}\n`);
+      const res = await request(app).get('/logs/competition.log?tail=3');
+      expect(res.text).toBe(`${long('x')}\n${long('y')}\n${long('z')}`);
+    });
+
+    it('does not cut a multi-byte character at the chunk boundary', async () => {
+      const line = 'é'.repeat(1000);
+      writeLog(`${line}\n`.repeat(200));
+      const res = await request(app).get('/logs/competition.log?tail=2');
+      expect(res.text).toBe(`${line}\n${line}`);
+    });
+
+    it('returns 404 when the log file is missing', async () => {
+      const res = await request(app).get('/logs/competition.log?tail=2');
+      expect(res.status).toBe(404);
+    });
   });
 
   it('returns the whole log when tail is not a positive number', async () => {
