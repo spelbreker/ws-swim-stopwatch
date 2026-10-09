@@ -17,12 +17,13 @@
 //   clearLaneInformation()
 //   cancelAllHighlightTimers()
 
-import { formatLapTime } from '../../js/modules/format.js';
+import { formatElapsed } from '../../js/modules/format.js';
 import { blockedUntil, describeLane } from './laneState.js';
 
 const LANES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const TICK_MS = 100;
 const NO_TIME = '--:--:--';
+const INVALID_TIME = '---:---:---';
 
 let splitCooldownMs = 12000;
 let running = false;
@@ -40,6 +41,8 @@ const swimmers = new Map();
 const splits = new Map();
 /** @type {Map<number, object>} */
 const elements = new Map();
+/** Lanes currently in timeout: only these are redrawn on every tick. */
+const timeoutLanes = new Set();
 
 function now() {
   return Date.now() + getOffset();
@@ -98,21 +101,29 @@ function renderLane(lane) {
     key.disabled = locked;
     key.setAttribute('aria-disabled', String(view.blocked || locked));
   });
+  if (view.state === 'timeout') timeoutLanes.add(lane);
+  else timeoutLanes.delete(lane);
   return view;
 }
 
-function renderAll() {
-  let needsTick = false;
-  LANES.forEach((lane) => {
-    const view = renderLane(lane);
-    if (view?.state === 'timeout') needsTick = true;
-  });
-  if (needsTick && !tickTimer) {
-    tickTimer = setInterval(renderAll, TICK_MS);
-  } else if (!needsTick && tickTimer) {
+// The countdown only needs a timer while a lane is in timeout.
+function syncTick() {
+  if (timeoutLanes.size > 0 && !tickTimer) {
+    tickTimer = setInterval(tick, TICK_MS);
+  } else if (timeoutLanes.size === 0 && tickTimer) {
     clearInterval(tickTimer);
     tickTimer = null;
   }
+}
+
+function tick() {
+  [...timeoutLanes].forEach(renderLane);
+  syncTick();
+}
+
+function renderAll() {
+  LANES.forEach(renderLane);
+  syncTick();
 }
 
 // A blocked lane (timeout, finished) is still sent: the server decides and logs an
@@ -152,6 +163,7 @@ export function initLaneButtons({ send, getServerTimeOffset, onSplitSent: afterS
   getOffset = getServerTimeOffset;
   onSplitSent = afterSend ?? (() => {});
   elements.clear();
+  timeoutLanes.clear();
   document.querySelectorAll('.lane-row').forEach((row) => {
     const lane = Number(row.getAttribute('data-lane'));
     elements.set(lane, {
@@ -207,6 +219,14 @@ export function resetRace() {
   renderAll();
 }
 
+// Race time of a split. Without a usable start time (page opened mid-race) fall back to elapsed_ms.
+function splitTime(message, startTime) {
+  if (!message.timestamp) return NO_TIME;
+  const sinceStart = startTime ? message.timestamp - startTime : -1;
+  if (sinceStart >= 0) return formatElapsed(sinceStart);
+  return typeof message.elapsed_ms === 'number' ? formatElapsed(message.elapsed_ms) : INVALID_TIME;
+}
+
 /**
  * Record an accepted split broadcast by the server.
  * @param {Object} message - The `split` message
@@ -216,10 +236,7 @@ export function applySplit(message, startTime) {
   const lane = Number(message.lane);
   if (!Number.isInteger(lane) || lane < 0 || lane > 9) return;
   const previous = getSplit(lane);
-  let time = message.timestamp ? formatLapTime(message.timestamp, startTime || 0) : NO_TIME;
-  if (time === '---:---:---' && typeof message.elapsed_ms === 'number') {
-    time = formatLapTime(message.elapsed_ms + 1, 1);
-  }
+  const time = splitTime(message, startTime);
   const splitNumber = typeof message.splitNumber === 'number' ? message.splitNumber : previous.count + 1;
   splits.set(lane, {
     count: splitNumber,

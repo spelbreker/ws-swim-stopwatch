@@ -48,7 +48,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     '../js/modules/socket.js': { send, onSocketEvent },
     '../js/modules/timeSync.js': { TimeSync: jest.fn() },
     '../js/modules/format.js': { formatLapTime: () => '00:31:00', pad: (n: number) => String(n).padStart(2, '0') },
-    '../../js/modules/format.js': { formatLapTime: () => '00:31:00' },
+    '../../js/modules/format.js': { formatElapsed: (ms: number) => `elapsed:${ms}` },
     '../js/modules/connectionIndicator.js': { setupConnectionIndicator: jest.fn() },
     '../js/modules/wakeLock.js': { requestWakeLock: jest.fn() },
     './remote/eventHeat.js': {
@@ -138,7 +138,7 @@ describe('competition remote lifecycle', () => {
 
     remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), splitNumber: 1, distance: 50 });
     expect(remote.lastRowState()).toBe('timeout');
-    expect(remote.laneTime.textContent).toBe('00:31:00');
+    expect(remote.laneTime.textContent).toBe('elapsed:30000');
     expect(remote.laneStatus.textContent).toMatch(/^Timeout 12\.0s$/);
 
     await jest.advanceTimersByTimeAsync(11_900);
@@ -146,6 +146,16 @@ describe('competition remote lifecycle', () => {
     await jest.advanceTimersByTimeAsync(200);
     expect(remote.lastRowState()).toBe('swim');
     expect(remote.laneStatus.textContent).toBe('Split 1 · 50m');
+  });
+
+  it('falls back to elapsed_ms for the split time when the start was missed', () => {
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now(), elapsed_ms: 18_190 });
+    expect(remote.laneTime.textContent).toBe('elapsed:18190');
+  });
+
+  it('shows a placeholder when neither the start nor elapsed_ms is known', () => {
+    remote.emit('message', { type: 'split', lane: 1, timestamp: Date.now() });
+    expect(remote.laneTime.textContent).toBe('---:---:---');
   });
 
   it('shows every lane in timeout right after the start, like the server does', () => {

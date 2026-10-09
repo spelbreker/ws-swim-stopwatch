@@ -196,7 +196,8 @@ Features:
 - **Keypad mode** — `Hidden` (default; tap the lane rows), `Keys` (show
   the 0-9 keypad) or `Locked` (rows and keys ignore taps). The choice is
   stored per device in `localStorage` (`remote.keysMode`). Physical `0`-`9`
-  keyboard shortcuts keep working unless locked or the lane is blocked.
+  keyboard shortcuts keep working unless locked; like a tap, they are still
+  sent for a blocked lane.
 - **Next** — the next heat (same event, or the first heat of the next
   event) with swimmers and entry times.
 - **Live log** — shows the server's `logs/competition.log` (polled every 3 s

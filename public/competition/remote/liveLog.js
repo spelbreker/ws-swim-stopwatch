@@ -33,6 +33,7 @@ let countElement = null;
 let pollTimer = null;
 let lastSnapshot = null;
 let refreshing = false;
+let refreshQueued = false;
 
 function field(line, name) {
   const match = line.match(new RegExp(`${name}: ([^,]+)`));
@@ -117,13 +118,21 @@ function render(entries) {
   if (emptyElement) emptyElement.classList.toggle('hidden', entries.length > 0);
 }
 
-/** Fetch the tail of the server log and show it. Overlapping calls are skipped. */
+/**
+ * Fetch the tail of the server log and show it. A call during a fetch runs once
+ * more after it, because that fetch may have read the log before the new line.
+ */
 export async function refreshLiveLog() {
-  if (refreshing || !listElement) return;
+  if (!listElement) return;
+  if (refreshing) {
+    refreshQueued = true;
+    return;
+  }
   refreshing = true;
   try {
     const res = await fetch(`/logs/competition.log?tail=${TAIL_LINES}`, { cache: 'no-store' });
-    // A missing log file just means nothing has happened yet.
+    // A missing log file just means nothing has happened yet; other errors keep what is shown.
+    if (!res.ok && res.status !== 404) return;
     const text = res.ok ? await res.text() : '';
     if (text === lastSnapshot) return;
     lastSnapshot = text;
@@ -138,6 +147,10 @@ export async function refreshLiveLog() {
     // Network hiccup: keep what is shown and try again on the next poll.
   } finally {
     refreshing = false;
+    if (refreshQueued) {
+      refreshQueued = false;
+      refreshLiveLog();
+    }
   }
 }
 

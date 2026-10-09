@@ -14,6 +14,7 @@ import { formatEventTitle } from './eventTitle.js';
 let eventSelect = null;
 let heatSelect = null;
 let heatDisplayedListener = null;
+let infoBarRequest = 0;
 
 /**
  * Register a listener that runs every time the info bar is refreshed for a heat
@@ -94,16 +95,20 @@ export async function updateEventHeatInfoBar(eventNr, heatNr, session) {
   const infoBar = document.getElementById('event-heat-info-bar');
   const kicker = document.getElementById('heat-kicker');
   if (!infoBar) return;
+  // A slower response for an earlier selection must not overwrite the card.
+  const requestId = ++infoBarRequest;
 
   try {
     const sessionParam = session ? `?session=${session}` : '';
     const eventRes = await fetch(`/competition/event/${eventNr}${sessionParam}`);
     if (!eventRes.ok) throw new Error('Event fetch failed');
     const eventData = await eventRes.json();
+    if (requestId !== infoBarRequest) return;
     const maxHeatNr = eventData.heats.length;
     infoBar.textContent = formatEventTitle(eventData);
     if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr} / ${maxHeatNr}`;
   } catch {
+    if (requestId !== infoBarRequest) return;
     infoBar.textContent = 'Unknown event/heat';
     if (kicker) kicker.textContent = `EVENT ${eventNr} · HEAT ${heatNr}`;
   }
