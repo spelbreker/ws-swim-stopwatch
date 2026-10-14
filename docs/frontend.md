@@ -147,6 +147,14 @@ entry points.
 - Toggles `#connection-indicator` between green (connected) and red
   (disconnected).
 
+### `public/js/modules/connectionMonitor.js`
+
+- Exports `createConnectionMonitor({ onChange, timeoutMs, checkMs })`.
+- Used by the remote. Reports `onChange(false)` when the socket closes, or when
+  no message arrives for 12 s while the socket still looks open (a dropped
+  network often gives no `close` event). Reports `onChange(true)` on `open` and
+  on the next message. Silent while the page is still connecting.
+
 ## Competition Remote
 
 **Files:** `public/competition/remote.html`, `public/competition/remote.js`,
@@ -178,6 +186,14 @@ Features:
   client, or a `start` that carries another event and heat (a starter), updates
   the session label, the event list of that session, the selects, the heat card
   and the swimmer and next-heat views.
+- **Event / heat navigation** — the selects and the `+1 Event` / `+1 Heat`
+  steppers only go forward. There are no "previous" buttons, so a heat or event
+  can not be stepped back by accident. Use the select to pick an earlier one on
+  purpose.
+- **Connection lost banner** — a red banner ("NO CONNECTION TO SERVER") shows
+  above the heat card whenever `connectionMonitor.js` reports the connection as
+  lost. The header dot turns red and the ping shows `offline`. Lane taps made
+  while offline are not sent.
 - **Start / Reset** — sends `start` and `reset` with synchronized timestamps.
 - **Lane rows** — one row per lane (0-9) with the swimmer name and club of
   the selected heat (`/competition/event/:event/heat/:heat`, relays show the
@@ -223,6 +239,12 @@ Features:
 The screen is the public display shown on a TV or projector. It only
 receives data — it has no controls.
 
+**Target display: Aquarijn, 1000x487 pixels.** In landscape at 640 px wide or
+more, `screen.html` uses a fit-to-screen layout: the body is `100dvh` and does
+not scroll, and the top bar, the 10 equal lane rows and the footer share the
+viewport height (font sizes in `vh`). It must stay fully visible at 100 % zoom
+on 1000x487. Check this after changing the layout.
+
 Features:
 
 - **Stopwatch** — runs locally using `startTime` (from the `start` message)
@@ -238,8 +260,9 @@ Features:
 - **Highlight** — briefly highlights a lane (2 s) when a split arrives.
 - **Clear** — on `clear` the shown split times, distances and arrival orders
   are blanked, but a lane's timeout and finish state stays, because the server
-  does not reset its split tracking on `clear`. `start`, `reset` and
-  `event-heat` clear everything.
+  does not reset its split tracking on `clear`. `start` and `event-heat` clear
+  everything. `reset` only stops the stopwatch: the finish times stay on the
+  board until the next `start`, event or heat.
 
 ## Dashboard
 

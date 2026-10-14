@@ -6,7 +6,7 @@
 import { send, onSocketEvent } from '../js/modules/socket.js';
 import { TimeSync } from '../js/modules/timeSync.js';
 import { pad } from '../js/modules/format.js';
-import { setupConnectionIndicator } from '../js/modules/connectionIndicator.js';
+import { createConnectionMonitor } from '../js/modules/connectionMonitor.js';
 import { requestWakeLock } from '../js/modules/wakeLock.js';
 import {
   initLaneButtons,
@@ -67,6 +67,21 @@ function disableControls(disable, elements) {
   });
 }
 
+const OFFLINE_PING_TEXT = 'offline';
+
+/** Show or hide the connection-lost banner and update the header indicator. */
+function renderConnection(online) {
+  const banner = document.getElementById('connection-banner');
+  const indicator = document.getElementById('connection-indicator');
+  const pingDisplay = document.getElementById('ping-display');
+  if (banner) banner.classList.toggle('hidden', online);
+  if (indicator) {
+    indicator.classList.toggle('bg-green-500', online);
+    indicator.classList.toggle('bg-red-500', !online);
+  }
+  if (pingDisplay && !online) pingDisplay.textContent = OFFLINE_PING_TEXT;
+}
+
 function getServerTimeOffset() {
   return serverTimeOffset;
 }
@@ -78,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize shared modules
   requestWakeLock();
-  setupConnectionIndicator(onSocketEvent);
   loadSplitCooldown();
   initTabs();
   initLiveLog();
@@ -143,8 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     heatSelect,
     document.getElementById('increment-event'),
     document.getElementById('increment-heat'),
-    document.getElementById('decrement-event'),
-    document.getElementById('decrement-heat'),
   ];
   const liveBadge = document.getElementById('live-badge');
 
@@ -273,8 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pingInterval = null;
   }
 
+  const connectionMonitor = createConnectionMonitor({ onChange: renderConnection });
+
   // WebSocket event handler
   onSocketEvent((event, socket, message) => {
+    connectionMonitor.handle(event);
+
     if (event === 'open') {
       stopPingSync();
 

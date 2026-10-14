@@ -130,27 +130,6 @@ export function initEventHeat({ send, getCurrentSession }) {
   heatSelect = document.getElementById('heat-select');
   const incrementEventButton = document.getElementById('increment-event');
   const incrementHeatButton = document.getElementById('increment-heat');
-  const decrementEventButton = document.getElementById('decrement-event');
-  const decrementHeatButton = document.getElementById('decrement-heat');
-
-  function decrementEvent() {
-    const currentIndex = eventSelect.selectedIndex;
-    if (currentIndex > 0) {
-      eventSelect.selectedIndex = currentIndex - 1;
-      heatSelect.value = 1;
-      sendEventAndHeat(eventSelect.value, 1, send, getCurrentSession());
-      updateEventHeatInfoBar(eventSelect.value, 1, getCurrentSession());
-    }
-  }
-
-  function decrementHeat() {
-    const currentHeat = parseInt(heatSelect.value, 10);
-    if (currentHeat > 1) {
-      heatSelect.value = currentHeat - 1;
-      sendEventAndHeat(parseInt(eventSelect.value, 10), currentHeat - 1, send, getCurrentSession());
-      updateEventHeatInfoBar(eventSelect.value, currentHeat - 1, getCurrentSession());
-    }
-  }
 
   function incrementEvent() {
     const options = eventSelect.options;
@@ -174,8 +153,6 @@ export function initEventHeat({ send, getCurrentSession }) {
 
   if (incrementEventButton) incrementEventButton.addEventListener('click', incrementEvent);
   if (incrementHeatButton) incrementHeatButton.addEventListener('click', incrementHeat);
-  if (decrementEventButton) decrementEventButton.addEventListener('click', decrementEvent);
-  if (decrementHeatButton) decrementHeatButton.addEventListener('click', decrementHeat);
 
   if (eventSelect) {
     eventSelect.addEventListener('change', () => {
@@ -192,7 +169,5 @@ export function initEventHeat({ send, getCurrentSession }) {
     });
   }
 
-  return {
-    eventSelect, heatSelect, incrementEvent, incrementHeat, decrementEvent, decrementHeat,
-  };
+  return { eventSelect, heatSelect, incrementEvent, incrementHeat };
 }

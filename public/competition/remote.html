@@ -24,6 +24,11 @@
           </div>
         </header>
 
+        <!-- Connection lost banner (shown by connectionMonitor) -->
+        <div id="connection-banner" role="alert" class="hidden flex-none bg-red-600 px-4 py-2 text-center text-base font-bold text-white">
+            NO CONNECTION TO SERVER &ndash; lane times are NOT being sent
+        </div>
+
         <!-- Heat card -->
         <section class="mx-auto flex w-full max-w-7xl flex-none items-center justify-between gap-3 px-4 py-2.5 lg:py-3">
             <div class="min-w-0">
@@ -218,7 +223,6 @@
 
                 <div class="flex gap-2 lg:min-w-0 lg:flex-1">
                     <div class="remote-stepper" role="group" aria-label="Event">
-                        <button type="button" id="decrement-event" aria-label="Previous event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
                         <div class="flex-1 text-center leading-none">
                             <label for="event-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">EVENT</label>
                             <select id="event-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>
@@ -226,7 +230,6 @@
                         <button type="button" id="increment-event" aria-label="Next event"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
                     </div>
                     <div class="remote-stepper" role="group" aria-label="Heat">
-                        <button type="button" id="decrement-heat" aria-label="Previous heat"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
                         <div class="flex-1 text-center leading-none">
                             <label for="heat-select" class="block text-[0.6875rem] font-semibold tracking-[0.12em] text-pool-300">HEAT</label>
                             <select id="heat-select" class="w-full appearance-none bg-transparent text-center font-mono text-lg font-bold text-slate-100 focus:outline-none disabled:text-pool-400"></select>

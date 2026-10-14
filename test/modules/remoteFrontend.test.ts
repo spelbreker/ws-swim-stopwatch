@@ -51,7 +51,7 @@ function setupRemote({ sessionsReady = Promise.resolve(), eventsReady = Promise.
     '../js/modules/timeSync.js': { TimeSync: jest.fn() },
     '../js/modules/format.js': { formatLapTime: () => '00:31:00', pad: (n: number) => String(n).padStart(2, '0') },
     '../../js/modules/format.js': { formatElapsed: (ms: number) => `elapsed:${ms}` },
-    '../js/modules/connectionIndicator.js': { setupConnectionIndicator: jest.fn() },
+    '../js/modules/connectionMonitor.js': { createConnectionMonitor: jest.fn(() => ({ handle: jest.fn() })) },
     '../js/modules/wakeLock.js': { requestWakeLock: jest.fn() },
     './remote/eventHeat.js': {
       initEventHeat: () => ({ eventSelect, heatSelect }),
