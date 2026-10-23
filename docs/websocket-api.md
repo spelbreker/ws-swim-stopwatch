@@ -166,6 +166,16 @@ labels still work but `isFinish` is never set.
   ```
   - `server_timestamp`: Server's local timestamp when message was processed (added by server)
 
+### `banners-updated`
+- **Direction:** Server → all clients
+- **Description:** Sent after a banner upload, delete or config change via the
+  [banner API](http-api.md#banners). The competition screen refetches `GET /banners`
+  (it also refetches on every reconnect).
+- **Payload:**
+  ```json
+  { "type": "banners-updated", "server_timestamp": 1718035220000 }
+  ```
+
 ## Device Management
 
 These messages are used to manage hardware devices (e.g., starter devices, lane timers) that connect via WebSocket from the [swimwatch-hardware](https://github.com/spelbreker/swimwatch-hardware) project.

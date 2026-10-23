@@ -26,6 +26,8 @@ export type Message =
   }
   | { type: 'event-heat'; event: number | string; heat: number | string; session?: number | string }
   | { type: 'clear' }
+  // Server -> screens: banner config or images changed, refetch GET /banners
+  | { type: 'banners-updated' }
   | { type: 'time_sync'; server_time: number }
   | { type: 'device_register'; ip: string; mac: string; role: 'starter' | 'lane'; lane?: number }
   | { type: 'device_update_role'; mac: string; role: 'starter' | 'lane' }

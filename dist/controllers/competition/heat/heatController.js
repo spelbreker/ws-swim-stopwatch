@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getHeat = getHeat;
 const competition_1 = __importDefault(require("../../../modules/competition"));
 function getHeat(req, res) {
-    const eventNumber = parseInt(req.params.event, 10);
-    const heatNumber = parseInt(req.params.heat, 10);
+    const eventNumber = parseInt(String(req.params.event), 10);
+    const heatNumber = parseInt(String(req.params.heat), 10);
     const meetIndex = req.query.meet ? parseInt(req.query.meet, 10) : 0;
     const sessionNumber = req.query.session ? parseInt(req.query.session, 10) : undefined;
     if (!eventNumber || !heatNumber) {

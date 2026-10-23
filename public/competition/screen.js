@@ -5,6 +5,7 @@ import { onSocketEvent } from '../js/modules/socket.js';
 import { TimeSync } from '../js/modules/timeSync.js';
 import { setupConnectionIndicator } from '../js/modules/connectionIndicator.js';
 import { requestWakeLock } from '../js/modules/wakeLock.js';
+import { createBannerRotator } from '../js/modules/bannerRotator.js';
 import {
   startStopwatch,
   stopStopwatch,
@@ -38,9 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize with first event and heat
   fetchCompetitionData(1, 1);
 
+  const banners = createBannerRotator(
+    document.getElementById('bottom-bar-slides'),
+    document.getElementById('bottom-bar-disclaimer'),
+  );
+  banners.reload();
+
   // WebSocket message handler
   onSocketEvent((event, socket, message) => {
+    // Changes made while disconnected are picked up on reconnect
+    if (event === 'open') banners.reload();
     if (event !== 'message') return;
+
+    /** Banner config or images changed in settings */
+    if (message.type === 'banners-updated') {
+      banners.reload();
+      return;
+    }
 
     /** Start the stopwatch */
     if (message.type === 'start') {

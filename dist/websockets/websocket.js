@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSplitTracker = getSplitTracker;
 exports.resetSplitTracker = resetSplitTracker;
 exports.getDevices = getDevices;
+exports.broadcast = broadcast;
 exports.setupWebSocket = setupWebSocket;
 const ws_1 = __importStar(require("ws"));
 const logger_1 = require("./logger");
@@ -217,8 +218,19 @@ function getDevices() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return Array.from(devices.values()).map(({ ws, ...device }) => device);
 }
+// Server created by setupWebSocket, so HTTP controllers can notify all clients
+let activeWss = null;
+/**
+ * Broadcast a server-originated message (e.g. banners-updated) to all clients.
+ * No-op before setupWebSocket has run (e.g. in controller tests).
+ */
+function broadcast(payload) {
+    if (activeWss)
+        broadcastAllClients(activeWss, payload);
+}
 function setupWebSocket(server) {
     const wss = new ws_1.WebSocketServer({ server });
+    activeWss = wss;
     const clientLiveness = new Map();
     wss.on('connection', (ws) => {
         clientLiveness.set(ws, true);

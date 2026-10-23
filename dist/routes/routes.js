@@ -1,7 +1,40 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerRoutes = registerRoutes;
-const express_1 = require("express");
+const express_1 = __importStar(require("express"));
 const competitionController_1 = require("../controllers/competition/competitionController");
 const eventController_1 = require("../controllers/competition/event/eventController");
 const heatController_1 = require("../controllers/competition/heat/heatController");
@@ -11,6 +44,8 @@ const devicesController_1 = require("../controllers/devicesController");
 const tunnelController_1 = require("../controllers/tunnelController");
 const settingsController_1 = require("../controllers/settingsController");
 const splashExportController_1 = require("../controllers/splashExportController");
+const bannerController_1 = require("../controllers/bannerController");
+const banners_1 = require("../modules/banners");
 // Register all competition-related routes
 function registerRoutes(app, upload) {
     // JSON body parser for tunnel routes - must be registered BEFORE routes
@@ -36,6 +71,13 @@ function registerRoutes(app, upload) {
     // Application settings (pool length, split cooldown)
     app.get('/settings', settingsController_1.getSettings);
     app.post('/settings', (0, express_1.json)(), settingsController_1.postSettings);
+    // Bottom-bar banners. Only GET /banners and /banners/image/ are in the tunnel
+    // allow-list; managing banners stays local.
+    app.get('/banners', bannerController_1.getBanners);
+    app.put('/banners/config', (0, express_1.json)(), bannerController_1.putBannerConfig);
+    app.post('/banners/upload', bannerController_1.receiveBannerFile, bannerController_1.uploadBanner);
+    app.delete('/banners/:id', bannerController_1.removeBanner);
+    app.use('/banners/image', express_1.default.static((0, banners_1.bannersDir)()));
     // Splash Meet Manager heat files (local only: not in the tunnel allow-list)
     app.get('/exports/splashme', splashExportController_1.getSplashExports);
     app.get('/exports/splashme/:file', splashExportController_1.downloadSplashExport);

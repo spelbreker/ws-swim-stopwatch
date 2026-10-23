@@ -319,6 +319,23 @@ describe('tunnelRestrictionMiddleware', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(403);
     });
 
+    it.each(['/banners', '/banners/image/abc.png'])('should allow banner read route %s via Cloudflare', (route) => {
+      mockRequest = createMockRequest(route, '1.2.3.4');
+
+      tunnelRestrictionMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it.each(['/banners/upload', '/banners/config', '/banners/abc'])('should block banner management route %s via Cloudflare', (route) => {
+      mockRequest = createMockRequest(route, '1.2.3.4');
+
+      tunnelRestrictionMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+    });
+
     it.each(['/competition/export.html', '/exports/splashme', '/exports/splashme/Event1-Heat1.txt'])(
       'should block Splash export %s via Cloudflare',
       (route) => {
