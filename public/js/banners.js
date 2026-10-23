@@ -23,9 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const buttonClass = 'px-2 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30';
 
-  function render() {
+  // Disclaimer inputs are only filled from the server, so re-rendering the list keeps unsaved edits
+  function fillDisclaimer() {
     showDisclaimer.checked = config.showDisclaimer;
     disclaimerSec.value = config.disclaimerSec;
+  }
+
+  function render() {
     empty.classList.toggle('hidden', config.banners.length > 0);
     list.replaceChildren(...config.banners.map((banner, i) => {
       const li = document.createElement('li');
@@ -65,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadBanners() {
     try {
       config = await request('/banners');
+      fillDisclaimer();
       render();
     } catch {
       setStatus('Failed to load banners', true);
@@ -94,11 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.confirm('Delete this banner? This cannot be undone.')) return;
     try {
       await request(`/banners/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      // Update the local list instead of reloading, so unsaved edits stay
+      config.banners = config.banners.filter((b) => b.id !== id);
+      render();
       setStatus('Banner deleted');
     } catch (err) {
       setStatus(err.message || 'Failed to delete banner', true);
+      loadBanners();
     }
-    loadBanners();
   });
 
   uploadButton.addEventListener('click', async () => {
@@ -112,7 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadButton.disabled = true;
     setStatus('Uploading...');
     try {
-      await request('/banners/upload', { method: 'POST', body: data });
+      const body = await request('/banners/upload', { method: 'POST', body: data });
+      // The server appends new banners too, so the local order stays in sync
+      config.banners.push(body.banner);
+      render();
       fileInput.value = '';
       setStatus('Banner uploaded');
     } catch (err) {
@@ -120,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       uploadButton.disabled = false;
     }
-    loadBanners();
   });
 
   saveButton.addEventListener('click', async () => {
@@ -137,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }),
       });
       config = body.config;
+      fillDisclaimer();
       render();
       setStatus('Banners saved');
     } catch (err) {
