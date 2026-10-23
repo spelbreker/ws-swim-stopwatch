@@ -75,7 +75,7 @@ The project consists of a Node.js server that serves HTML files and manages WebS
 
 - **Remote Control Interface**: Open [http://localhost:8080/remote.html](http://_vscodecontentref_/2) to access the remote control interface. Use the buttons to start/reset the stopwatch and record split times.
 - **Display Screen**: Open [http://localhost:8080/screen.html](http://_vscodecontentref_/3) to view the split times for each lane.
-- **Settings**: Open [http://localhost:8080/settings.html](http://localhost:8080/settings.html) to set the pool length (25m/50m) and the split cooldown in seconds (default 12). Settings are stored in `config/app.json` and are only reachable locally (not via the Cloudflare tunnel). See [docs/websocket-api.md](docs/websocket-api.md#split-cooldown--ignored-splits) for how splits are labelled and filtered.
+- **Settings**: Open [http://localhost:8080/settings.html](http://localhost:8080/settings.html) to set the pool length (25m/50m) and the split cooldown in seconds (default 12). Settings are stored in `config/app.json` and are only reachable locally (not via the Cloudflare tunnel). The same page manages the **banners** that rotate in the screen's bottom bar (PNG/JPG/WebP, max 2 MB, max 20) alongside the disclaimer; see [docs/http-api.md](docs/http-api.md#banners). See [docs/websocket-api.md](docs/websocket-api.md#split-cooldown--ignored-splits) for how splits are labelled and filtered.
 
 ## Docker Setup
 
@@ -95,7 +95,7 @@ To run the project using Docker, follow these steps:
 
 The compose file bind-mounts four host directories so data survives container rebuilds:
 `uploads/` (raw Lenex uploads), `logs/`, `config/` (tunnel + app settings) and `data/`
-(the processed `competition.json`). The data directory can be overridden with the `DATA_DIR`
+(the processed `competition.json` and uploaded banner images in `data/banners/`). The data directory can be overridden with the `DATA_DIR`
 environment variable (default `./data`).
 
 ### Docker with Cloudflare Tunnel

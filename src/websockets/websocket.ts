@@ -209,8 +209,20 @@ export function getDevices(): DeviceInfoResponse[] {
   return Array.from(devices.values()).map(({ ws, ...device }) => device);
 }
 
+// Server created by setupWebSocket, so HTTP controllers can notify all clients
+let activeWss: WebSocketServer | null = null;
+
+/**
+ * Broadcast a server-originated message (e.g. banners-updated) to all clients.
+ * No-op before setupWebSocket has run (e.g. in controller tests).
+ */
+export function broadcast(payload: Message) {
+  if (activeWss) broadcastAllClients(activeWss, payload);
+}
+
 export function setupWebSocket(server: http.Server) {
   const wss = new WebSocketServer({ server });
+  activeWss = wss;
   const clientLiveness = new Map<WebSocket, boolean>();
 
   wss.on('connection', (ws: WebSocket) => {

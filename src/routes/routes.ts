@@ -1,4 +1,4 @@
-import { Express, json } from 'express';
+import express, { Express, json } from 'express';
 import multer from 'multer';
 import {
   uploadCompetition,
@@ -18,6 +18,14 @@ import {
   deleteTunnelConfig,
 } from '../controllers/tunnelController';
 import { getSettings, postSettings } from '../controllers/settingsController';
+import {
+  getBanners,
+  receiveBannerFile,
+  uploadBanner,
+  putBannerConfig,
+  removeBanner,
+} from '../controllers/bannerController';
+import { bannersDir } from '../modules/banners';
 
 // Register all competition-related routes
 export function registerRoutes(app: Express, upload: multer.Multer) {
@@ -49,4 +57,12 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
   // Application settings (pool length, split cooldown)
   app.get('/settings', getSettings);
   app.post('/settings', json(), postSettings);
+
+  // Bottom-bar banners. Only GET /banners and /banners/image/ are in the tunnel
+  // allow-list; managing banners stays local.
+  app.get('/banners', getBanners);
+  app.put('/banners/config', json(), putBannerConfig);
+  app.post('/banners/upload', receiveBannerFile, uploadBanner);
+  app.delete('/banners/:id', removeBanner);
+  app.use('/banners/image', express.static(bannersDir()));
 }

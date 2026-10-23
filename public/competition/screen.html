@@ -140,6 +140,36 @@
                 width: 100%;
             }
 
+            /* Slides are stacked and cross-fade; wide, low images (e.g. 728x90) fit best */
+            .bottom-bar-slides {
+                position: relative;
+                width: 100%;
+                height: 2.5rem;
+            }
+
+            .bottom-bar-slide {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                transition: opacity 0.6s ease-in-out;
+            }
+
+            .bottom-bar-slide.active {
+                opacity: 1;
+            }
+
+            .bottom-bar-text {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            img.bottom-bar-slide {
+                object-fit: contain;
+            }
+
             /* ═══════════════════════════════════════════════════════════
                Tablet breakpoint (≥768px)
                Show club column, increase font sizes
@@ -197,6 +227,10 @@
                 .bottom-bar {
                     font-size: 1.125rem;
                     padding: 0.5rem 1rem;
+                }
+
+                .bottom-bar-slides {
+                    height: 3rem;
                 }
             }
 
@@ -292,6 +326,10 @@
                     align-items: center;
                     justify-content: center;
                 }
+
+                .bottom-bar-slides {
+                    height: 100%;
+                }
             }
         </style>
     </head>
@@ -385,10 +423,12 @@
         </table>
         </div>
 
-        <!-- Bottom bar: disclaimer -->
+        <!-- Bottom bar: rotating disclaimer and banners (see js/modules/bannerRotator.js) -->
         <footer class="bottom-bar">
-            <div class="bottom-bar-text">
-                Dit zijn geen officiele tijden
+            <div id="bottom-bar-slides" class="bottom-bar-slides">
+                <div id="bottom-bar-disclaimer" class="bottom-bar-slide bottom-bar-text active">
+                    Dit zijn geen officiële tijden
+                </div>
             </div>
         </footer>
 

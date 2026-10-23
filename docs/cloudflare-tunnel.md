@@ -31,6 +31,7 @@ This application includes built-in middleware that restricts tunnel access to sp
 - `/competition/event/*` - Event data API
 - `/competition/summary` - Competition summary API
 - `/devices` - Device list API
+- `/banners` and `/banners/image/*` - Bottom-bar banners for the screen (read-only)
  - `/favicon.ico` - Site icon
 
 **Only accessible locally (blocked via tunnel):**

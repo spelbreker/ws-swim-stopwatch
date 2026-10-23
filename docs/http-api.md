@@ -10,6 +10,7 @@ from localhost / private IPs.
 
 - [Competition](#competition)
 - [Settings](#settings)
+- [Banners](#banners)
 - [Tunnel](#tunnel)
 - [Devices](#devices)
 - [Logs](#logs)
@@ -185,6 +186,65 @@ on save.
 ```
 
 - **400:** validation error (field-specific message)
+- **500:** failed to save
+
+## Banners
+
+Images that rotate in the bottom bar of `competition/screen.html`, together with the
+"Dit zijn geen officiële tijden" disclaimer slide. Managed on `settings.html`.
+The config is stored in `config/banners.json`; images in `DATA_DIR/banners/`
+(default `data/banners/`) under generated names. Every change broadcasts
+[`banners-updated`](websocket-api.md#banners-updated) so screens reload without a refresh.
+
+### `GET /banners`
+
+- **Tunnel-allowed** (used by the screen).
+- **200 response** (array order is the rotation order):
+
+```json
+{
+  "showDisclaimer": true,
+  "disclaimerSec": 10,
+  "banners": [
+    { "id": "3f2c…", "filename": "3f2c….png", "durationSec": 10, "enabled": true }
+  ]
+}
+```
+
+### `GET /banners/image/:filename`
+
+Serves a banner image. **Tunnel-allowed.**
+
+### `POST /banners/upload`
+
+Adds one image to the end of the rotation (10 s, enabled).
+
+- **Tunnel-blocked.**
+- **Content-Type:** `multipart/form-data`, field `banner`
+- **Validation:** PNG, JPG or WebP (checked on file content), at most 2 MB, at most 20 banners
+- **200 response:** `{ "success": true, "banner": { … } }`
+- **400:** no file, wrong type, too large or limit reached
+- **500:** failed to store
+
+### `PUT /banners/config`
+
+Saves order, durations, on/off and the disclaimer slide in one call.
+
+- **Tunnel-blocked.**
+- **Content-Type:** `application/json`
+- **Body:** `{ "showDisclaimer": true, "disclaimerSec": 10, "banners": [{ "id": "…", "durationSec": 10, "enabled": true }] }`
+- **Validation:** `banners` lists every existing id exactly once; durations are integers between `1` and `300`
+- **200 response:** `{ "success": true, "config": { … } }`
+- **400:** validation error
+- **500:** failed to save
+
+### `DELETE /banners/:id`
+
+Removes the banner and its image file.
+
+- **Tunnel-blocked.**
+- **200:** `{ "success": true }`
+- **404:** unknown id
 - **500:** failed to save
 
 ## Tunnel
