@@ -25,6 +25,7 @@ Full documentation lives in [`docs/`](docs/):
 | [http-api.md](docs/http-api.md) | Complete REST API reference |
 | [websocket-api.md](docs/websocket-api.md) | WebSocket message contract and state diagrams |
 | [split-aware-timing.md](docs/split-aware-timing.md) | Split labels, cooldown, finish detection, arrival ranking |
+| [splash-export.md](docs/splash-export.md) | Heat files for Splash Meet Manager ("Generic Txt heat files") |
 | [frontend.md](docs/frontend.md) | Page map, shared JS, page-by-page behaviour, layout convention |
 | [deployment.md](docs/deployment.md) | Docker, environment variables, volumes, operations, CI |
 | [cloudflare-tunnel.md](docs/cloudflare-tunnel.md) | Cloudflare Tunnel setup and route restrictions |
@@ -43,6 +44,8 @@ The project consists of a Node.js server that serves HTML files and manages WebS
 - Split-aware timing: splits are labelled with the distance covered (50m, 100m, ...), lanes are
   ranked by completed splits and time, the finish is marked, and accidental double presses are
   filtered by a per-lane cooldown (ignored splits are logged).
+- Splash Meet Manager export: accepted splits are written to heat files for the
+  "Generic Txt heat files" timing interface and can be downloaded from the export page.
 
 ## Getting Started
 
@@ -93,10 +96,11 @@ To run the project using Docker, follow these steps:
 
 3. Open your browser and navigate to [http://localhost:8080](http://_vscodecontentref_/4).
 
-The compose file bind-mounts four host directories so data survives container rebuilds:
-`uploads/` (raw Lenex uploads), `logs/`, `config/` (tunnel + app settings) and `data/`
-(the processed `competition.json`). The data directory can be overridden with the `DATA_DIR`
-environment variable (default `./data`).
+The compose file bind-mounts five host directories so data survives container rebuilds:
+`uploads/` (raw Lenex uploads), `logs/`, `config/` (tunnel + app settings), `data/`
+(the processed `competition.json`) and `exports/` (Splash Meet Manager heat files). The data
+directory can be overridden with the `DATA_DIR` environment variable (default `./data`), the
+export directory with `EXPORT_DIR` (default `./exports`).
 
 ### Docker with Cloudflare Tunnel
 
@@ -176,6 +180,7 @@ project-root/
 ├── data/                    # Processed competition.json (gitignored, Docker volume)
 ├── config/                  # app.json + tunnel.json (gitignored, Docker volume)
 ├── logs/                    # competition.log (gitignored, Docker volume)
+├── exports/                 # Splash Meet Manager heat files (gitignored, Docker volume)
 ├── examples/                # Example Lenex files
 ├── Dockerfile
 ├── docker-compose.yml

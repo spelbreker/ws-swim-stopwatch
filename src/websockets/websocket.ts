@@ -9,6 +9,7 @@ import {
 } from './logger';
 import { loadSettings } from '../modules/settings';
 import { SplitTracker, computeHeatInfo } from '../modules/splitTracker';
+import { SplashExporter } from '../modules/splashExport';
 
 // Store device information
 const devices = new Map<string, DeviceInfo>();
@@ -20,8 +21,12 @@ export function getSplitTracker(): SplitTracker {
   return splitTracker;
 }
 
+// Writes the tracker's running heat to a Splash Meet Manager heat file
+let splashExporter = new SplashExporter();
+
 export function resetSplitTracker() {
   splitTracker = new SplitTracker(loadSettings);
+  splashExporter = new SplashExporter();
 }
 
 // Largest timestamp that still produces a valid Date; beyond this
@@ -119,6 +124,8 @@ function handleSplit(msg: Record<string, unknown>, wss: WebSocketServer) {
     isFinish,
     ranking,
   });
+  // After the broadcast, so disk I/O does not delay the screens
+  splashExporter.write(splitTracker.getRun());
 }
 
 function handleEventHeat(msg: Record<string, unknown>, wss: WebSocketServer) {
