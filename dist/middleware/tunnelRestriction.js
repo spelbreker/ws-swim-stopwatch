@@ -20,6 +20,9 @@ const ALLOWED_TUNNEL_ROUTES = [
     '/competition/event/',
     '/competition/summary',
     '/devices',
+    // Bottom-bar banners (read-only; management routes stay local)
+    '/banners',
+    '/banners/image/',
 ];
 /**
  * Middleware to restrict access via Cloudflare tunnel to specific routes only
