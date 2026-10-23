@@ -201,35 +201,51 @@
             }
 
             /* ═══════════════════════════════════════════════════════════
-               LED / Desktop breakpoint (≥1024px)
-               Exact same vh-based sizing as the original LED layout.
-               Body fills viewport with no scroll.
+               Fit-to-screen layout (landscape, ≥640px wide)
+               Used for the Aquarijn LED screen (1000x487) and any
+               desktop/tablet in landscape. Top bar, 10 equal lane rows
+               and the footer share exactly the viewport height, so
+               nothing scrolls at any zoom level or browser chrome.
                ═══════════════════════════════════════════════════════════ */
-            @media (min-width: 1024px) and (orientation: landscape) {
+            @media (min-width: 640px) and (orientation: landscape) {
                 body {
                     overflow: hidden;
                     height: 100vh;
-                    min-height: auto;
-                }
-
-                .lane-table {
-                    table-layout: auto;
-                    flex: none;
+                    height: 100dvh;
+                    min-height: 0;
                 }
 
                 .top-bar {
+                    flex: none;
                     height: 10vh;
-                    padding: 0.25rem 1rem;
+                    height: 10dvh;
+                    padding: 0 1rem;
                     font-size: 4vh;
+                    font-size: 4dvh;
                 }
 
                 .top-bar .stopwatch {
                     font-size: 5vh;
+                    font-size: 5dvh;
+                }
+
+                .lane-wrap {
+                    flex: 1;
+                    min-height: 0;
+                    position: relative;
+                }
+
+                .lane-table {
+                    position: absolute;
+                    inset: 0;
+                    height: 100%;
+                    table-layout: auto;
                 }
 
                 .lane-table tr.lane {
-                    height: calc(82vh / 10);
-                    font-size: 5vh;
+                    height: 10%;
+                    font-size: 4.5vh;
+                    font-size: 4.5dvh;
                 }
 
                 .lane-table th {
@@ -254,19 +270,27 @@
                 }
 
                 .lane-table .arrival-order {
+                    display: table-cell;
                     width: 3rem;
+                    text-align: center;
                     padding: 0 1rem;
                 }
 
+                .lane-table .split-place {
+                    display: none;
+                }
+
                 .bottom-bar {
-                    height: 8vh;
+                    flex: none;
+                    position: static;
+                    height: 7vh;
+                    height: 7dvh;
                     font-size: 3vh;
+                    font-size: 3dvh;
                     padding: 0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    position: fixed;
-                    bottom: 0;
                 }
             }
         </style>
@@ -284,6 +308,7 @@
         </header>
 
         <!-- Lane table -->
+        <div class="lane-wrap">
         <table class="lane-table">
             <tbody>
                 <tr class="lane" id="lane-0">
@@ -358,6 +383,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
 
         <!-- Bottom bar: disclaimer -->
         <footer class="bottom-bar">

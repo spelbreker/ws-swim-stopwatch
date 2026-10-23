@@ -50,11 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    /** Stop the stopwatch */
+    /** Stop the stopwatch; finish times stay on the board until the next start, event or heat */
     if (message.type === 'reset') {
       stopStopwatch();
-      clearSplitTimes();
-      clearArrivalOrders();
       return;
     }
 

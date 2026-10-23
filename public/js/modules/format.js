@@ -19,6 +19,15 @@ export function pad(n) {
 export function formatLapTime(ts, base = 0) {
   const elapsed = ts - base;
   if (elapsed < 0 || base === 0) return '---:---:---';
+  return formatElapsed(elapsed);
+}
+
+/**
+ * Format an elapsed time in ms as mm:ss:cc.
+ * @param {number} elapsed - Elapsed time in ms, 0 or more
+ * @returns {string} Formatted as "mm:ss:cc"
+ */
+export function formatElapsed(elapsed) {
   const minutes = Math.floor(elapsed / 60000);
   const seconds = Math.floor((elapsed % 60000) / 1000);
   const milliseconds = Math.floor((elapsed % 1000) / 10);
