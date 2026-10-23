@@ -19,6 +19,11 @@ import {
 } from '../controllers/tunnelController';
 import { getSettings, postSettings } from '../controllers/settingsController';
 import {
+  getSplashExports,
+  downloadSplashExport,
+  deleteSplashExports,
+} from '../controllers/splashExportController';
+import {
   getBanners,
   receiveBannerFile,
   uploadBanner,
@@ -65,4 +70,9 @@ export function registerRoutes(app: Express, upload: multer.Multer) {
   app.post('/banners/upload', receiveBannerFile, uploadBanner);
   app.delete('/banners/:id', removeBanner);
   app.use('/banners/image', express.static(bannersDir()));
+
+  // Splash Meet Manager heat files (local only: not in the tunnel allow-list)
+  app.get('/exports/splashme', getSplashExports);
+  app.get('/exports/splashme/:file', downloadSplashExport);
+  app.delete('/exports/splashme', deleteSplashExports);
 }

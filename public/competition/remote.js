@@ -152,11 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Locked while running: changing session sends event-heat, which ends the running heat
   const controlElements = [
     eventSelect,
     heatSelect,
     document.getElementById('increment-event'),
     document.getElementById('increment-heat'),
+    document.getElementById('session-menu-button'),
   ];
   const liveBadge = document.getElementById('live-badge');
 

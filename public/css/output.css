@@ -1191,6 +1191,9 @@
   .opacity-0 {
     opacity: 0%;
   }
+  .opacity-60 {
+    opacity: 60%;
+  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -1368,6 +1371,9 @@
     opacity: 50%;
   }
   @media (width >= 40rem) {
+    .sm\:table-cell {
+      display: table-cell;
+    }
     .sm\:px-6 {
       padding-inline: calc(var(--spacing) * 6);
     }

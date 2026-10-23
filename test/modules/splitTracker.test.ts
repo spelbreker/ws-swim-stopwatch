@@ -219,6 +219,68 @@ describe('SplitTracker', () => {
       expect(tracker.getHeat()).toBeNull();
     });
   });
+
+  describe('getRun', () => {
+    it('is null without heat or without start', () => {
+      const { tracker } = makeTracker();
+      tracker.onStart(T0);
+      expect(tracker.getRun()).toBeNull();
+      tracker.setHeat(heat(100));
+      expect(tracker.getRun()).toBeNull();
+    });
+
+    it('returns the accepted split timestamps per lane and distance', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
+      tracker.onStart(T0);
+      tracker.onSplit(3, T0 + 30_000);
+      tracker.onSplit(3, T0 + 30_500); // cooldown: not part of the run
+      tracker.onSplit(3, T0 + 61_000);
+      tracker.onSplit(4, T0 + 31_000);
+      const run = tracker.getRun();
+      expect(run).toMatchObject({ event: 1, heat: 1, startTime: T0, runId: 1 });
+      expect(run!.lanes).toEqual(new Map([
+        [3, new Map([[50, T0 + 30_000], [100, T0 + 61_000]])],
+        [4, new Map([[50, T0 + 31_000]])],
+      ]));
+    });
+
+    it('increments runId on every start', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
+      tracker.onStart(T0);
+      tracker.onStart(T0 + 1);
+      expect(tracker.getRun()!.runId).toBe(2);
+    });
+
+    it('setHeat ends the running start, so its splits do not move to the new heat', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
+      tracker.onStart(T0);
+      tracker.onSplit(3, T0 + 30_000);
+      tracker.setHeat({ ...heat(100), heat: 2 });
+      tracker.onSplit(3, T0 + 61_000);
+      expect(tracker.getRun()).toBeNull();
+    });
+
+    it('onReset ends the run', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
+      tracker.onStart(T0);
+      tracker.onReset();
+      expect(tracker.getRun()).toBeNull();
+    });
+
+    it('returns a copy that later splits do not change', () => {
+      const { tracker } = makeTracker();
+      tracker.setHeat(heat(100));
+      tracker.onStart(T0);
+      tracker.onSplit(3, T0 + 30_000);
+      const run = tracker.getRun()!;
+      tracker.onSplit(3, T0 + 61_000);
+      expect(run.lanes.get(3)!.size).toBe(1);
+    });
+  });
 });
 
 describe('computeHeatInfo', () => {

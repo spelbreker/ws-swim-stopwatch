@@ -155,8 +155,11 @@ graph TD
 ## State Lifecycle
 
 The `SplitTracker` holds per-lane state (`splitCount`, `lastTimestamp`,
-`finished`) and the current heat info (`event`, `heat`, `totalDistance`,
-`expectedSplits`).
+`finished`, accepted split timestamps per distance), the current heat info
+(`event`, `heat`, `totalDistance`, `expectedSplits`) and the start time with a
+`runId` that increases on every start. `getRun()` returns the running heat with
+its accepted splits (used by the [Splash export](splash-export.md)); it is null
+without heat or start.
 
 ```mermaid
 stateDiagram-v2
@@ -173,9 +176,9 @@ stateDiagram-v2
 
 | Event | Lane state | Heat state |
 |-------|-----------|------------|
-| `event-heat` | cleared | reloaded from `competition.json` |
-| `start` | cleared | preserved (reloaded if event/heat differ from current) |
-| `reset` | cleared | cleared |
+| `event-heat` | cleared | reloaded from `competition.json`; start time cleared |
+| `start` | cleared | preserved (reloaded if event/heat differ from current); start time set, `runId` + 1 |
+| `reset` | cleared | cleared, including the start time |
 | `clear` | unchanged | unchanged (UI-only) |
 
 The WebSocket adapter also defensively reloads heat info on `start` if the

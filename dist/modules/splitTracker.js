@@ -40,17 +40,21 @@ class SplitTracker {
         this.lanes = new Map();
         this.heat = null;
         this.startTime = null;
+        this.runId = 0;
     }
     getHeat() {
         return this.heat;
     }
+    /** A new heat invalidates the running start: its splits belong to the old heat. */
     setHeat(info) {
         this.heat = info;
         this.lanes.clear();
+        this.startTime = null;
     }
     onStart(timestamp) {
         this.lanes.clear();
         this.startTime = timestamp ?? null;
+        this.runId += 1;
     }
     onReset() {
         this.lanes.clear();
@@ -83,8 +87,27 @@ class SplitTracker {
         const rawDistance = splitNumber * splitDistanceFor(poolLength);
         const distance = totalDistance > 0 ? Math.min(rawDistance, totalDistance) : rawDistance;
         const isFinish = expectedSplits > 0 && splitNumber >= expectedSplits;
-        this.lanes.set(lane, { splitCount: splitNumber, lastTimestamp: timestamp, finished: isFinish });
+        const splits = state?.splits ?? new Map();
+        splits.set(distance, timestamp);
+        this.lanes.set(lane, { splitCount: splitNumber, lastTimestamp: timestamp, finished: isFinish, splits });
         return { accepted: true, distance, splitNumber, isFinish, ranking: this.getRanking() };
+    }
+    /**
+     * The running heat with its accepted splits, or null when there is no heat
+     * or no start (not started, reset, or heat changed since the start).
+     */
+    getRun() {
+        if (!this.heat || this.startTime === null)
+            return null;
+        const lanes = new Map();
+        this.lanes.forEach((state, lane) => lanes.set(lane, new Map(state.splits)));
+        return {
+            event: this.heat.event,
+            heat: this.heat.heat,
+            startTime: this.startTime,
+            runId: this.runId,
+            lanes,
+        };
     }
     /** Lanes with at least one split, ranked by (splitCount desc, lastTimestamp asc). */
     getRanking() {
